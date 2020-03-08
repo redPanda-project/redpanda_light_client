@@ -7,7 +7,7 @@ void main() {
 //    RedPandaLightClient awesome;
 
     setUp(() {
-      RedPandaLightClient.init(new KademliaId());
+//      RedPandaLightClient.init(new KademliaId());
     });
 
     test('Test Channels', () {
