@@ -1,7 +1,7 @@
 name: redpanda_light_client
-description: A starting point for Dart libraries or applications.
+description: redpanda - peer to peer chat, light client written in dart.
 # version: 1.0.0
-# homepage: https://www.example.com
+# homepage: https://redpanda.im
 # author: robin <RobinFlohr@gmail.com>
 
 environment:
@@ -13,3 +13,11 @@ environment:
 dev_dependencies:
   pedantic: ^1.8.0
   test: ^1.6.0
+
+  buffer: ^1.0.6
+  hex: ^0.1.2
+  base58check: ^1.0.1
+  byte_array: ^0.1.6
+  pointycastle: ^1.0.2
+  cryptography: ^0.1.2
+  sentry: ">=3.0.0 <4.0.0"
