@@ -13,7 +13,7 @@ pipeline {
         }
         stage('Test') {
             steps {
-                sh "pub run test"
+                sh "pub run test --no-color"
             }
         }
         stage('Coverage') {
