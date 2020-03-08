@@ -2,13 +2,16 @@ pipeline {
     agent {
         docker {
             image 'google/dart'
-            args '-e PUB_CACHE=./.pub-cache'
+            args '-u root -e PUB_CACHE=./.pub-cache'
         }
     }
     stages {
         stage ('Prepare lcov converter') {
             steps {
                 sh "curl -O https://raw.githubusercontent.com/eriwen/lcov-to-cobertura-xml/master/lcov_cobertura/lcov_cobertura.py"
+                sh 'apt-get update'
+                sh 'apt-get -y install python3 python3-pip'
+                sh 'python3 -m pip install setuptools'
             }
         }
         stage ('dependencies') {
