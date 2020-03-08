@@ -1,16 +1,17 @@
 import 'package:redpanda_light_client/redpanda_light_client.dart';
+import 'package:redpanda_light_client/src/main/KademliaId.dart';
 import 'package:test/test.dart';
 
 void main() {
   group('A group of tests', () {
-    Awesome awesome;
+//    RedPandaLightClient awesome;
 
     setUp(() {
-      awesome = Awesome();
+      RedPandaLightClient.init(new KademliaId());
     });
 
-    test('First Test', () {
-      expect(awesome.isAwesome, isTrue);
+    test('Test Channels', () {
+      expect(RedPandaLightClient.getChannels().length, 2);
     });
   });
 }
