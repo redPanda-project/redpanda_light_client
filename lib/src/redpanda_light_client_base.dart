@@ -9,9 +9,9 @@ class RedPandaLightClient {
   static List<Channel> _channels;
   static String test = "test";
 
-  static init(KademliaId myKademliaId) {
-    ConnectionService connectionService = ConnectionService(myKademliaId);
-    connectionService.start();
+  static init() async {
+    ConnectionService connectionService = ConnectionService();
+    await connectionService.start();
   }
 
   static List<Channel> getChannels() {

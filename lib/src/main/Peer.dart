@@ -8,9 +8,12 @@ import 'package:pointycastle/api.dart';
 import 'package:pointycastle/export.dart';
 import 'package:redpanda_light_client/src/main/ByteBuffer.dart';
 import 'package:redpanda_light_client/src/main/Command.dart';
+import 'package:redpanda_light_client/src/main/ConnectionService.dart';
 import 'package:redpanda_light_client/src/main/KademliaId.dart';
 import 'package:redpanda_light_client/src/main/Utils.dart';
 
+import 'package:convert/convert.dart';
+//import 'package:crypto/crypto.dart';
 
 class Peer {
   String _ip;
@@ -100,26 +103,44 @@ class Peer {
         if (cmd == Command.REQUEST_PUBLIC_KEY) {
           print('peer requested our public key...');
 
-          final ECKeyGenerator generator = KeyGenerator("EC");
-          generator.init(
-            ParametersWithRandom(
-              ECKeyGeneratorParameters(
-                ECDomainParameters("secp256r1"),
-              ),
-              getSecureRandom(),
-            ),
-          );
-
-          final AsymmetricKeyPair pair = generator.generateKeyPair();
-
-          ECPublicKey publicKey = pair.publicKey;
+          ECPublicKey publicKey = ConnectionService.nodeKey.publicKey;
 
           Uint8List encoded = publicKey.Q.getEncoded(false);
 
-          print('my public key ' + encoded.toString());
-          print('my public key ' + encoded.length.toString());
+//          print('my public key ' + encoded.toString());
+//          print('my public key ' + encoded.length.toString());
+//
+//          print('asd ' + hex.encode(publicKey.Q.getEncoded(false)));
+//
+//          print('asd ' + hex.encode(publicKey.parameters.G.getEncoded(true)));
+//          print('asd ' + hex.encode(publicKey.parameters.G.getEncoded(false)));
+//
+//          print('asd ' +
+//              hex.encode(publicKey.parameters.curve.infinity.getEncoded(true)));
 
+          //die letzten 130 bytes nehmen und die parameter....
+//          ECPublicKey(Q, publicKey.parameters);
 
+//          Digest convert = sha256.convert(publicKey.Q.getEncoded(false));
+//
+//          String encode = hex.encode(convert.bytes);
+
+          Uint8List publickeybytes = publicKey.Q.getEncoded(false);
+
+          SHA256Digest sha256 = new SHA256Digest();
+
+          Uint8List shaBytes = sha256.process(publickeybytes);
+
+          print('Asdf_ ' + KademliaId.fromFirstBytes(shaBytes).toString());
+          print(hex.encode(publickeybytes));
+
+          print('Asdf22_ ' + hex.encode(shaBytes));
+
+          ByteBuffer byteBuffer = new ByteBuffer(1 + 65);
+          byteBuffer.writeByte(Command.SEND_PUBLIC_KEY);
+          byteBuffer.writeList(encoded);
+
+          socket.add(byteBuffer.buffer.asInt8List());
         }
 
 //        byte command = allocate.get();

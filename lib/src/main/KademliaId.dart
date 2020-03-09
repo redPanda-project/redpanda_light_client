@@ -3,8 +3,8 @@ import 'dart:typed_data';
 
 import 'package:base58check/base58.dart';
 import 'package:cryptography/math.dart';
+import 'package:redpanda_light_client/src/main/ByteBuffer.dart';
 import 'package:redpanda_light_client/src/main/Utils.dart';
-
 
 class KademliaId {
   static final int ID_LENGTH = 160;
@@ -15,6 +15,11 @@ class KademliaId {
 
   KademliaId.fromString(String string) {
     _bytes = Utils.base58decode(string);
+  }
+
+  KademliaId.fromFirstBytes(Uint8List bytes) {
+    this._bytes = ByteBuffer.fromBuffer(bytes.buffer, 0, ID_LENGTH_BYTES)
+        .readBytes(ID_LENGTH_BYTES);
   }
 
   KademliaId() {
