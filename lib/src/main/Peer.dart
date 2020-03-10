@@ -107,6 +107,8 @@ class Peer {
 
           Uint8List encoded = publicKey.Q.getEncoded(false);
 
+
+
 //          print('my public key ' + encoded.toString());
 //          print('my public key ' + encoded.length.toString());
 //

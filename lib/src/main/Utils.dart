@@ -8,12 +8,15 @@ import 'package:convert/convert.dart';
 
 class Utils {
   static Random random = Random.secure();
+  static FortunaRandom secureRandom = FortunaRandom();
   static const String _bitcoinAlphabet =
       "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
   static Base58Codec base58codec = new Base58Codec(_bitcoinAlphabet);
   static final MAGIC = Utf8Codec().encode("k3gV");
   static List<Function> states = new List();
   static SHA256Digest sha256Digest = new SHA256Digest();
+
+
 
   static Uint8List randBytes(int n) {
     final Uint8List bytes = Uint8List(n);
@@ -30,7 +33,6 @@ class Utils {
   static Uint8List base58decode(String string) {
     return base58codec.decode(string);
   }
-
 
   static String hexEncode(Uint8List bytes) {
     return hex.encode(bytes);
@@ -59,5 +61,14 @@ class Utils {
       else
         return list2[i] == val;
     });
+  }
+
+  static SecureRandom getSecureRandom() {
+    List<int> seeds = [];
+    for (int i = 0; i < 32; i++) {
+      seeds.add(random.nextInt(255));
+    }
+    secureRandom.seed(new KeyParameter(new Uint8List.fromList(seeds)));
+    return secureRandom;
   }
 }
