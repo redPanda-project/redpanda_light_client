@@ -10,9 +10,12 @@ import 'package:redpanda_light_client/src/main/ByteBuffer.dart';
 import 'package:redpanda_light_client/src/main/Command.dart';
 import 'package:redpanda_light_client/src/main/ConnectionService.dart';
 import 'package:redpanda_light_client/src/main/KademliaId.dart';
+import 'package:redpanda_light_client/src/main/NodeId.dart';
+import 'package:redpanda_light_client/src/main/SentryLogger.dart';
 import 'package:redpanda_light_client/src/main/Utils.dart';
 
 import 'package:convert/convert.dart';
+import 'package:sentry/sentry.dart';
 //import 'package:crypto/crypto.dart';
 
 class Peer {
@@ -23,7 +26,8 @@ class Peer {
   bool connected = false;
   bool isEncryptionActive = false;
   int handshakeStatus = 0;
-  AsymmetricKeyPair pair;
+  NodeId _nodeId;
+  KademliaId _kademliaId;
 
   int lastActionOnConnection = 0;
 
@@ -42,6 +46,8 @@ class Peer {
     byteDataReader.add(data);
 
     print('on data: ' + data.toString());
+
+    //todo check for is connected...
 
 //    print(Utf8Codec().decode(data.sublist(0, 4)));
 //    print(magic);
@@ -83,11 +89,11 @@ class Peer {
         Uint8List nonce = buffer.readBytes(20);
 //    print("server identity: " + HEX.encode(nonce).toUpperCase());
 
-        KademliaId kademliaId = new KademliaId.fromBytes(nonce);
+        _kademliaId = new KademliaId.fromBytes(nonce);
 
-        print('Found node with id: ' + kademliaId.toString());
+        print('Found node with id: ' + _kademliaId.toString());
 
-        if (pair == null) {
+        if (_nodeId == null || _nodeId.getKeyPair() == null) {
           //we have to request the public key of the node
           requestPublicKey();
           print('requested public key from peer...');
@@ -106,8 +112,6 @@ class Peer {
           ECPublicKey publicKey = ConnectionService.nodeKey.publicKey;
 
           Uint8List encoded = publicKey.Q.getEncoded(false);
-
-
 
 //          print('my public key ' + encoded.toString());
 //          print('my public key ' + encoded.length.toString());
@@ -143,6 +147,35 @@ class Peer {
           byteBuffer.writeList(encoded);
 
           socket.add(byteBuffer.buffer.asInt8List());
+        } else if (cmd == Command.SEND_PUBLIC_KEY) {
+          List<int> bytesForPublicKey = buffer.readBytes(NodeId.PUBLIC_KEYLEN);
+
+          NodeId peerNodeId =
+              NodeId.importPublic(Uint8List.fromList(bytesForPublicKey));
+
+          setNodeId(peerNodeId);
+          print('obtained public key from peer: ' +
+              getNodeId().getKademliaId().toString());
+
+          if (_kademliaId != getNodeId().getKademliaId()) {
+            print('wrong public key for node id found, disconnecting...');
+            SentryLogger.log("Error code: g4bdghstg3f4");
+            disconnect();
+          }
+
+          //activate enc todo change to schema from java
+          ByteBuffer byteBuffer = new ByteBuffer(1 + 8);
+          byteBuffer.writeByte(Command.ACTIVATE_ENCRYPTION);
+          //todo add random bytes for iv!
+          socket.add(byteBuffer.buffer.asInt8List());
+
+
+        } else if (cmd == Command.ACTIVATE_ENCRYPTION) {
+          ECPublicKey publicKey = _nodeId.getKeyPair().publicKey;
+
+          Uint8List sharedSecret = generateSharedSecret(
+              ConnectionService.nodeId.getKeyPair(), publicKey.Q);
+          print('intermediateSharedSecret: ' + Utils.hexEncode(sharedSecret));
         }
 
 //        byte command = allocate.get();
@@ -154,9 +187,21 @@ class Peer {
     }
   }
 
+  Uint8List generateSharedSecret(
+      AsymmetricKeyPair localPair, ECPoint remotePublicPoint) {
+    var ss = remotePublicPoint * (localPair.privateKey as ECPrivateKey).d;
+    return hex.decode(toHex(ss.x.toBigInteger()));
+  }
+
+  String toHex(BigInt bi) {
+    var hex = bi.toRadixString(16);
+    return (hex.length & 1 == 0) ? hex : '0$hex';
+  }
+
   bool operator ==(other) {
     Peer otherPeer = other as Peer;
 
+    //todo add port...
     if (otherPeer.ip == ip) {
       return true;
     }
@@ -184,5 +229,18 @@ class Peer {
     }
     secureRandom.seed(new KeyParameter(new Uint8List.fromList(seeds)));
     return secureRandom;
+  }
+
+  void setNodeId(NodeId peerNodeId) {
+    _nodeId = peerNodeId;
+  }
+
+  NodeId getNodeId() {
+    return _nodeId;
+  }
+
+  void disconnect() {
+    //todo maybe we need to do some more?
+    socket.close();
   }
 }

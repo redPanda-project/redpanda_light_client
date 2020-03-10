@@ -5,6 +5,9 @@ import 'package:redpanda_light_client/src/main/KademliaId.dart';
 import 'package:redpanda_light_client/src/main/Utils.dart';
 
 class NodeId {
+  static final int PUBLIC_KEYLEN_LONG = 92;
+  static final int PUBLIC_KEYLEN = 65;
+
   AsymmetricKeyPair _keyPair;
   KademliaId _kademliaId;
 
@@ -26,6 +29,10 @@ class NodeId {
   KademliaId getKademliaId() {
     _kademliaId ??= NodeId.fromPublicKey(_keyPair.publicKey);
     return _kademliaId;
+  }
+
+  AsymmetricKeyPair getKeyPair() {
+    return _keyPair;
   }
 
   static KademliaId fromPublicKey(ECPublicKey key) {
@@ -97,4 +104,17 @@ class NodeId {
 
 //  return null;
   }
+
+  /**
+   * Equals operator checks for same bytes for the KademliaId.
+   */
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is NodeId &&
+          runtimeType == other.runtimeType &&
+          _kademliaId == other._kademliaId;
+
+  @override
+  int get hashCode => _kademliaId.hashCode;
 }
