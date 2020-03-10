@@ -42,18 +42,11 @@ class ConnectionService {
     peerlist = new List();
 
     nodeId = NodeId.withNewKeyPair();
+    nodeKey = nodeId.getKeyPair();
+    kademliaId = nodeId.getKademliaId();
 
-//    nodeKey = generator.generateKeyPair();
-
-    ECPublicKey pubkey = nodeKey.publicKey;
-    Uint8List pubkeyBytes = pubkey.Q.getEncoded(false);
-
-    kademliaId = KademliaId.fromFirstBytes(pubkeyBytes);
-
-    print('My NodeId: ' + nodeId.toString());
+    print('My NodeId: ' + kademliaId.toString());
     assert(kademliaId.bytes.length == KademliaId.ID_LENGTH_BYTES);
-
-//    print('sha bytes: ' + hex.encode(sha256.convert(pubkey.Q.getEncoded(false)).bytes));
   }
 
   void loop() {
@@ -137,7 +130,7 @@ class ConnectionService {
 
       ByteBuffer byteBuffer =
           new ByteBuffer(4 + 1 + KademliaId.ID_LENGTH_BYTES + 4);
-      byteBuffer.writeList('3kgV'.codeUnits);
+      byteBuffer.writeList(Utils.MAGIC);
       byteBuffer.writeByte(8);
       byteBuffer.writeList(kademliaId.bytes);
       print(byteBuffer.buffer.asUint8List());
