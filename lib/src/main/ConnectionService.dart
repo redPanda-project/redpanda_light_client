@@ -4,8 +4,6 @@ import 'dart:ffi';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data' hide ByteBuffer;
-import 'dart:typed_data';
-import 'dart:typed_data' as prefix0;
 
 import 'package:base58check/base58.dart';
 import 'package:base58check/base58check.dart';
@@ -23,6 +21,8 @@ import 'package:redpanda_light_client/src/main/Utils.dart';
 import 'package:sentry/sentry.dart';
 
 import 'package:convert/convert.dart';
+
+import 'NodeId.dart';
 //import 'package:crypto/crypto.dart';
 
 const String _bitcoinAlphabet =
@@ -34,37 +34,26 @@ class ConnectionService {
   Socket socket;
 
   static AsymmetricKeyPair nodeKey;
-  static KademliaId nodeId;
+  static NodeId nodeId;
+  static KademliaId kademliaId;
   List<Peer> peerlist;
 
   ConnectionService() {
     peerlist = new List();
 
-    final ECKeyGenerator generator = KeyGenerator("EC");
-    generator.init(
-      ParametersWithRandom(
-        ECKeyGeneratorParameters(
-          ECDomainParameters("brainpoolp256r1"),
-        ),
-        getSecureRandom(),
-      ),
-    );
+    nodeId = NodeId.withNewKeyPair();
 
-    nodeKey = generator.generateKeyPair();
+//    nodeKey = generator.generateKeyPair();
 
     ECPublicKey pubkey = nodeKey.publicKey;
     Uint8List pubkeyBytes = pubkey.Q.getEncoded(false);
 
-
-    nodeId = KademliaId.fromFirstBytes(pubkeyBytes);
-
+    kademliaId = KademliaId.fromFirstBytes(pubkeyBytes);
 
     print('My NodeId: ' + nodeId.toString());
-    assert(nodeId.bytes.length == KademliaId.ID_LENGTH_BYTES);
+    assert(kademliaId.bytes.length == KademliaId.ID_LENGTH_BYTES);
 
 //    print('sha bytes: ' + hex.encode(sha256.convert(pubkey.Q.getEncoded(false)).bytes));
-
-
   }
 
   void loop() {
@@ -150,7 +139,7 @@ class ConnectionService {
           new ByteBuffer(4 + 1 + KademliaId.ID_LENGTH_BYTES + 4);
       byteBuffer.writeList('3kgV'.codeUnits);
       byteBuffer.writeByte(8);
-      byteBuffer.writeList(nodeId.bytes);
+      byteBuffer.writeList(kademliaId.bytes);
       print(byteBuffer.buffer.asUint8List());
       byteBuffer.writeInt(59558);
       print(byteBuffer.buffer.asUint8List());
@@ -239,16 +228,5 @@ class ConnectionService {
         stackTrace: stackTrace,
       );
     }
-  }
-
-  SecureRandom getSecureRandom() {
-    var secureRandom = FortunaRandom();
-    var random = Random.secure();
-    List<int> seeds = [];
-    for (int i = 0; i < 32; i++) {
-      seeds.add(random.nextInt(255));
-    }
-    secureRandom.seed(new KeyParameter(new Uint8List.fromList(seeds)));
-    return secureRandom;
   }
 }
