@@ -109,7 +109,7 @@ class Peer {
         if (cmd == Command.REQUEST_PUBLIC_KEY) {
           print('peer requested our public key...');
 
-          ECPublicKey publicKey = ConnectionService.nodeKey.publicKey;
+          ECPublicKey publicKey = ConnectionService.nodeId.getKeyPair().publicKey;
 
           Uint8List encoded = publicKey.Q.getEncoded(false);
 
