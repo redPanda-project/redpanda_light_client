@@ -1,8 +1,8 @@
 name: redpanda_light_client
 description: redpanda - peer to peer chat, light client written in dart.
-# version: 1.0.0
-# homepage: https://redpanda.im
-# author: robin <RobinFlohr@gmail.com>
+version: 0.0.1
+homepage: https://redpanda.im
+author: Robin Braun <RobinFlohr@gmail.com>
 
 environment:
   sdk: '>=2.5.0 <3.0.0'
@@ -14,10 +14,16 @@ dependencies:
   byte_array: ^0.1.6
   pointycastle: ^1.0.2
   cryptography: ^0.1.2
-  sentry: ">=3.0.0 <4.0.0"
+  sentry: ^3.0.1
   flat_buffers: ^1.11.0
+  moor: ^2.4.2
+  moor_ffi: ^0.4.0
+  #path_provider: ^1.6.5
+  path: ^1.6.4
 
 dev_dependencies:
   pedantic: ^1.8.0
   test: ^1.6.0
   test_coverage: ^0.4.1
+  moor_generator: ^2.4.0
+  build_runner: ^1.8.0

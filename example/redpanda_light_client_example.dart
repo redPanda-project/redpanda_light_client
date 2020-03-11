@@ -1,5 +1,4 @@
-import 'package:redpanda_light_client/redpanda_light_client.dart';
-import 'package:redpanda_light_client/src/main/KademliaId.dart';
+import 'package:redpanda_light_client/export.dart';
 
 main() {
   RedPandaLightClient.init();
