@@ -8,6 +8,9 @@ class NodeId {
   static final int PUBLIC_KEYLEN_LONG = 92;
   static final int PUBLIC_KEYLEN = 65;
 
+  static final ECDomainParameters parameters =
+      ECDomainParameters("brainpoolp256r1");
+
   AsymmetricKeyPair _keyPair;
   KademliaId _kademliaId;
 
@@ -15,6 +18,37 @@ class NodeId {
 
   NodeId.withNewKeyPair() {
     _keyPair = generateECKeys();
+    ECPrivateKey priv = _keyPair.privateKey;
+    BigInt i = priv.d;
+    String radixString = i.toRadixString(16);
+    print(radixString);
+    print(i.toString());
+    BigInt parse = BigInt.parse(radixString, radix: 16);
+    print(i.toString());
+    print(parse.toString());
+
+    ECPrivateKey ecPrivateKey = ECPrivateKey(parse, parameters);
+  }
+
+  String exportWithPrivate() {
+    ECPrivateKey priv = _keyPair.privateKey;
+    String privString = priv.d.toRadixString(16);
+    String pubString = Utils.base58encode(exportPublic());
+    return privString + "," + pubString;
+  }
+
+  NodeId.importWithPrivate(String string) {
+    List<String> split = string.split(",");
+
+    String privString = split[0];
+    String pubString = split[1];
+
+    BigInt parse = BigInt.parse(privString, radix: 16);
+    ECPrivateKey privateKey = ECPrivateKey(parse, parameters);
+
+    ECPublicKey publicKey = bytesToPublicKey(Utils.base58decode(pubString));
+
+    _keyPair = new AsymmetricKeyPair(publicKey, privateKey);
   }
 
   Uint8List exportPublic() {
@@ -54,55 +88,14 @@ class NodeId {
     return generator.generateKeyPair();
   }
 
-  static NodeId importPublic(Uint8List bytes) {
-    ECDomainParameters parameters = ECDomainParameters("brainpoolp256r1");
+  NodeId.importPublic(Uint8List bytes) {
+    ECPublicKey publicKey = bytesToPublicKey(bytes);
+    _keyPair = new AsymmetricKeyPair(publicKey, null);
+  }
+
+  static ECPublicKey bytesToPublicKey(Uint8List bytes) {
     ECPoint Q = parameters.curve.decodePoint(bytes);
-    ECPublicKey publicKey = ECPublicKey(Q, parameters);
-
-    AsymmetricKeyPair keyPair = new AsymmetricKeyPair(publicKey, null);
-    NodeId nodeId = new NodeId(keyPair);
-    return nodeId;
-
-//    ECCurveBase(parameters.curve.a.toBigInteger(),parameters.curve.b.toBigInteger());
-//
-//    ECCurve()
-//
-//    ECCurveBase.decodePoint(bytes.toList());
-
-//    final ECKeyGenerator generator = KeyGenerator("EC");
-//    generator.init(Parameters
-//      ParametersWithRandom(
-//        ECKeyGeneratorParameters(
-//          ECDomainParameters("brainpoolp256r1"),
-//        ),
-//        Utils.getSecureRandom(),
-//      ),
-//    );
-
-//  byte[] bytesFull = new byte[PUBLIC_KEYLEN_LONG];
-//  ByteBuffer.wrap(bytesFull)
-//      .put(getCurveParametersForASN1Format())
-//      .put(bytes);
-//
-//
-//  EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(bytesFull);
-//
-//  KeyFactory keyFactory = null;
-//  try {
-//  keyFactory = KeyFactory.getInstance("ECDH", "BC");
-//  PublicKey newPublicKey = keyFactory.generatePublic(publicKeySpec);
-//
-//  KeyPair keyPair = new KeyPair(newPublicKey, null);
-//  return new NodeId(keyPair);
-//  } catch (NoSuchAlgorithmException e) {
-//  e.printStackTrace();
-//  } catch (NoSuchProviderException e) {
-//  e.printStackTrace();
-//  } catch (InvalidKeySpecException e) {
-//  e.printStackTrace();
-//  }
-
-//  return null;
+    return ECPublicKey(Q, parameters);
   }
 
   /**

@@ -18,6 +18,7 @@ import 'package:redpanda_light_client/src/main/KademliaId.dart';
 import 'package:redpanda_light_client/src/main/Peer.dart';
 import 'package:redpanda_light_client/src/main/Settings.dart';
 import 'package:redpanda_light_client/src/main/Utils.dart';
+import 'package:redpanda_light_client/src/main/store/moor_database.dart';
 import 'package:sentry/sentry.dart';
 
 import 'package:convert/convert.dart';
@@ -31,22 +32,20 @@ const String _bitcoinAlphabet =
 class ConnectionService {
   static final SentryClient sentry = new SentryClient(
       dsn: "https://5ab6bb5e18a84fc1934b438139cc13d1@sentry.io/3871436");
-  Socket socket;
 
-  static AsymmetricKeyPair nodeKey;
+  static LocalSetting localSetting;
+
+  static String pathToDatabase;
+
   static NodeId nodeId;
   static KademliaId kademliaId;
   List<Peer> peerlist;
+  static AppDatabase appDatabase;
 
-  ConnectionService() {
+  ConnectionService(String pathToDatabase) {
+    ConnectionService.pathToDatabase = pathToDatabase;
+
     peerlist = new List();
-
-    nodeId = NodeId.withNewKeyPair();
-    nodeKey = nodeId.getKeyPair();
-    kademliaId = nodeId.getKademliaId();
-
-    print('My NodeId: ' + kademliaId.toString());
-    assert(kademliaId.bytes.length == KademliaId.ID_LENGTH_BYTES);
   }
 
   void loop() {
@@ -87,6 +86,42 @@ class ConnectionService {
    * Method to start the ConnectionService.
    */
   Future<void> start() async {
+    /**
+     * Setup database and LocalSettings...
+     */
+
+    appDatabase = new AppDatabase();
+
+    localSetting = await appDatabase.getLocalSettings;
+    if (localSetting == null) {
+      //no settings found
+
+      nodeId = NodeId.withNewKeyPair();
+      kademliaId = nodeId.getKademliaId();
+
+      LocalSettingsCompanion localSettingsCompanion =
+          LocalSettingsCompanion.insert(
+              privateKey: nodeId.exportWithPrivate(),
+              kademliaId: kademliaId.bytes);
+
+      appDatabase.save(localSettingsCompanion);
+      print('new localsettings saved!');
+    } else {
+      nodeId = NodeId.importWithPrivate(localSetting.privateKey);
+      kademliaId = KademliaId.fromBytes(localSetting.kademliaId);
+      print('Found KademliaId in db: ' + kademliaId.toString());
+      assert(nodeId.getKademliaId() == kademliaId);
+    }
+
+    print('test insert new channel');
+    ChannelsCompanion channelsCompanion = ChannelsCompanion.insert(
+        title: "Title1 ",
+        lastMessage_text: "last msg",
+        lastMessage_user: "james");
+    appDatabase.insertChannel(channelsCompanion);
+
+    print('My NodeId: ' + kademliaId.toString());
+
     /**
      * We run loop immediately and every 5 seconds, this method will check for
      * timed out peers and establish connections.
@@ -148,31 +183,17 @@ class ConnectionService {
     });
   }
 
-  void dataHandler(data) {
-    print(new String.fromCharCodes(data).trim());
-  }
-
-  void errorHandler(error, StackTrace trace) {
-    print(error);
-  }
-
-  void doneHandler() {
-    socket.destroy();
-  }
-
-  bool _listsAreEqual(list1, list2) {
-    if (list1.length != list2.length) {
-      return false;
-    }
-    var i = -1;
-    return list1.every((val) {
-      i++;
-      if (val is List && list2[i] is List)
-        return _listsAreEqual(val, list2[i]);
-      else
-        return list2[i] == val;
-    });
-  }
+//  void dataHandler(data) {
+//    print(new String.fromCharCodes(data).trim());
+//  }
+//
+//  void errorHandler(error, StackTrace trace) {
+//    print(error);
+//  }
+//
+//  void doneHandler() {
+//    socket.destroy();
+//  }
 
   void reseed() {
 //    print('reseed...');
