@@ -117,4 +117,9 @@ class NodeId {
 
   @override
   int get hashCode => _kademliaId.hashCode;
+
+  @override
+  String toString() {
+    return getKademliaId().toString();
+  }
 }
