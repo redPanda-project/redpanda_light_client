@@ -89,3 +89,5 @@ fabric.properties
 
 
 data/
+#exlude moor generated files, generate with: pub run build_runner build
+*.g.dart

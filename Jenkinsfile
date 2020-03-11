@@ -11,6 +11,11 @@ pipeline {
                 sh 'pub get'
             }
         }
+        stage ('Moor (sqlite) db build Classes') {
+            steps {
+                sh 'pub run build_runner build'
+            }
+        }
         stage('Test') {
             steps {
                 sh "pub run test --no-color"
