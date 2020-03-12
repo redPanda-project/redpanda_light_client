@@ -1,32 +1,32 @@
 import 'dart:io';
 
 import 'package:moor/moor.dart';
-//import 'package:moor/src/utils/lazy_database.dart';
-
 import 'package:moor_ffi/moor_ffi.dart';
 import 'package:path/path.dart' as p;
 import 'package:redpanda_light_client/src/main/ConnectionService.dart';
 
-// assuming that your file is called filename.dart. This will give an error at first,
-// but it's needed for moor to know about the generated code
+/**
+ * Here we define the tables in the sqlite database. The code can be generated with
+ * pub run build_runner build
+ * This will generate the file moor_database.g.dart which will then be used by dart
+ */
 part 'moor_database.g.dart';
 
-// this will generate a table called "todos" for us. The rows of that table will
-// be represented by a class called "Todo".
+// this will generate a table called LocalSettings for us. The rows of that table will
+// be represented by a class called LocalSetting.
+// Note the tables are plural (with s) and the class which will hold the data without s
 class LocalSettings extends Table {
   IntColumn get id => integer().autoIncrement()();
-
-//  TextColumn get title => text().withLength(min: 6, max: 32)();
-//
-//  TextColumn get content => text().named('body')();
-//
-//  IntColumn get category => integer().nullable()();
 
   TextColumn get privateKey => text()();
 
   BlobColumn get kademliaId => blob()();
 }
 
+/**
+ * Sqlite schema for Channels, will generate a class Channel which then holds
+ * all data for the communication.
+ */
 class Channels extends Table {
   IntColumn get id => integer().autoIncrement()();
 
@@ -44,8 +44,8 @@ class AppDatabase extends _$AppDatabase {
   // we tell the database where to store the data with this constructor
   AppDatabase() : super(_openConnection());
 
-  // you should bump this number whenever you change or add a table definition. Migrations
-  // are covered later in this readme.
+  // you should bump this number whenever you change or add a table definition.
+  // Migrations are covered below.
   @override
   int get schemaVersion => 3;
 

@@ -15,4 +15,5 @@ main() async {
 //todo documentation of used licenses
 /**
  * sqlite for windows: https://www.sqlite.org/copyright.html
+ * moor: MIT License https://github.com/simolus3/moor/blob/master/LICENSE
  */

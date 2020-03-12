@@ -11,15 +11,23 @@ import 'package:redpanda_light_client/src/main/KademliaId.dart';
 class RedPandaLightClient {
   static List<Channel> _channels;
 
-  static init(String dataFolderPath) async {
+  static ConnectionService connectionService;
+
+  static Future<void> init(String dataFolderPath) async {
     // create sqlite database folder otherwise the database opening will fail
     // with: SqliteException: bad parameter or other API misuse, unable to open database file
 //    if (Platform.isWindows) {
 //    await new Directory('data').create(recursive: true);
 //    }
 
-    ConnectionService connectionService = ConnectionService(dataFolderPath);
+    connectionService = ConnectionService(dataFolderPath);
     await connectionService.start();
+    print('db: ' + ConnectionService.appDatabase.toString());
+  }
+
+  static Future<void> shutdown() async {
+    ConnectionService.appDatabase.close();
+    connectionService.loopTimer.cancel();
   }
 
 //  static List<Channel> getChannels() {
