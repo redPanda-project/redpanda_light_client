@@ -213,12 +213,12 @@ class $LocalSettingsTable extends LocalSettings
 
 class Channel extends DataClass implements Insertable<Channel> {
   final int id;
-  final String title;
+  final String name;
   final String lastMessage_text;
   final String lastMessage_user;
   Channel(
       {@required this.id,
-      @required this.title,
+      @required this.name,
       @required this.lastMessage_text,
       @required this.lastMessage_user});
   factory Channel.fromData(Map<String, dynamic> data, GeneratedDatabase db,
@@ -228,8 +228,7 @@ class Channel extends DataClass implements Insertable<Channel> {
     final stringType = db.typeSystem.forDartType<String>();
     return Channel(
       id: intType.mapFromDatabaseResponse(data['${effectivePrefix}id']),
-      title:
-          stringType.mapFromDatabaseResponse(data['${effectivePrefix}title']),
+      name: stringType.mapFromDatabaseResponse(data['${effectivePrefix}name']),
       lastMessage_text: stringType
           .mapFromDatabaseResponse(data['${effectivePrefix}last_message_text']),
       lastMessage_user: stringType
@@ -241,7 +240,7 @@ class Channel extends DataClass implements Insertable<Channel> {
     serializer ??= moorRuntimeOptions.defaultSerializer;
     return Channel(
       id: serializer.fromJson<int>(json['id']),
-      title: serializer.fromJson<String>(json['title']),
+      name: serializer.fromJson<String>(json['name']),
       lastMessage_text: serializer.fromJson<String>(json['lastMessage_text']),
       lastMessage_user: serializer.fromJson<String>(json['lastMessage_user']),
     );
@@ -251,7 +250,7 @@ class Channel extends DataClass implements Insertable<Channel> {
     serializer ??= moorRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
-      'title': serializer.toJson<String>(title),
+      'name': serializer.toJson<String>(name),
       'lastMessage_text': serializer.toJson<String>(lastMessage_text),
       'lastMessage_user': serializer.toJson<String>(lastMessage_user),
     };
@@ -261,8 +260,7 @@ class Channel extends DataClass implements Insertable<Channel> {
   ChannelsCompanion createCompanion(bool nullToAbsent) {
     return ChannelsCompanion(
       id: id == null && nullToAbsent ? const Value.absent() : Value(id),
-      title:
-          title == null && nullToAbsent ? const Value.absent() : Value(title),
+      name: name == null && nullToAbsent ? const Value.absent() : Value(name),
       lastMessage_text: lastMessage_text == null && nullToAbsent
           ? const Value.absent()
           : Value(lastMessage_text),
@@ -274,12 +272,12 @@ class Channel extends DataClass implements Insertable<Channel> {
 
   Channel copyWith(
           {int id,
-          String title,
+          String name,
           String lastMessage_text,
           String lastMessage_user}) =>
       Channel(
         id: id ?? this.id,
-        title: title ?? this.title,
+        name: name ?? this.name,
         lastMessage_text: lastMessage_text ?? this.lastMessage_text,
         lastMessage_user: lastMessage_user ?? this.lastMessage_user,
       );
@@ -287,7 +285,7 @@ class Channel extends DataClass implements Insertable<Channel> {
   String toString() {
     return (StringBuffer('Channel(')
           ..write('id: $id, ')
-          ..write('title: $title, ')
+          ..write('name: $name, ')
           ..write('lastMessage_text: $lastMessage_text, ')
           ..write('lastMessage_user: $lastMessage_user')
           ..write(')'))
@@ -297,45 +295,45 @@ class Channel extends DataClass implements Insertable<Channel> {
   @override
   int get hashCode => $mrjf($mrjc(
       id.hashCode,
-      $mrjc(title.hashCode,
+      $mrjc(name.hashCode,
           $mrjc(lastMessage_text.hashCode, lastMessage_user.hashCode))));
   @override
   bool operator ==(dynamic other) =>
       identical(this, other) ||
       (other is Channel &&
           other.id == this.id &&
-          other.title == this.title &&
+          other.name == this.name &&
           other.lastMessage_text == this.lastMessage_text &&
           other.lastMessage_user == this.lastMessage_user);
 }
 
 class ChannelsCompanion extends UpdateCompanion<Channel> {
   final Value<int> id;
-  final Value<String> title;
+  final Value<String> name;
   final Value<String> lastMessage_text;
   final Value<String> lastMessage_user;
   const ChannelsCompanion({
     this.id = const Value.absent(),
-    this.title = const Value.absent(),
+    this.name = const Value.absent(),
     this.lastMessage_text = const Value.absent(),
     this.lastMessage_user = const Value.absent(),
   });
   ChannelsCompanion.insert({
     this.id = const Value.absent(),
-    @required String title,
+    @required String name,
     @required String lastMessage_text,
     @required String lastMessage_user,
-  })  : title = Value(title),
+  })  : name = Value(name),
         lastMessage_text = Value(lastMessage_text),
         lastMessage_user = Value(lastMessage_user);
   ChannelsCompanion copyWith(
       {Value<int> id,
-      Value<String> title,
+      Value<String> name,
       Value<String> lastMessage_text,
       Value<String> lastMessage_user}) {
     return ChannelsCompanion(
       id: id ?? this.id,
-      title: title ?? this.title,
+      name: name ?? this.name,
       lastMessage_text: lastMessage_text ?? this.lastMessage_text,
       lastMessage_user: lastMessage_user ?? this.lastMessage_user,
     );
@@ -355,12 +353,12 @@ class $ChannelsTable extends Channels with TableInfo<$ChannelsTable, Channel> {
         hasAutoIncrement: true, declaredAsPrimaryKey: true);
   }
 
-  final VerificationMeta _titleMeta = const VerificationMeta('title');
-  GeneratedTextColumn _title;
+  final VerificationMeta _nameMeta = const VerificationMeta('name');
+  GeneratedTextColumn _name;
   @override
-  GeneratedTextColumn get title => _title ??= _constructTitle();
-  GeneratedTextColumn _constructTitle() {
-    return GeneratedTextColumn('title', $tableName, false,
+  GeneratedTextColumn get name => _name ??= _constructName();
+  GeneratedTextColumn _constructName() {
+    return GeneratedTextColumn('name', $tableName, false,
         minTextLength: 3, maxTextLength: 32);
   }
 
@@ -394,7 +392,7 @@ class $ChannelsTable extends Channels with TableInfo<$ChannelsTable, Channel> {
 
   @override
   List<GeneratedColumn> get $columns =>
-      [id, title, lastMessage_text, lastMessage_user];
+      [id, name, lastMessage_text, lastMessage_user];
   @override
   $ChannelsTable get asDslTable => this;
   @override
@@ -408,11 +406,11 @@ class $ChannelsTable extends Channels with TableInfo<$ChannelsTable, Channel> {
     if (d.id.present) {
       context.handle(_idMeta, id.isAcceptableValue(d.id.value, _idMeta));
     }
-    if (d.title.present) {
+    if (d.name.present) {
       context.handle(
-          _titleMeta, title.isAcceptableValue(d.title.value, _titleMeta));
+          _nameMeta, name.isAcceptableValue(d.name.value, _nameMeta));
     } else if (isInserting) {
-      context.missing(_titleMeta);
+      context.missing(_nameMeta);
     }
     if (d.lastMessage_text.present) {
       context.handle(
@@ -447,8 +445,8 @@ class $ChannelsTable extends Channels with TableInfo<$ChannelsTable, Channel> {
     if (d.id.present) {
       map['id'] = Variable<int, IntType>(d.id.value);
     }
-    if (d.title.present) {
-      map['title'] = Variable<String, StringType>(d.title.value);
+    if (d.name.present) {
+      map['name'] = Variable<String, StringType>(d.name.value);
     }
     if (d.lastMessage_text.present) {
       map['last_message_text'] =

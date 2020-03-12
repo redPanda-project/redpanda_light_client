@@ -43,7 +43,6 @@ class ConnectionService {
   static AppDatabase appDatabase;
   Timer loopTimer;
 
-
   ConnectionService(String pathToDatabase) {
     ConnectionService.pathToDatabase = pathToDatabase;
 
@@ -117,7 +116,7 @@ class ConnectionService {
 
     print('test insert new channel');
     ChannelsCompanion channelsCompanion = ChannelsCompanion.insert(
-        title: "Title1",
+        name: "Title1",
         lastMessage_text: "last msg",
         lastMessage_user: "james");
     appDatabase.insertChannel(channelsCompanion);
@@ -131,9 +130,6 @@ class ConnectionService {
     loop();
     const oneSec = const Duration(seconds: 5);
     loopTimer = new Timer.periodic(oneSec, (Timer t) => {loop()});
-
-
-
   }
 
   Future<void> connectTo(Peer peer) async {

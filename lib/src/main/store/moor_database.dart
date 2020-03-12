@@ -30,7 +30,7 @@ class LocalSettings extends Table {
 class Channels extends Table {
   IntColumn get id => integer().autoIncrement()();
 
-  TextColumn get title => text().withLength(min: 3, max: 32)();
+  TextColumn get name => text().withLength(min: 3, max: 32)();
 
   TextColumn get lastMessage_text => text().withLength()();
 
@@ -47,7 +47,7 @@ class AppDatabase extends _$AppDatabase {
   // you should bump this number whenever you change or add a table definition.
   // Migrations are covered below.
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   Future<LocalSetting> get getLocalSettings =>
       select(localSettings).getSingle();
@@ -93,6 +93,11 @@ class AppDatabase extends _$AppDatabase {
 
   Future<int> removeChannel(int id) async {
     return (delete(channels)..where((tbl) => tbl.id.equals(id))).go();
+  }
+
+  Future<int> renameChannel(int id, String newname) async {
+    return (update(channels)..where((tbl) => tbl.id.equals(id)))
+        .write(ChannelsCompanion(name: Value(newname)));
   }
 }
 
