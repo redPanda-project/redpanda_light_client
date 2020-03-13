@@ -26,6 +26,10 @@ class ByteBuffer {
     return ByteBuffer.fromByteData(view, endian);
   }
 
+  factory ByteBuffer.fromList(Uint8List list) {
+    return ByteBuffer.fromBuffer(list.buffer);
+  }
+
   int readByte() => _getNum<int>((i, _) => _byteData.getInt8(i), 1);
 
   int readUnsignedByte() => _getNum<int>((i, _) => _byteData.getUint8(i), 1);
@@ -166,6 +170,10 @@ class ByteBuffer {
   prefix0.ByteBuffer get buffer => _byteData.buffer;
 
   int get bytesAvailable => length - _offset;
+
+  int remaining() {
+    return bytesAvailable;
+  }
 
   int get offset => _offset;
 
