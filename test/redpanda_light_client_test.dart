@@ -1,5 +1,3 @@
-import 'package:redpanda_light_client/export.dart';
-import 'package:redpanda_light_client/src/main/KademliaId.dart';
 import 'package:test/test.dart';
 
 void main() {

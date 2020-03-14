@@ -75,7 +75,7 @@ class AppDatabase extends _$AppDatabase {
       print("dropping table " + table.actualTableName);
     }
 
-    migrator.createAll();
+    await migrator.createAll();
   }
 
   // watches all Channel entries. The stream will automatically

@@ -1,16 +1,10 @@
 // TODO: Put public facing types in this file.
 
-import 'dart:io';
-
 import 'package:redpanda_light_client/export.dart';
-import 'package:redpanda_light_client/src/main/Channel.dart';
 import 'package:redpanda_light_client/src/main/ConnectionService.dart';
-import 'package:redpanda_light_client/src/main/KademliaId.dart';
 
 /// Checks if you are awesome. Spoiler: you are.
 class RedPandaLightClient {
-  static List<Channel> _channels;
-
   static ConnectionService connectionService;
 
   static Future<void> init(String dataFolderPath) async {
@@ -26,7 +20,7 @@ class RedPandaLightClient {
   }
 
   static Future<void> shutdown() async {
-    ConnectionService.appDatabase.close();
+    await ConnectionService.appDatabase.close();
     connectionService.loopTimer.cancel();
   }
 

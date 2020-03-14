@@ -14,7 +14,7 @@ class FBPeerList {
     return reader.read(rootRef, 0);
   }
 
-  static const fb.Reader<FBPeerList> reader = const _FBPeerListReader();
+  static const fb.Reader<FBPeerList> reader = _FBPeerListReader();
 
   final fb.BufferContext _bc;
   final int _bcOffset;
@@ -95,12 +95,12 @@ class FBPeer {
     return reader.read(rootRef, 0);
   }
 
-  static const fb.Reader<FBPeer> reader = const _FBPeerReader();
+  static const fb.Reader<FBPeer> reader = _FBPeerReader();
 
   final fb.BufferContext _bc;
   final int _bcOffset;
 
-  List<int> get nodeId => const fb.ListReader<int>(const fb.Int8Reader()).vTableGet(_bc, _bcOffset, 4, null);
+  List<int> get nodeId => const fb.ListReader<int>(fb.Int8Reader()).vTableGet(_bc, _bcOffset, 4, null);
   String get ip => const fb.StringReader().vTableGet(_bc, _bcOffset, 6, null);
   int get port => const fb.Int32Reader().vTableGet(_bc, _bcOffset, 8, 0);
 

@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 class Command {
   static final int GET_PEER_LIST = 1;
 

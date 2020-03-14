@@ -53,8 +53,7 @@ class ByteBuffer {
 
   double readDouble() => _getNum<double>(_byteData.getFloat64, 8);
 
-  void writeByte(int value) =>
-      _setNum<int>((i, v, _) => _byteData.setInt8(i, v), value, 1);
+  void writeByte(int value) => _setNum<int>((i, v, _) => _byteData.setInt8(i, v), value, 1);
 
   void writeList(List<int> bytes) {
     Uint8List asUint8List = byteData.buffer.asUint8List();
@@ -62,8 +61,7 @@ class ByteBuffer {
     _offset += bytes.length;
   }
 
-  void writeUnsignedByte(int value) =>
-      _setNum<int>((i, v, _) => _byteData.setUint8(i, v), value, 1);
+  void writeUnsignedByte(int value) => _setNum<int>((i, v, _) => _byteData.setUint8(i, v), value, 1);
 
   /// Writes [int], 1 if true, zero if false
   void writeBoolean(bool value) => writeByte(value ? 1 : 0);
@@ -91,11 +89,12 @@ class ByteBuffer {
   void operator []=(int i, int value) => _byteData.setInt8(i, value);
 
   /// Appends [other] to [this]
-  ByteBuffer operator +(ByteBuffer other) =>
-      ByteBuffer(length + other.length)..writeBytes(this)..writeBytes(other);
+  ByteBuffer operator +(ByteBuffer other) => ByteBuffer(length + other.length)..writeBytes(this)..writeBytes(other);
 
   Iterable<int> byteStream() sync* {
-    while (offset < length) yield this[offset++];
+    while (offset < length) {
+      yield this[offset++];
+    }
   }
 
   /// Returns true if every byte in both [ByteBuffer]s are equal
@@ -108,7 +107,11 @@ class ByteBuffer {
 
     if (length != other.length) return false;
 
-    for (var i = 0; i < length; i++) if (this[i] != other[i]) return false;
+    for (var i = 0; i < length; i++) {
+      if (this[i] != other[i]) {
+        return false;
+      }
+    }
 
     return true;
   }
@@ -120,7 +123,9 @@ class ByteBuffer {
     const p = 16777619;
     var hash = 2166136261;
 
-    for (var i = 0; i < length; i++) hash = (hash ^ this[i]) * p;
+    for (var i = 0; i < length; i++) {
+      hash = (hash ^ this[i]) * p;
+    }
 
     offset = tempOffset;
 
@@ -140,25 +145,22 @@ class ByteBuffer {
     final oldOffset = bytes.offset;
     bytes.offset = offset;
 
-    for (var i = 0; i < byteCount; i++) writeByte(bytes.readByte());
+    for (var i = 0; i < byteCount; i++) {
+      writeByte(bytes.readByte());
+    }
 
     bytes.offset = oldOffset;
   }
 
-  void _setNum<T extends num>(
-      void Function(int, T, Endian) f, T value, int size) {
-    if (_offset + size > length)
-      throw RangeError(
-          'attempted to write to offset ${_offset + size}, length is $length');
+  void _setNum<T extends num>(void Function(int, T, Endian) f, T value, int size) {
+    if (_offset + size > length) throw RangeError('attempted to write to offset ${_offset + size}, length is $length');
 
     f(offset, value, endian);
     _offset += size;
   }
 
   T _getNum<T extends num>(T Function(int, Endian) f, int size) {
-    if (_offset + size > length)
-      throw RangeError(
-          'attempted to read from offset ${_offset + size}, length is $length');
+    if (_offset + size > length) throw RangeError('attempted to read from offset ${_offset + size}, length is $length');
 
     final data = f(_offset, endian);
     _offset += size;
@@ -178,8 +180,7 @@ class ByteBuffer {
   int get offset => _offset;
 
   set offset(int value) {
-    if (value < 0 || value > length)
-      throw RangeError('attempting to set offset to $value, length is $length');
+    if (value < 0 || value > length) throw RangeError('attempting to set offset to $value, length is $length');
 
     _offset = value;
   }

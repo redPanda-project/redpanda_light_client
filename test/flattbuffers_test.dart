@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 
 import 'package:redpanda_light_client/src/main/KademliaId.dart';
-import 'package:redpanda_light_client/src/main/NodeId.dart';
 import 'package:redpanda_light_client/src/main/Utils.dart';
 import 'package:redpanda_light_client/src/main/commands/FBPeerList_im.redpanda.commands_generated.dart';
 import 'package:test/test.dart';

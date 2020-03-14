@@ -15,8 +15,6 @@ import 'package:redpanda_light_client/src/main/SentryLogger.dart';
 import 'package:redpanda_light_client/src/main/Utils.dart';
 
 import 'package:convert/convert.dart';
-import 'package:sentry/sentry.dart';
-//import 'package:crypto/crypto.dart';
 
 class Peer {
   static final int IVbytelen = 16;
@@ -47,6 +45,14 @@ class Peer {
   String get ip => _ip;
 
   int get port => _port;
+
+  set ip(String value) {
+    _ip = value;
+  }
+
+  set port(int value) {
+    _port = value;
+  }
 
   void ondata(Uint8List data) {
 //    print(data.toString());
@@ -111,8 +117,7 @@ class Peer {
            */
           List<int> bytesForPublicKey = buffer.readBytes(NodeId.PUBLIC_KEYLEN);
 
-          NodeId peerNodeId =
-              NodeId.importPublic(Uint8List.fromList(bytesForPublicKey));
+          NodeId peerNodeId = NodeId.importPublic(Uint8List.fromList(bytesForPublicKey));
 
           print('new nodeid from peer: ' + peerNodeId.toString());
 
@@ -140,8 +145,7 @@ class Peer {
 
           //lets read the random bytes from them
           if (buffer.remaining() < IVbytelenHalf) {
-            print("not enough bytes for encryption... " +
-                buffer.remaining().toString());
+            print("not enough bytes for encryption... " + buffer.remaining().toString());
             disconnect();
             return;
           }
@@ -308,10 +312,7 @@ class Peer {
   }
 
   Uint8List getRandomFromUs() {
-    if (randomFromUs == null) {
-      //todo switch to secure random?
-      randomFromUs = Utils.randBytes(IVbytelenHalf);
-    }
+    randomFromUs ??= Utils.randBytes(IVbytelenHalf);
     return randomFromUs;
   }
 
@@ -380,8 +381,7 @@ class Peer {
     return true;
   }
 
-  Uint8List generateSharedSecret(
-      AsymmetricKeyPair localPair, ECPoint remotePublicPoint) {
+  Uint8List generateSharedSecret(AsymmetricKeyPair localPair, ECPoint remotePublicPoint) {
     var ss = remotePublicPoint * (localPair.privateKey as ECPrivateKey).d;
     return hex.decode(toHex(ss.x.toBigInteger()));
   }
@@ -391,6 +391,7 @@ class Peer {
     return (hex.length & 1 == 0) ? hex : '0$hex';
   }
 
+  @override
   bool operator ==(other) {
     Peer otherPeer = other as Peer;
 

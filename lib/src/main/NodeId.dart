@@ -18,16 +18,6 @@ class NodeId {
 
   NodeId.withNewKeyPair() {
     _keyPair = generateECKeys();
-    ECPrivateKey priv = _keyPair.privateKey;
-    BigInt i = priv.d;
-    String radixString = i.toRadixString(16);
-    print(radixString);
-    print(i.toString());
-    BigInt parse = BigInt.parse(radixString, radix: 16);
-    print(i.toString());
-    print(parse.toString());
-
-    ECPrivateKey ecPrivateKey = ECPrivateKey(parse, parameters);
   }
 
   String exportWithPrivate() {
