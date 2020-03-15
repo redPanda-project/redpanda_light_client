@@ -3,6 +3,7 @@ import 'dart:core';
 import 'dart:io';
 
 import 'package:redpanda_light_client/src/main/ByteBuffer.dart';
+import 'package:redpanda_light_client/src/main/Command.dart';
 import 'package:redpanda_light_client/src/main/KademliaId.dart';
 import 'package:redpanda_light_client/src/main/Peer.dart';
 import 'package:redpanda_light_client/src/main/Settings.dart';
@@ -32,17 +33,25 @@ class ConnectionService {
     peerlist = new List();
   }
 
-  void loop() {
+  Future<void> loop() async {
+    //todo we have to use the zone around each peer and not for the entire loop
+    runZoned<Future<void>>(() async {
+      loop2();
+    }, onError: (error, stackTrace) {
+      print(error);
+      print(stackTrace);
+    });
+  }
+
+  Future<void> loop2() async {
     if (peerlist.length < 3) {
       reseed();
     }
 
     for (Peer peer in peerlist) {
       if (peer.connecting || peer.connected) {
-        if (new DateTime.now().millisecondsSinceEpoch - peer.lastActionOnConnection > 1000 * 5) {
-          if (peer.socket != null) {
-            peer.socket.destroy();
-          }
+        if (new DateTime.now().millisecondsSinceEpoch - peer.lastActionOnConnection > 1000 * 15) {
+          peer.disconnect();
 
           for (Function setState in Utils.states) {
             setState(() {
@@ -55,6 +64,16 @@ class ConnectionService {
               peer.connected = false;
             });
           }
+        }
+
+        if (peer.connected && peer.isEncryptionActive) {
+          ByteBuffer byteBuffer = new ByteBuffer(1);
+          byteBuffer.writeByte(Command.PING);
+
+          byteBuffer.flip();
+
+          await peer.sendEncrypt(byteBuffer);
+          print('pinged peer...');
         }
 
         continue;
@@ -123,12 +142,14 @@ class ConnectionService {
 
     peer.lastActionOnConnection = new DateTime.now().millisecondsSinceEpoch;
 
-    await Socket.connect(peer.ip, peer.port).catchError(peer.onError).then((socket) {
+    Socket.connect(peer.ip, peer.port).catchError(peer.onError).then((socket) {
       if (socket == null) {
         peer.connecting = false;
 //        print('error connecting...');
         return;
       }
+
+      peer.reset();
 
       peer.socket = socket;
 
@@ -156,6 +177,7 @@ class ConnectionService {
       //      socket.add(59558);
       //      socket.flush();
       socket.listen(peer.ondata);
+
       //      socket.destroy();
     });
   }

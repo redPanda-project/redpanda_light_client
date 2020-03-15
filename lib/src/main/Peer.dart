@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data' hide ByteBuffer;
@@ -33,6 +34,15 @@ class Peer {
   Uint8List randomFromThem;
   Uint8List randomFromUs;
 
+  Uint8List sharedSecretSend;
+  Uint8List sharedSecretReceive;
+
+  Uint8List ivSend;
+  Uint8List ivReceive;
+
+  CTRStreamCipher ctrStreamCipherSend;
+  CTRStreamCipher ctrStreamCipherReceive;
+
   NodeId _nodeId;
   KademliaId _kademliaId;
 
@@ -52,6 +62,18 @@ class Peer {
 
   set port(int value) {
     _port = value;
+  }
+
+  void reset() {
+    connecting = false;
+    connected = false;
+    isEncryptionActive = false;
+    handshakeStatus = 0;
+    waitingForEncryption = false;
+    weSendOurRandom = false;
+
+    randomFromThem = null;
+    randomFromUs = null;
   }
 
   void ondata(Uint8List data) {
@@ -90,6 +112,29 @@ class Peer {
 //    print(byteDataReader.readUint(2));
 
     ByteBuffer buffer = ByteBuffer.fromBuffer(data.buffer);
+
+    if (isEncryptionActive && connected) {
+      print("received encrypted command...");
+
+      ByteBuffer decryptBuffer = decrypt(buffer);
+
+      int decryptedCommand = decryptBuffer.readByte();
+
+      if (decryptedCommand == Command.PING) {
+        print("received ping...");
+        ByteBuffer byteBuffer = new ByteBuffer(1);
+        byteBuffer.writeByte(Command.PONG);
+        byteBuffer.flip();
+
+        sendEncrypt(byteBuffer);
+        print('ponged peer...');
+      } else if (decryptedCommand == Command.PONG) {
+        lastActionOnConnection = new DateTime.now().millisecondsSinceEpoch;
+        print('received pong...');
+      }
+
+      return;
+    }
 
     if (!isEncryptionActive) {
       if (handshakeStatus == 0) {
@@ -167,7 +212,7 @@ class Peer {
         ByteBuffer byteBuffer = new ByteBuffer(1 + IVbytelenHalf);
         byteBuffer.writeByte(Command.ACTIVATE_ENCRYPTION);
         byteBuffer.writeList(getRandomFromUs());
-        socket.add(byteBuffer.buffer.asInt8List());
+        socket.add(byteBuffer.array());
 
         print("written bytes for ACTIVATE_ENCRYPTION");
 
@@ -194,7 +239,8 @@ class Peer {
 
         ByteBuffer byteBuffer = new ByteBuffer(1);
         byteBuffer.writeByte(Command.PING);
-        socket.add(byteBuffer.buffer.asInt8List());
+
+        byteBuffer.flip();
 
         sendEncrypt(byteBuffer);
       }
@@ -317,26 +363,90 @@ class Peer {
   }
 
   ByteBuffer decrypt(ByteBuffer buffer) {
-    //todo
+    Uint8List decBytes = ctrStreamCipherReceive.process(buffer.readBytes(buffer.remaining()));
+    return ByteBuffer.fromList(decBytes);
   }
 
-  void sendEncrypt(ByteBuffer buffer) {
-    //todo
+  Future<void> sendEncrypt(ByteBuffer buffer) async {
+    print('len bytes to send enc: ' + buffer.remaining().toString() + " cmd: " + buffer.array().toString());
+
+    Uint8List encBytes = ctrStreamCipherSend.process(buffer.array());
+
+    print('len bytes to send enc: ' + encBytes.length.toString());
+
+    print('enc cmd: ' + encBytes.toString());
+
+    socket.handleError((e) => {print(e.toString())});
+
+
+
+    socket.add(encBytes);
+
+
   }
 
   void calculateSharedSecret() {
-    //todo
+    print('calculateSharedSecret');
+
+    ECPublicKey publicKey = _nodeId.getKeyPair().publicKey;
+    Uint8List encoded = generateIntermediateSharedSecret(ConnectionService.nodeId.getKeyPair(), publicKey.Q);
+
+    print('intermediateSharedSecret: ' + Utils.hexEncode(encoded).toString());
+
+    ByteBuffer bytesForPrivateAESkeySend = ByteBuffer(32 + IVbytelen);
+    ByteBuffer bytesForPrivateAESkeyReceive = ByteBuffer(32 + IVbytelen);
+
+    bytesForPrivateAESkeySend.writeList(encoded);
+    bytesForPrivateAESkeyReceive.writeList(encoded);
+
+    bytesForPrivateAESkeySend.writeList(randomFromUs);
+    bytesForPrivateAESkeySend.writeList(randomFromThem);
+
+    bytesForPrivateAESkeyReceive.writeList(randomFromThem);
+    bytesForPrivateAESkeyReceive.writeList(randomFromUs);
+
+    sharedSecretSend = Utils.sha256(bytesForPrivateAESkeySend.array());
+    sharedSecretReceive = Utils.sha256(bytesForPrivateAESkeyReceive.array());
+
+    ByteBuffer bytesForIVsend = ByteBuffer(IVbytelen);
+    ByteBuffer bytesForIVreceive = ByteBuffer(IVbytelen);
+
+    bytesForIVsend.writeList(randomFromUs);
+    bytesForIVsend.writeList(randomFromThem);
+    bytesForIVreceive.writeList(randomFromThem);
+    bytesForIVreceive.writeList(randomFromUs);
+
+    ivSend = bytesForIVsend.array();
+    ivReceive = bytesForIVreceive.array();
   }
 
   void activateEncryption() {
     //todo
+
+    print('activateEncryption');
+
+    AESFastEngine aesSend = AESFastEngine();
+    ctrStreamCipherSend = CTRStreamCipher(aesSend);
+    ParametersWithIV parametersWithIVSend = ParametersWithIV(KeyParameter(sharedSecretSend), ivSend);
+    ctrStreamCipherSend.init(false, parametersWithIVSend);
+
+    print('activateEncryption Send succesful');
+
+    AESFastEngine aesReceive = AESFastEngine();
+    ctrStreamCipherReceive = CTRStreamCipher(aesReceive);
+    ParametersWithIV parametersWithIVReceive = ParametersWithIV(KeyParameter(sharedSecretReceive), ivReceive);
+    ctrStreamCipherReceive.init(false, parametersWithIVReceive);
+
+    print('activateEncryption Receive succesful');
+
+    isEncryptionActive = true;
   }
 
   bool hasPublicKey() {
     if (_nodeId == null || _nodeId.getKeyPair() == null) {
       return false;
     }
-    return _nodeId.getKeyPair().privateKey != null;
+    return _nodeId.getKeyPair().publicKey != null;
   }
 
   void sendPublicKeyToPeer() {
@@ -349,7 +459,7 @@ class Peer {
     byteBuffer.writeByte(Command.SEND_PUBLIC_KEY);
     byteBuffer.writeList(encoded);
 
-    socket.add(byteBuffer.buffer.asInt8List());
+    socket.add(byteBuffer.array());
   }
 
   bool parseHandshake(ByteBuffer buffer) {
@@ -381,7 +491,7 @@ class Peer {
     return true;
   }
 
-  Uint8List generateSharedSecret(AsymmetricKeyPair localPair, ECPoint remotePublicPoint) {
+  Uint8List generateIntermediateSharedSecret(AsymmetricKeyPair localPair, ECPoint remotePublicPoint) {
     var ss = remotePublicPoint * (localPair.privateKey as ECPrivateKey).d;
     return hex.decode(toHex(ss.x.toBigInteger()));
   }
@@ -411,7 +521,7 @@ class Peer {
 
     ByteBuffer byteBuffer = new ByteBuffer(1);
     byteBuffer.writeByte(Command.REQUEST_PUBLIC_KEY);
-    socket.add(byteBuffer.buffer.asInt8List());
+    socket.add(byteBuffer.array());
   }
 
   SecureRandom getSecureRandom() {
@@ -435,6 +545,13 @@ class Peer {
 
   void disconnect() {
     //todo maybe we need to do some more?
-    socket.close();
+
+    if (socket != null) {
+      socket.close();
+      socket.destroy();
+    }
+
+    // resets all variables such that the handshake can start from beginning
+    reset();
   }
 }

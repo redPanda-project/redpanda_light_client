@@ -195,4 +195,14 @@ class ByteBuffer {
 
     return ret;
   }
+
+  Uint8List array() {
+    return buffer.asUint8List();
+  }
+
+  void flip() {
+    //todo we have to set the limit?
+    _offset = 0;
+  }
+
 }
