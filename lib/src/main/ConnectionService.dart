@@ -6,6 +6,7 @@ import 'package:redpanda_light_client/src/main/ByteBuffer.dart';
 import 'package:redpanda_light_client/src/main/Command.dart';
 import 'package:redpanda_light_client/src/main/KademliaId.dart';
 import 'package:redpanda_light_client/src/main/Peer.dart';
+import 'package:redpanda_light_client/src/main/PeerList.dart';
 import 'package:redpanda_light_client/src/main/Settings.dart';
 import 'package:redpanda_light_client/src/main/Utils.dart';
 import 'package:redpanda_light_client/src/main/store/moor_database.dart';
@@ -23,14 +24,11 @@ class ConnectionService {
 
   static NodeId nodeId;
   static KademliaId kademliaId;
-  List<Peer> peerlist;
   static AppDatabase appDatabase;
   Timer loopTimer;
 
   ConnectionService(String pathToDatabase) {
     ConnectionService.pathToDatabase = pathToDatabase;
-
-    peerlist = new List();
   }
 
   Future<void> loop() async {
@@ -44,11 +42,11 @@ class ConnectionService {
   }
 
   Future<void> loop2() async {
-    if (peerlist.length < 3) {
+    if (PeerList.length() < 3) {
       reseed();
     }
 
-    for (Peer peer in peerlist) {
+    for (Peer peer in PeerList.getList()) {
       if (peer.connecting || peer.connected) {
         if (new DateTime.now().millisecondsSinceEpoch - peer.lastActionOnConnection > 1000 * 15) {
           peer.disconnect();
@@ -162,12 +160,13 @@ class ConnectionService {
       //      socket.add(utf8.encode("3kgV"));
       //      socket.write(utf8.encode("3kgV"));
 
-      ByteBuffer byteBuffer = new ByteBuffer(4 + 1 + KademliaId.ID_LENGTH_BYTES + 4);
+      ByteBuffer byteBuffer = new ByteBuffer(4 + 1 + 1 + KademliaId.ID_LENGTH_BYTES + 4);
       byteBuffer.writeList(Utils.MAGIC);
-      byteBuffer.writeByte(8);
+      byteBuffer.writeByte(8); //protocoll version code
+      byteBuffer.writeByte(129); //lightClient
       byteBuffer.writeList(kademliaId.bytes);
       print(byteBuffer.buffer.asUint8List());
-      byteBuffer.writeInt(59558);
+      byteBuffer.writeInt(0);
       print(byteBuffer.buffer.asUint8List());
 
       socket.add(byteBuffer.buffer.asInt8List());
@@ -204,13 +203,7 @@ class ConnectionService {
         return;
       }
       Peer peer = new Peer(ip, port);
-
-      if (!peerlist.contains(peer)) {
-//        print('peer not in list add');
-        peerlist.add(peer);
-      } else {
-//        print('peer in list do not add');
-      }
+      PeerList.add(peer);
     }
   }
 

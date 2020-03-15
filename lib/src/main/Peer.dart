@@ -12,10 +12,12 @@ import 'package:redpanda_light_client/src/main/Command.dart';
 import 'package:redpanda_light_client/src/main/ConnectionService.dart';
 import 'package:redpanda_light_client/src/main/KademliaId.dart';
 import 'package:redpanda_light_client/src/main/NodeId.dart';
+import 'package:redpanda_light_client/src/main/PeerList.dart';
 import 'package:redpanda_light_client/src/main/SentryLogger.dart';
 import 'package:redpanda_light_client/src/main/Utils.dart';
 
 import 'package:convert/convert.dart';
+import 'package:redpanda_light_client/src/main/commands/FBPeerList_im.redpanda.commands_generated.dart';
 
 class Peer {
   static final int IVbytelen = 16;
@@ -52,6 +54,8 @@ class Peer {
 
   Peer(this._ip, this._port);
 
+  Peer.withKademliaId(this._ip, this._port, this._kademliaId);
+
   String get ip => _ip;
 
   int get port => _port;
@@ -62,6 +66,10 @@ class Peer {
 
   set port(int value) {
     _port = value;
+  }
+
+  KademliaId getKademliaId() {
+    return _kademliaId;
   }
 
   void reset() {
@@ -81,8 +89,6 @@ class Peer {
 
     ByteDataReader byteDataReader = new ByteDataReader();
     byteDataReader.add(data);
-
-    print('on data: ' + data.toString());
 
     //todo check for is connected...
 
@@ -114,11 +120,12 @@ class Peer {
     ByteBuffer buffer = ByteBuffer.fromBuffer(data.buffer);
 
     if (isEncryptionActive && connected) {
-      print("received encrypted command...");
-
       ByteBuffer decryptBuffer = decrypt(buffer);
 
       int decryptedCommand = decryptBuffer.readByte();
+
+      print("received encrypted command: " + decryptedCommand.toString());
+      print('on data: ' + decryptBuffer.array().toString());
 
       if (decryptedCommand == Command.PING) {
         print("received ping...");
@@ -131,6 +138,32 @@ class Peer {
       } else if (decryptedCommand == Command.PONG) {
         lastActionOnConnection = new DateTime.now().millisecondsSinceEpoch;
         print('received pong...');
+      } else if (decryptedCommand == Command.SEND_PEERLIST) {
+        print('received peerlist...');
+
+        int toReadBytes = decryptBuffer.readInt();
+
+        List<int> readBytes = decryptBuffer.readBytes(toReadBytes);
+
+        FBPeerList fbPeerList = new FBPeerList(readBytes);
+
+        for (FBPeer fbPeer in fbPeerList.peers) {
+          if (fbPeer.nodeId == null) {
+            //lets skip peers without a kademliaId...
+            continue;
+          }
+
+          KademliaId kademliaId = KademliaId.fromBytes(Uint8List.fromList(fbPeer.nodeId));
+
+          if (kademliaId == ConnectionService.kademliaId) {
+            //lets not add ourselves...
+            continue;
+          }
+
+          print("peer in fblist: " + fbPeer.ip + " " + kademliaId.toString());
+
+          PeerList.add(new Peer.withKademliaId(fbPeer.ip, fbPeer.port, kademliaId));
+        }
       }
 
       return;
@@ -264,6 +297,15 @@ class Peer {
 
         //todo setup connection
         connected = true;
+
+        //lets request some peers
+
+        ByteBuffer byteBuffer = new ByteBuffer(1);
+        byteBuffer.writeByte(Command.REQUEST_PEERLIST);
+
+        byteBuffer.flip();
+
+        sendEncrypt(byteBuffer);
       }
     }
 
@@ -378,11 +420,7 @@ class Peer {
 
     socket.handleError((e) => {print(e.toString())});
 
-
-
     socket.add(encBytes);
-
-
   }
 
   void calculateSharedSecret() {
@@ -512,8 +550,8 @@ class Peer {
   }
 
   void onError(error) {
-//    print("error found: $error");
-    print("error found...");
+    print("error found: $error");
+//    print("error found... ");
   }
 
   void requestPublicKey() {
@@ -553,5 +591,14 @@ class Peer {
 
     // resets all variables such that the handshake can start from beginning
     reset();
+  }
+
+  int getIpPortHash() {
+    return generateIpPortHash(ip, port);
+  }
+
+  static int generateIpPortHash(String ip, int port) {
+    //ToDo: we need later a better method
+    return ip.hashCode + port;
   }
 }
