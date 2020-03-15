@@ -26,9 +26,11 @@ class ConnectionService {
   static KademliaId kademliaId;
   static AppDatabase appDatabase;
   Timer loopTimer;
+  static int myPort;
 
   ConnectionService(String pathToDatabase) {
     ConnectionService.pathToDatabase = pathToDatabase;
+    myPort = Utils.random.nextInt(3000) + 6000;
   }
 
   Future<void> loop() async {
@@ -38,6 +40,7 @@ class ConnectionService {
     }, onError: (error, stackTrace) {
       print(error);
       print(stackTrace);
+      ConnectionService.sentry.captureException(exception: error, stackTrace: stackTrace);
     });
   }
 
@@ -46,7 +49,16 @@ class ConnectionService {
       reseed();
     }
 
+    List<Peer> toRemove = [];
+
     for (Peer peer in PeerList.getList()) {
+      print('Peer: ${peer.getKademliaId()} retries: ${peer.restries} ');
+
+      if (peer.restries > 10) {
+        toRemove.add(peer);
+        continue;
+      }
+
       if (peer.connecting || peer.connected) {
         if (new DateTime.now().millisecondsSinceEpoch - peer.lastActionOnConnection > 1000 * 15) {
           peer.disconnect();
@@ -71,13 +83,17 @@ class ConnectionService {
           byteBuffer.flip();
 
           await peer.sendEncrypt(byteBuffer);
-          print('pinged peer...');
+//          print('pinged peer...');
         }
 
         continue;
       }
 
       connectTo(peer);
+    }
+
+    for (Peer peer in toRemove) {
+      PeerList.remove(peer);
     }
   }
 
@@ -139,6 +155,7 @@ class ConnectionService {
     }
 
     peer.lastActionOnConnection = new DateTime.now().millisecondsSinceEpoch;
+    peer.restries++;
 
     Socket.connect(peer.ip, peer.port).catchError(peer.onError).then((socket) {
       if (socket == null) {
@@ -166,7 +183,7 @@ class ConnectionService {
       byteBuffer.writeByte(129); //lightClient
       byteBuffer.writeList(kademliaId.bytes);
       print(byteBuffer.buffer.asUint8List());
-      byteBuffer.writeInt(0);
+      byteBuffer.writeInt(myPort); //port
       print(byteBuffer.buffer.asUint8List());
 
       socket.add(byteBuffer.buffer.asInt8List());

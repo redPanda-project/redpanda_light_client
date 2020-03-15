@@ -25,6 +25,7 @@ class Peer {
 
   String _ip;
   int _port;
+  int restries = 0;
 
   bool connecting = false;
   bool connected = false;
@@ -124,20 +125,20 @@ class Peer {
 
       int decryptedCommand = decryptBuffer.readByte();
 
-      print("received encrypted command: " + decryptedCommand.toString());
-      print('on data: ' + decryptBuffer.array().toString());
+//      print("received encrypted command: " + decryptedCommand.toString());
+//      print('on data: ' + decryptBuffer.array().toString());
 
       if (decryptedCommand == Command.PING) {
-        print("received ping...");
+//        print("received ping...");
         ByteBuffer byteBuffer = new ByteBuffer(1);
         byteBuffer.writeByte(Command.PONG);
         byteBuffer.flip();
 
         sendEncrypt(byteBuffer);
-        print('ponged peer...');
+//        print('ponged peer...');
       } else if (decryptedCommand == Command.PONG) {
         lastActionOnConnection = new DateTime.now().millisecondsSinceEpoch;
-        print('received pong...');
+//        print('received pong...');
       } else if (decryptedCommand == Command.SEND_PEERLIST) {
         print('received peerlist...');
 
@@ -297,6 +298,7 @@ class Peer {
 
         //todo setup connection
         connected = true;
+        restries = 0;
 
         //lets request some peers
 
@@ -410,13 +412,13 @@ class Peer {
   }
 
   Future<void> sendEncrypt(ByteBuffer buffer) async {
-    print('len bytes to send enc: ' + buffer.remaining().toString() + " cmd: " + buffer.array().toString());
+//    print('len bytes to send enc: ' + buffer.remaining().toString() + " cmd: " + buffer.array().toString());
 
     Uint8List encBytes = ctrStreamCipherSend.process(buffer.array());
 
-    print('len bytes to send enc: ' + encBytes.length.toString());
+//    print('len bytes to send enc: ' + encBytes.length.toString());
 
-    print('enc cmd: ' + encBytes.toString());
+//    print('enc cmd: ' + encBytes.toString());
 
     socket.handleError((e) => {print(e.toString())});
 
@@ -461,21 +463,21 @@ class Peer {
   void activateEncryption() {
     //todo
 
-    print('activateEncryption');
+//    print('activateEncryption');
 
     AESFastEngine aesSend = AESFastEngine();
     ctrStreamCipherSend = CTRStreamCipher(aesSend);
     ParametersWithIV parametersWithIVSend = ParametersWithIV(KeyParameter(sharedSecretSend), ivSend);
     ctrStreamCipherSend.init(false, parametersWithIVSend);
 
-    print('activateEncryption Send succesful');
+//    print('activateEncryption Send succesful');
 
     AESFastEngine aesReceive = AESFastEngine();
     ctrStreamCipherReceive = CTRStreamCipher(aesReceive);
     ParametersWithIV parametersWithIVReceive = ParametersWithIV(KeyParameter(sharedSecretReceive), ivReceive);
     ctrStreamCipherReceive.init(false, parametersWithIVReceive);
 
-    print('activateEncryption Receive succesful');
+//    print('activateEncryption Receive succesful');
 
     isEncryptionActive = true;
   }
@@ -509,6 +511,9 @@ class Peer {
 
     int version = buffer.readByte();
     print("version $version");
+
+    int lightClient = buffer.readByte();
+    print("lightclient code: $lightClient");
 
     Uint8List nonce = buffer.readBytes(20);
 //    print("server identity: " + HEX.encode(nonce).toUpperCase());
@@ -550,8 +555,8 @@ class Peer {
   }
 
   void onError(error) {
-    print("error found: $error");
-//    print("error found... ");
+//    print("error found: $error");
+    print("error found... " + error.toString());
   }
 
   void requestPublicKey() {
