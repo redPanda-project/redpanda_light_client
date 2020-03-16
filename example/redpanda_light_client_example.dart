@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:redpanda_light_client/export.dart';
 import 'dart:io';
 
@@ -9,7 +11,10 @@ void main() async {
    */
   await new Directory(dataFolderPath).create(recursive: true);
 
-  await RedPandaLightClient.init(dataFolderPath);
+  await RedPandaLightClient.init(dataFolderPath, 5500);
+
+  const oneSec = const Duration(seconds: 5);
+  new Timer(oneSec, () => RedPandaLightClient.shutdown());
 }
 
 //todo documentation of used licenses

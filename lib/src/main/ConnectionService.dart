@@ -28,9 +28,9 @@ class ConnectionService {
   Timer loopTimer;
   static int myPort;
 
-  ConnectionService(String pathToDatabase) {
+  ConnectionService(String pathToDatabase, int mPort) {
     ConnectionService.pathToDatabase = pathToDatabase;
-    myPort = Utils.random.nextInt(3000) + 6000;
+    myPort = mPort;
   }
 
   Future<void> loop() async {
