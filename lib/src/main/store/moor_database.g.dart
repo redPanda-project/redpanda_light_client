@@ -211,36 +211,42 @@ class $LocalSettingsTable extends LocalSettings
   }
 }
 
-class Channel extends DataClass implements Insertable<Channel> {
+class DBChannel extends DataClass implements Insertable<DBChannel> {
   final int id;
   final String name;
+  final Uint8List sharedSecret;
   final String lastMessage_text;
   final String lastMessage_user;
-  Channel(
+  DBChannel(
       {@required this.id,
       @required this.name,
-      @required this.lastMessage_text,
-      @required this.lastMessage_user});
-  factory Channel.fromData(Map<String, dynamic> data, GeneratedDatabase db,
+      @required this.sharedSecret,
+      this.lastMessage_text,
+      this.lastMessage_user});
+  factory DBChannel.fromData(Map<String, dynamic> data, GeneratedDatabase db,
       {String prefix}) {
     final effectivePrefix = prefix ?? '';
     final intType = db.typeSystem.forDartType<int>();
     final stringType = db.typeSystem.forDartType<String>();
-    return Channel(
+    final uint8ListType = db.typeSystem.forDartType<Uint8List>();
+    return DBChannel(
       id: intType.mapFromDatabaseResponse(data['${effectivePrefix}id']),
       name: stringType.mapFromDatabaseResponse(data['${effectivePrefix}name']),
+      sharedSecret: uint8ListType
+          .mapFromDatabaseResponse(data['${effectivePrefix}shared_secret']),
       lastMessage_text: stringType
           .mapFromDatabaseResponse(data['${effectivePrefix}last_message_text']),
       lastMessage_user: stringType
           .mapFromDatabaseResponse(data['${effectivePrefix}last_message_user']),
     );
   }
-  factory Channel.fromJson(Map<String, dynamic> json,
+  factory DBChannel.fromJson(Map<String, dynamic> json,
       {ValueSerializer serializer}) {
     serializer ??= moorRuntimeOptions.defaultSerializer;
-    return Channel(
+    return DBChannel(
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String>(json['name']),
+      sharedSecret: serializer.fromJson<Uint8List>(json['sharedSecret']),
       lastMessage_text: serializer.fromJson<String>(json['lastMessage_text']),
       lastMessage_user: serializer.fromJson<String>(json['lastMessage_user']),
     );
@@ -251,16 +257,20 @@ class Channel extends DataClass implements Insertable<Channel> {
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'name': serializer.toJson<String>(name),
+      'sharedSecret': serializer.toJson<Uint8List>(sharedSecret),
       'lastMessage_text': serializer.toJson<String>(lastMessage_text),
       'lastMessage_user': serializer.toJson<String>(lastMessage_user),
     };
   }
 
   @override
-  ChannelsCompanion createCompanion(bool nullToAbsent) {
-    return ChannelsCompanion(
+  DBChannelsCompanion createCompanion(bool nullToAbsent) {
+    return DBChannelsCompanion(
       id: id == null && nullToAbsent ? const Value.absent() : Value(id),
       name: name == null && nullToAbsent ? const Value.absent() : Value(name),
+      sharedSecret: sharedSecret == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sharedSecret),
       lastMessage_text: lastMessage_text == null && nullToAbsent
           ? const Value.absent()
           : Value(lastMessage_text),
@@ -270,22 +280,25 @@ class Channel extends DataClass implements Insertable<Channel> {
     );
   }
 
-  Channel copyWith(
+  DBChannel copyWith(
           {int id,
           String name,
+          Uint8List sharedSecret,
           String lastMessage_text,
           String lastMessage_user}) =>
-      Channel(
+      DBChannel(
         id: id ?? this.id,
         name: name ?? this.name,
+        sharedSecret: sharedSecret ?? this.sharedSecret,
         lastMessage_text: lastMessage_text ?? this.lastMessage_text,
         lastMessage_user: lastMessage_user ?? this.lastMessage_user,
       );
   @override
   String toString() {
-    return (StringBuffer('Channel(')
+    return (StringBuffer('DBChannel(')
           ..write('id: $id, ')
           ..write('name: $name, ')
+          ..write('sharedSecret: $sharedSecret, ')
           ..write('lastMessage_text: $lastMessage_text, ')
           ..write('lastMessage_user: $lastMessage_user')
           ..write(')'))
@@ -295,55 +308,63 @@ class Channel extends DataClass implements Insertable<Channel> {
   @override
   int get hashCode => $mrjf($mrjc(
       id.hashCode,
-      $mrjc(name.hashCode,
-          $mrjc(lastMessage_text.hashCode, lastMessage_user.hashCode))));
+      $mrjc(
+          name.hashCode,
+          $mrjc(sharedSecret.hashCode,
+              $mrjc(lastMessage_text.hashCode, lastMessage_user.hashCode)))));
   @override
   bool operator ==(dynamic other) =>
       identical(this, other) ||
-      (other is Channel &&
+      (other is DBChannel &&
           other.id == this.id &&
           other.name == this.name &&
+          other.sharedSecret == this.sharedSecret &&
           other.lastMessage_text == this.lastMessage_text &&
           other.lastMessage_user == this.lastMessage_user);
 }
 
-class ChannelsCompanion extends UpdateCompanion<Channel> {
+class DBChannelsCompanion extends UpdateCompanion<DBChannel> {
   final Value<int> id;
   final Value<String> name;
+  final Value<Uint8List> sharedSecret;
   final Value<String> lastMessage_text;
   final Value<String> lastMessage_user;
-  const ChannelsCompanion({
+  const DBChannelsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
+    this.sharedSecret = const Value.absent(),
     this.lastMessage_text = const Value.absent(),
     this.lastMessage_user = const Value.absent(),
   });
-  ChannelsCompanion.insert({
+  DBChannelsCompanion.insert({
     this.id = const Value.absent(),
     @required String name,
-    @required String lastMessage_text,
-    @required String lastMessage_user,
+    @required Uint8List sharedSecret,
+    this.lastMessage_text = const Value.absent(),
+    this.lastMessage_user = const Value.absent(),
   })  : name = Value(name),
-        lastMessage_text = Value(lastMessage_text),
-        lastMessage_user = Value(lastMessage_user);
-  ChannelsCompanion copyWith(
+        sharedSecret = Value(sharedSecret);
+  DBChannelsCompanion copyWith(
       {Value<int> id,
       Value<String> name,
+      Value<Uint8List> sharedSecret,
       Value<String> lastMessage_text,
       Value<String> lastMessage_user}) {
-    return ChannelsCompanion(
+    return DBChannelsCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
+      sharedSecret: sharedSecret ?? this.sharedSecret,
       lastMessage_text: lastMessage_text ?? this.lastMessage_text,
       lastMessage_user: lastMessage_user ?? this.lastMessage_user,
     );
   }
 }
 
-class $ChannelsTable extends Channels with TableInfo<$ChannelsTable, Channel> {
+class $DBChannelsTable extends DBChannels
+    with TableInfo<$DBChannelsTable, DBChannel> {
   final GeneratedDatabase _db;
   final String _alias;
-  $ChannelsTable(this._db, [this._alias]);
+  $DBChannelsTable(this._db, [this._alias]);
   final VerificationMeta _idMeta = const VerificationMeta('id');
   GeneratedIntColumn _id;
   @override
@@ -362,6 +383,20 @@ class $ChannelsTable extends Channels with TableInfo<$ChannelsTable, Channel> {
         minTextLength: 3, maxTextLength: 32);
   }
 
+  final VerificationMeta _sharedSecretMeta =
+      const VerificationMeta('sharedSecret');
+  GeneratedBlobColumn _sharedSecret;
+  @override
+  GeneratedBlobColumn get sharedSecret =>
+      _sharedSecret ??= _constructSharedSecret();
+  GeneratedBlobColumn _constructSharedSecret() {
+    return GeneratedBlobColumn(
+      'shared_secret',
+      $tableName,
+      false,
+    );
+  }
+
   final VerificationMeta _lastMessage_textMeta =
       const VerificationMeta('lastMessage_text');
   GeneratedTextColumn _lastMessage_text;
@@ -372,7 +407,7 @@ class $ChannelsTable extends Channels with TableInfo<$ChannelsTable, Channel> {
     return GeneratedTextColumn(
       'last_message_text',
       $tableName,
-      false,
+      true,
     );
   }
 
@@ -386,21 +421,21 @@ class $ChannelsTable extends Channels with TableInfo<$ChannelsTable, Channel> {
     return GeneratedTextColumn(
       'last_message_user',
       $tableName,
-      false,
+      true,
     );
   }
 
   @override
   List<GeneratedColumn> get $columns =>
-      [id, name, lastMessage_text, lastMessage_user];
+      [id, name, sharedSecret, lastMessage_text, lastMessage_user];
   @override
-  $ChannelsTable get asDslTable => this;
+  $DBChannelsTable get asDslTable => this;
   @override
-  String get $tableName => _alias ?? 'channels';
+  String get $tableName => _alias ?? 'd_b_channels';
   @override
-  final String actualTableName = 'channels';
+  final String actualTableName = 'd_b_channels';
   @override
-  VerificationContext validateIntegrity(ChannelsCompanion d,
+  VerificationContext validateIntegrity(DBChannelsCompanion d,
       {bool isInserting = false}) {
     final context = VerificationContext();
     if (d.id.present) {
@@ -412,21 +447,25 @@ class $ChannelsTable extends Channels with TableInfo<$ChannelsTable, Channel> {
     } else if (isInserting) {
       context.missing(_nameMeta);
     }
+    if (d.sharedSecret.present) {
+      context.handle(
+          _sharedSecretMeta,
+          sharedSecret.isAcceptableValue(
+              d.sharedSecret.value, _sharedSecretMeta));
+    } else if (isInserting) {
+      context.missing(_sharedSecretMeta);
+    }
     if (d.lastMessage_text.present) {
       context.handle(
           _lastMessage_textMeta,
           lastMessage_text.isAcceptableValue(
               d.lastMessage_text.value, _lastMessage_textMeta));
-    } else if (isInserting) {
-      context.missing(_lastMessage_textMeta);
     }
     if (d.lastMessage_user.present) {
       context.handle(
           _lastMessage_userMeta,
           lastMessage_user.isAcceptableValue(
               d.lastMessage_user.value, _lastMessage_userMeta));
-    } else if (isInserting) {
-      context.missing(_lastMessage_userMeta);
     }
     return context;
   }
@@ -434,19 +473,23 @@ class $ChannelsTable extends Channels with TableInfo<$ChannelsTable, Channel> {
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  Channel map(Map<String, dynamic> data, {String tablePrefix}) {
+  DBChannel map(Map<String, dynamic> data, {String tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : null;
-    return Channel.fromData(data, _db, prefix: effectivePrefix);
+    return DBChannel.fromData(data, _db, prefix: effectivePrefix);
   }
 
   @override
-  Map<String, Variable> entityToSql(ChannelsCompanion d) {
+  Map<String, Variable> entityToSql(DBChannelsCompanion d) {
     final map = <String, Variable>{};
     if (d.id.present) {
       map['id'] = Variable<int, IntType>(d.id.value);
     }
     if (d.name.present) {
       map['name'] = Variable<String, StringType>(d.name.value);
+    }
+    if (d.sharedSecret.present) {
+      map['shared_secret'] =
+          Variable<Uint8List, BlobType>(d.sharedSecret.value);
     }
     if (d.lastMessage_text.present) {
       map['last_message_text'] =
@@ -460,8 +503,8 @@ class $ChannelsTable extends Channels with TableInfo<$ChannelsTable, Channel> {
   }
 
   @override
-  $ChannelsTable createAlias(String alias) {
-    return $ChannelsTable(_db, alias);
+  $DBChannelsTable createAlias(String alias) {
+    return $DBChannelsTable(_db, alias);
   }
 }
 
@@ -470,10 +513,11 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   $LocalSettingsTable _localSettings;
   $LocalSettingsTable get localSettings =>
       _localSettings ??= $LocalSettingsTable(this);
-  $ChannelsTable _channels;
-  $ChannelsTable get channels => _channels ??= $ChannelsTable(this);
+  $DBChannelsTable _dBChannels;
+  $DBChannelsTable get dBChannels => _dBChannels ??= $DBChannelsTable(this);
   @override
   Iterable<TableInfo> get allTables => allSchemaEntities.whereType<TableInfo>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [localSettings, channels];
+  List<DatabaseSchemaEntity> get allSchemaEntities =>
+      [localSettings, dBChannels];
 }

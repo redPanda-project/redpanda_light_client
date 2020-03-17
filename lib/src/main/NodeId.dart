@@ -8,8 +8,9 @@ class NodeId {
   static final int PUBLIC_KEYLEN_LONG = 92;
   static final int PUBLIC_KEYLEN = 65;
 
-  static final ECDomainParameters parameters =
-      ECDomainParameters("brainpoolp256r1");
+  static Padding padding = new Padding("PKCS7");
+
+  static final ECDomainParameters parameters = ECDomainParameters("brainpoolp256r1");
 
   AsymmetricKeyPair _keyPair;
   KademliaId _kademliaId;
@@ -60,8 +61,7 @@ class NodeId {
   }
 
   static KademliaId fromPublicKey(ECPublicKey key) {
-    return KademliaId.fromFirstBytes(
-        Utils.sha256(NodeId.exportPublicFromKey(key)));
+    return KademliaId.fromFirstBytes(Utils.sha256(NodeId.exportPublicFromKey(key)));
   }
 
   static AsymmetricKeyPair generateECKeys() {
@@ -88,15 +88,14 @@ class NodeId {
     return ECPublicKey(Q, parameters);
   }
 
+
+
   /**
    * Equals operator checks for same bytes for the KademliaId.
    */
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is NodeId &&
-          runtimeType == other.runtimeType &&
-          _kademliaId == other._kademliaId;
+      identical(this, other) || other is NodeId && runtimeType == other.runtimeType && _kademliaId == other._kademliaId;
 
   @override
   int get hashCode => _kademliaId.hashCode;

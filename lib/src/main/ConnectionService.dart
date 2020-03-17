@@ -127,9 +127,7 @@ class ConnectionService {
     }
 
     print('test insert new channel');
-    ChannelsCompanion channelsCompanion =
-        ChannelsCompanion.insert(name: "Title1", lastMessage_text: "last msg", lastMessage_user: "james");
-    await appDatabase.insertChannel(channelsCompanion);
+    await appDatabase.createNewChannel("Title1");
 
     print('My NodeId: ' + kademliaId.toString());
 
