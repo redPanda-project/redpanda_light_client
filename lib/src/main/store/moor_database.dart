@@ -5,6 +5,7 @@ import 'package:moor_ffi/moor_ffi.dart';
 import 'package:path/path.dart' as p;
 import 'package:redpanda_light_client/src/main/Channel.dart';
 import 'package:redpanda_light_client/src/main/ConnectionService.dart';
+import 'package:redpanda_light_client/src/main/NodeId.dart';
 import 'package:redpanda_light_client/src/main/Utils.dart';
 import 'package:redpanda_light_client/src/main/store/DBChannels.dart';
 
@@ -21,7 +22,7 @@ part 'moor_database.g.dart';
 class LocalSettings extends Table {
   IntColumn get id => integer().autoIncrement()();
 
-  TextColumn get privateKey => text()();
+  BlobColumn get privateKey => blob()();
 
   BlobColumn get kademliaId => blob()();
 }
@@ -36,7 +37,7 @@ class AppDatabase extends _$AppDatabase {
   // you should bump this number whenever you change or add a table definition.
   // Migrations are covered below.
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 10;
 
   Future<LocalSetting> get getLocalSettings => select(localSettings).getSingle();
 
@@ -73,24 +74,29 @@ class AppDatabase extends _$AppDatabase {
   }
 
   /**
-   * Returns the id of the new channel in db, uses only the channel name for insert and generates a new sharedSecret.
+   * Returns the id of the new channel in db, uses only the channel name for insert and generates a new sharedSecret
+   * and private key for the NodeId.
    */
   Future<int> createNewChannel(String name) async {
-    DBChannelsCompanion entry = DBChannelsCompanion.insert(name: name, sharedSecret: Utils.randBytes(32));
+    var nodeId = new NodeId.withNewKeyPair();
+
+    DBChannelsCompanion entry =
+        DBChannelsCompanion.insert(name: name, sharedSecret: Utils.randBytes(32), nodeId: nodeId.exportWithPrivate());
+    print("insert channel");
     return into(dBChannels).insert(entry);
   }
 
   Future<int> removeChannel(int id) async {
-    return (delete(dBChannels)
-      ..where((tbl) => tbl.id.equals(id))).go();
+    return (delete(dBChannels)..where((tbl) => tbl.id.equals(id))).go();
   }
 
   Future<int> renameChannel(int id, String newname) async {
-    return (update(dBChannels)
-      ..where((tbl) => tbl.id.equals(id))).write(DBChannelsCompanion(name: Value(newname)));
+    return (update(dBChannels)..where((tbl) => tbl.id.equals(id))).write(DBChannelsCompanion(name: Value(newname)));
   }
 
-  Future<DBChannel> get getRandomDBChannel => select(dBChannels).getSingle();
+  Future<List<DBChannel>> getAllChannels() {
+   return select(dBChannels).get();
+  }
 }
 
 LazyDatabase _openConnection() {

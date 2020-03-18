@@ -22,25 +22,35 @@ class NodeId {
     _keyPair = generateECKeys();
   }
 
-  String exportWithPrivate() {
+  /**
+   * Exports the private point d of the curve.
+   */
+  Uint8List exportWithPrivate() {
     ECPrivateKey priv = _keyPair.privateKey;
-    String privString = priv.d.toRadixString(16);
-    String pubString = Utils.base58encode(exportPublic());
-    return privString + "," + pubString;
+    ECPublicKey pub = _keyPair.publicKey;
+
+    var asn1Object = ASN1Sequence();
+    asn1Object.add(ASN1Integer(priv.d));
+
+    // GET the BER Stream
+    var signatureBytes = asn1Object.encodedBytes;
+    return signatureBytes;
   }
 
-  NodeId.importWithPrivate(String string) {
-    List<String> split = string.split(",");
+  /**
+   * Imports the private key as asn1 encoded point d. The public key is computed from the private key.
+   */
+  NodeId.importWithPrivate(Uint8List bytes) {
+    var asn1parser = ASN1Parser(bytes);
+    ASN1Sequence asnObject = asn1parser.nextObject();
 
-    String privString = split[0];
-    String pubString = split[1];
+    ASN1Integer asn1d = asnObject.elements[0] as ASN1Integer;
+    BigInt d = asn1d.valueAsBigInteger;
 
-    BigInt parse = BigInt.parse(privString, radix: 16);
-    ECPrivateKey privateKey = ECPrivateKey(parse, parameters);
+    //code to generate public Q is from ec_key_generator.dart:45
+    var Q = parameters.G * d;
 
-    ECPublicKey publicKey = bytesToPublicKey(Utils.base58decode(pubString));
-
-    _keyPair = new AsymmetricKeyPair(publicKey, privateKey);
+    _keyPair = new AsymmetricKeyPair(new ECPublicKey(Q, parameters), new ECPrivateKey(d, parameters));
   }
 
   Uint8List exportPublic() {

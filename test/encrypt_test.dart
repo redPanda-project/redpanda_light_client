@@ -101,14 +101,14 @@ void main() {
 
       var appDatabase = new AppDatabase();
 
-      var getRandomChannel = await appDatabase.getRandomDBChannel;
+      var allChannels = await appDatabase.getAllChannels();
 
-      if (getRandomChannel == null) {
+      if (allChannels.length == 0) {
         await appDatabase.createNewChannel("Name 1");
-        getRandomChannel = await appDatabase.getRandomDBChannel;
+        allChannels = await appDatabase.getAllChannels();
       }
 
-      var channel = new Channel(getRandomChannel);
+      var channel = new Channel(allChannels[0]);
 
       print(channel);
 

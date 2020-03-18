@@ -18,6 +18,15 @@ void main() {
       expect(Utils.listsAreEqual(nodeIdonlyPublic.exportPublic(), bytes), true);
     });
 
+    test('Test export and import private', () {
+      NodeId nodeId = NodeId.withNewKeyPair();
+      Uint8List bytes = nodeId.exportWithPrivate();
+
+      NodeId nodeIdImported = NodeId.importWithPrivate(bytes);
+
+      expect(Utils.listsAreEqual(nodeIdImported.exportWithPrivate(), bytes), true);
+    });
+
     test('Test signature and verify', () {
       NodeId nodeId = NodeId.withNewKeyPair();
 

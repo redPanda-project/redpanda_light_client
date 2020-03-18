@@ -9,7 +9,7 @@ part of 'moor_database.dart';
 // ignore_for_file: unnecessary_brace_in_string_interps, unnecessary_this
 class LocalSetting extends DataClass implements Insertable<LocalSetting> {
   final int id;
-  final String privateKey;
+  final Uint8List privateKey;
   final Uint8List kademliaId;
   LocalSetting(
       {@required this.id,
@@ -19,11 +19,10 @@ class LocalSetting extends DataClass implements Insertable<LocalSetting> {
       {String prefix}) {
     final effectivePrefix = prefix ?? '';
     final intType = db.typeSystem.forDartType<int>();
-    final stringType = db.typeSystem.forDartType<String>();
     final uint8ListType = db.typeSystem.forDartType<Uint8List>();
     return LocalSetting(
       id: intType.mapFromDatabaseResponse(data['${effectivePrefix}id']),
-      privateKey: stringType
+      privateKey: uint8ListType
           .mapFromDatabaseResponse(data['${effectivePrefix}private_key']),
       kademliaId: uint8ListType
           .mapFromDatabaseResponse(data['${effectivePrefix}kademlia_id']),
@@ -34,7 +33,7 @@ class LocalSetting extends DataClass implements Insertable<LocalSetting> {
     serializer ??= moorRuntimeOptions.defaultSerializer;
     return LocalSetting(
       id: serializer.fromJson<int>(json['id']),
-      privateKey: serializer.fromJson<String>(json['privateKey']),
+      privateKey: serializer.fromJson<Uint8List>(json['privateKey']),
       kademliaId: serializer.fromJson<Uint8List>(json['kademliaId']),
     );
   }
@@ -43,7 +42,7 @@ class LocalSetting extends DataClass implements Insertable<LocalSetting> {
     serializer ??= moorRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
-      'privateKey': serializer.toJson<String>(privateKey),
+      'privateKey': serializer.toJson<Uint8List>(privateKey),
       'kademliaId': serializer.toJson<Uint8List>(kademliaId),
     };
   }
@@ -61,7 +60,7 @@ class LocalSetting extends DataClass implements Insertable<LocalSetting> {
     );
   }
 
-  LocalSetting copyWith({int id, String privateKey, Uint8List kademliaId}) =>
+  LocalSetting copyWith({int id, Uint8List privateKey, Uint8List kademliaId}) =>
       LocalSetting(
         id: id ?? this.id,
         privateKey: privateKey ?? this.privateKey,
@@ -91,7 +90,7 @@ class LocalSetting extends DataClass implements Insertable<LocalSetting> {
 
 class LocalSettingsCompanion extends UpdateCompanion<LocalSetting> {
   final Value<int> id;
-  final Value<String> privateKey;
+  final Value<Uint8List> privateKey;
   final Value<Uint8List> kademliaId;
   const LocalSettingsCompanion({
     this.id = const Value.absent(),
@@ -100,12 +99,14 @@ class LocalSettingsCompanion extends UpdateCompanion<LocalSetting> {
   });
   LocalSettingsCompanion.insert({
     this.id = const Value.absent(),
-    @required String privateKey,
+    @required Uint8List privateKey,
     @required Uint8List kademliaId,
   })  : privateKey = Value(privateKey),
         kademliaId = Value(kademliaId);
   LocalSettingsCompanion copyWith(
-      {Value<int> id, Value<String> privateKey, Value<Uint8List> kademliaId}) {
+      {Value<int> id,
+      Value<Uint8List> privateKey,
+      Value<Uint8List> kademliaId}) {
     return LocalSettingsCompanion(
       id: id ?? this.id,
       privateKey: privateKey ?? this.privateKey,
@@ -129,11 +130,11 @@ class $LocalSettingsTable extends LocalSettings
   }
 
   final VerificationMeta _privateKeyMeta = const VerificationMeta('privateKey');
-  GeneratedTextColumn _privateKey;
+  GeneratedBlobColumn _privateKey;
   @override
-  GeneratedTextColumn get privateKey => _privateKey ??= _constructPrivateKey();
-  GeneratedTextColumn _constructPrivateKey() {
-    return GeneratedTextColumn(
+  GeneratedBlobColumn get privateKey => _privateKey ??= _constructPrivateKey();
+  GeneratedBlobColumn _constructPrivateKey() {
+    return GeneratedBlobColumn(
       'private_key',
       $tableName,
       false,
@@ -197,7 +198,7 @@ class $LocalSettingsTable extends LocalSettings
       map['id'] = Variable<int, IntType>(d.id.value);
     }
     if (d.privateKey.present) {
-      map['private_key'] = Variable<String, StringType>(d.privateKey.value);
+      map['private_key'] = Variable<Uint8List, BlobType>(d.privateKey.value);
     }
     if (d.kademliaId.present) {
       map['kademlia_id'] = Variable<Uint8List, BlobType>(d.kademliaId.value);
@@ -215,12 +216,14 @@ class DBChannel extends DataClass implements Insertable<DBChannel> {
   final int id;
   final String name;
   final Uint8List sharedSecret;
+  final Uint8List nodeId;
   final String lastMessage_text;
   final String lastMessage_user;
   DBChannel(
       {@required this.id,
       @required this.name,
       @required this.sharedSecret,
+      @required this.nodeId,
       this.lastMessage_text,
       this.lastMessage_user});
   factory DBChannel.fromData(Map<String, dynamic> data, GeneratedDatabase db,
@@ -234,6 +237,8 @@ class DBChannel extends DataClass implements Insertable<DBChannel> {
       name: stringType.mapFromDatabaseResponse(data['${effectivePrefix}name']),
       sharedSecret: uint8ListType
           .mapFromDatabaseResponse(data['${effectivePrefix}shared_secret']),
+      nodeId: uint8ListType
+          .mapFromDatabaseResponse(data['${effectivePrefix}node_id']),
       lastMessage_text: stringType
           .mapFromDatabaseResponse(data['${effectivePrefix}last_message_text']),
       lastMessage_user: stringType
@@ -247,6 +252,7 @@ class DBChannel extends DataClass implements Insertable<DBChannel> {
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       sharedSecret: serializer.fromJson<Uint8List>(json['sharedSecret']),
+      nodeId: serializer.fromJson<Uint8List>(json['nodeId']),
       lastMessage_text: serializer.fromJson<String>(json['lastMessage_text']),
       lastMessage_user: serializer.fromJson<String>(json['lastMessage_user']),
     );
@@ -258,6 +264,7 @@ class DBChannel extends DataClass implements Insertable<DBChannel> {
       'id': serializer.toJson<int>(id),
       'name': serializer.toJson<String>(name),
       'sharedSecret': serializer.toJson<Uint8List>(sharedSecret),
+      'nodeId': serializer.toJson<Uint8List>(nodeId),
       'lastMessage_text': serializer.toJson<String>(lastMessage_text),
       'lastMessage_user': serializer.toJson<String>(lastMessage_user),
     };
@@ -271,6 +278,8 @@ class DBChannel extends DataClass implements Insertable<DBChannel> {
       sharedSecret: sharedSecret == null && nullToAbsent
           ? const Value.absent()
           : Value(sharedSecret),
+      nodeId:
+          nodeId == null && nullToAbsent ? const Value.absent() : Value(nodeId),
       lastMessage_text: lastMessage_text == null && nullToAbsent
           ? const Value.absent()
           : Value(lastMessage_text),
@@ -284,12 +293,14 @@ class DBChannel extends DataClass implements Insertable<DBChannel> {
           {int id,
           String name,
           Uint8List sharedSecret,
+          Uint8List nodeId,
           String lastMessage_text,
           String lastMessage_user}) =>
       DBChannel(
         id: id ?? this.id,
         name: name ?? this.name,
         sharedSecret: sharedSecret ?? this.sharedSecret,
+        nodeId: nodeId ?? this.nodeId,
         lastMessage_text: lastMessage_text ?? this.lastMessage_text,
         lastMessage_user: lastMessage_user ?? this.lastMessage_user,
       );
@@ -299,6 +310,7 @@ class DBChannel extends DataClass implements Insertable<DBChannel> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('sharedSecret: $sharedSecret, ')
+          ..write('nodeId: $nodeId, ')
           ..write('lastMessage_text: $lastMessage_text, ')
           ..write('lastMessage_user: $lastMessage_user')
           ..write(')'))
@@ -310,8 +322,12 @@ class DBChannel extends DataClass implements Insertable<DBChannel> {
       id.hashCode,
       $mrjc(
           name.hashCode,
-          $mrjc(sharedSecret.hashCode,
-              $mrjc(lastMessage_text.hashCode, lastMessage_user.hashCode)))));
+          $mrjc(
+              sharedSecret.hashCode,
+              $mrjc(
+                  nodeId.hashCode,
+                  $mrjc(lastMessage_text.hashCode,
+                      lastMessage_user.hashCode))))));
   @override
   bool operator ==(dynamic other) =>
       identical(this, other) ||
@@ -319,6 +335,7 @@ class DBChannel extends DataClass implements Insertable<DBChannel> {
           other.id == this.id &&
           other.name == this.name &&
           other.sharedSecret == this.sharedSecret &&
+          other.nodeId == this.nodeId &&
           other.lastMessage_text == this.lastMessage_text &&
           other.lastMessage_user == this.lastMessage_user);
 }
@@ -327,12 +344,14 @@ class DBChannelsCompanion extends UpdateCompanion<DBChannel> {
   final Value<int> id;
   final Value<String> name;
   final Value<Uint8List> sharedSecret;
+  final Value<Uint8List> nodeId;
   final Value<String> lastMessage_text;
   final Value<String> lastMessage_user;
   const DBChannelsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.sharedSecret = const Value.absent(),
+    this.nodeId = const Value.absent(),
     this.lastMessage_text = const Value.absent(),
     this.lastMessage_user = const Value.absent(),
   });
@@ -340,20 +359,24 @@ class DBChannelsCompanion extends UpdateCompanion<DBChannel> {
     this.id = const Value.absent(),
     @required String name,
     @required Uint8List sharedSecret,
+    @required Uint8List nodeId,
     this.lastMessage_text = const Value.absent(),
     this.lastMessage_user = const Value.absent(),
   })  : name = Value(name),
-        sharedSecret = Value(sharedSecret);
+        sharedSecret = Value(sharedSecret),
+        nodeId = Value(nodeId);
   DBChannelsCompanion copyWith(
       {Value<int> id,
       Value<String> name,
       Value<Uint8List> sharedSecret,
+      Value<Uint8List> nodeId,
       Value<String> lastMessage_text,
       Value<String> lastMessage_user}) {
     return DBChannelsCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
       sharedSecret: sharedSecret ?? this.sharedSecret,
+      nodeId: nodeId ?? this.nodeId,
       lastMessage_text: lastMessage_text ?? this.lastMessage_text,
       lastMessage_user: lastMessage_user ?? this.lastMessage_user,
     );
@@ -397,6 +420,18 @@ class $DBChannelsTable extends DBChannels
     );
   }
 
+  final VerificationMeta _nodeIdMeta = const VerificationMeta('nodeId');
+  GeneratedBlobColumn _nodeId;
+  @override
+  GeneratedBlobColumn get nodeId => _nodeId ??= _constructNodeId();
+  GeneratedBlobColumn _constructNodeId() {
+    return GeneratedBlobColumn(
+      'node_id',
+      $tableName,
+      false,
+    );
+  }
+
   final VerificationMeta _lastMessage_textMeta =
       const VerificationMeta('lastMessage_text');
   GeneratedTextColumn _lastMessage_text;
@@ -427,7 +462,7 @@ class $DBChannelsTable extends DBChannels
 
   @override
   List<GeneratedColumn> get $columns =>
-      [id, name, sharedSecret, lastMessage_text, lastMessage_user];
+      [id, name, sharedSecret, nodeId, lastMessage_text, lastMessage_user];
   @override
   $DBChannelsTable get asDslTable => this;
   @override
@@ -454,6 +489,12 @@ class $DBChannelsTable extends DBChannels
               d.sharedSecret.value, _sharedSecretMeta));
     } else if (isInserting) {
       context.missing(_sharedSecretMeta);
+    }
+    if (d.nodeId.present) {
+      context.handle(
+          _nodeIdMeta, nodeId.isAcceptableValue(d.nodeId.value, _nodeIdMeta));
+    } else if (isInserting) {
+      context.missing(_nodeIdMeta);
     }
     if (d.lastMessage_text.present) {
       context.handle(
@@ -490,6 +531,9 @@ class $DBChannelsTable extends DBChannels
     if (d.sharedSecret.present) {
       map['shared_secret'] =
           Variable<Uint8List, BlobType>(d.sharedSecret.value);
+    }
+    if (d.nodeId.present) {
+      map['node_id'] = Variable<Uint8List, BlobType>(d.nodeId.value);
     }
     if (d.lastMessage_text.present) {
       map['last_message_text'] =

@@ -11,6 +11,8 @@ class DBChannels extends Table {
 
   BlobColumn get sharedSecret => blob()();
 
+  BlobColumn get nodeId => blob()();
+
   TextColumn get lastMessage_text => text().nullable().withLength()();
 
   TextColumn get lastMessage_user => text().nullable().withLength()();

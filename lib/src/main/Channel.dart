@@ -9,6 +9,7 @@ import 'package:redpanda_light_client/src/main/Utils.dart';
 class Channel {
   DBChannel _dbChannel;
   String _name;
+  NodeId _nodeId;
 
   Channel(this._dbChannel) {
     _name = _dbChannel.name;
@@ -16,6 +17,14 @@ class Channel {
 
   Channel.newWithName(String name) {
     _name = name;
+  }
+
+  NodeId getNodeId() {
+    if (_nodeId == null)  {
+      _nodeId = NodeId.importWithPrivate(_dbChannel.nodeId);
+    }
+
+    return _nodeId;
   }
 
   /**
