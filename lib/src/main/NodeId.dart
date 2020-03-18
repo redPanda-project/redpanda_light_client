@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:asn1lib/asn1lib.dart';
 import 'package:pointycastle/export.dart';
 import 'package:redpanda_light_client/src/main/KademliaId.dart';
 import 'package:redpanda_light_client/src/main/Utils.dart';
@@ -88,7 +89,45 @@ class NodeId {
     return ECPublicKey(Q, parameters);
   }
 
+  /**
+   * Using SHA-256/DET-ECDSA, the signature is asn1 encoded with BigInt r and BigInt s.
+   * Info: https://crypto.stackexchange.com/questions/1795/how-can-i-convert-a-der-ecdsa-signature-to-asn-1
+   */
+  Uint8List sign(Uint8List message) {
+    final signer = Signer("SHA-256/DET-ECDSA");
+    signer.init(
+      true,
+      PrivateKeyParameter(getKeyPair().privateKey),
+    );
+    final ECSignature sig = signer.generateSignature(message);
 
+    var asn1Object = ASN1Sequence();
+    asn1Object.add(ASN1Integer(sig.r));
+    asn1Object.add(ASN1Integer(sig.s));
+
+    // GET the BER Stream
+    var signatureBytes = asn1Object.encodedBytes;
+    return signatureBytes;
+  }
+
+  /**
+   * Using SHA-256/DET-ECDSA, the signature has to be in asn1 format with BigInt r and BigInt s.
+   * Info: https://crypto.stackexchange.com/questions/1795/how-can-i-convert-a-der-ecdsa-signature-to-asn-1
+   */
+  bool verify(Uint8List message, Uint8List signature) {
+    var asn1parser = ASN1Parser(signature);
+    ASN1Sequence asnObject = asn1parser.nextObject();
+
+    ASN1Integer r = asnObject.elements[0] as ASN1Integer;
+    ASN1Integer s = asnObject.elements[1] as ASN1Integer;
+    var ecSignatureFromBytes = ECSignature(r.valueAsBigInteger, s.valueAsBigInteger);
+
+    final verifier = Signer("SHA-256/DET-ECDSA");
+    verifier.init(false, PublicKeyParameter(getKeyPair().publicKey));
+
+    final isValid = verifier.verifySignature(message, ecSignatureFromBytes);
+    return isValid;
+  }
 
   /**
    * Equals operator checks for same bytes for the KademliaId.
