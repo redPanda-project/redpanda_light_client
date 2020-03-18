@@ -69,4 +69,8 @@ class Utils {
     secureRandom.seed(new KeyParameter(new Uint8List.fromList(seeds)));
     return secureRandom;
   }
+
+  static int getCurrentTimeMillis() {
+    return new DateTime.now().millisecondsSinceEpoch;
+  }
 }

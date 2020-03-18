@@ -21,6 +21,7 @@ dependencies:
   #path_provider: ^1.6.5
   path: ^1.6.4
   asn1lib: ^0.6.4
+  date_format:
 
 dev_dependencies:
   pedantic: ^1.8.0

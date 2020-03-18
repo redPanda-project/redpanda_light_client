@@ -37,7 +37,7 @@ class AppDatabase extends _$AppDatabase {
   // you should bump this number whenever you change or add a table definition.
   // Migrations are covered below.
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 12;
 
   Future<LocalSetting> get getLocalSettings => select(localSettings).getSingle();
 
@@ -94,8 +94,17 @@ class AppDatabase extends _$AppDatabase {
     return (update(dBChannels)..where((tbl) => tbl.id.equals(id))).write(DBChannelsCompanion(name: Value(newname)));
   }
 
+  Future<int> updateChannelData(int id, String channelDataString) async {
+    return (update(dBChannels)..where((tbl) => tbl.id.equals(id)))
+        .write(DBChannelsCompanion(channelData: Value(channelDataString)));
+  }
+
+  Future<DBChannel> getChannelById(int id) {
+    return (select(dBChannels)..where((tbl) => tbl.id.equals(id))).getSingle();
+  }
+
   Future<List<DBChannel>> getAllChannels() {
-   return select(dBChannels).get();
+    return select(dBChannels).get();
   }
 }
 

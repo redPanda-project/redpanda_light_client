@@ -217,6 +217,7 @@ class DBChannel extends DataClass implements Insertable<DBChannel> {
   final String name;
   final Uint8List sharedSecret;
   final Uint8List nodeId;
+  final String channelData;
   final String lastMessage_text;
   final String lastMessage_user;
   DBChannel(
@@ -224,6 +225,7 @@ class DBChannel extends DataClass implements Insertable<DBChannel> {
       @required this.name,
       @required this.sharedSecret,
       @required this.nodeId,
+      this.channelData,
       this.lastMessage_text,
       this.lastMessage_user});
   factory DBChannel.fromData(Map<String, dynamic> data, GeneratedDatabase db,
@@ -239,6 +241,8 @@ class DBChannel extends DataClass implements Insertable<DBChannel> {
           .mapFromDatabaseResponse(data['${effectivePrefix}shared_secret']),
       nodeId: uint8ListType
           .mapFromDatabaseResponse(data['${effectivePrefix}node_id']),
+      channelData: stringType
+          .mapFromDatabaseResponse(data['${effectivePrefix}channel_data']),
       lastMessage_text: stringType
           .mapFromDatabaseResponse(data['${effectivePrefix}last_message_text']),
       lastMessage_user: stringType
@@ -253,6 +257,7 @@ class DBChannel extends DataClass implements Insertable<DBChannel> {
       name: serializer.fromJson<String>(json['name']),
       sharedSecret: serializer.fromJson<Uint8List>(json['sharedSecret']),
       nodeId: serializer.fromJson<Uint8List>(json['nodeId']),
+      channelData: serializer.fromJson<String>(json['channelData']),
       lastMessage_text: serializer.fromJson<String>(json['lastMessage_text']),
       lastMessage_user: serializer.fromJson<String>(json['lastMessage_user']),
     );
@@ -265,6 +270,7 @@ class DBChannel extends DataClass implements Insertable<DBChannel> {
       'name': serializer.toJson<String>(name),
       'sharedSecret': serializer.toJson<Uint8List>(sharedSecret),
       'nodeId': serializer.toJson<Uint8List>(nodeId),
+      'channelData': serializer.toJson<String>(channelData),
       'lastMessage_text': serializer.toJson<String>(lastMessage_text),
       'lastMessage_user': serializer.toJson<String>(lastMessage_user),
     };
@@ -280,6 +286,9 @@ class DBChannel extends DataClass implements Insertable<DBChannel> {
           : Value(sharedSecret),
       nodeId:
           nodeId == null && nullToAbsent ? const Value.absent() : Value(nodeId),
+      channelData: channelData == null && nullToAbsent
+          ? const Value.absent()
+          : Value(channelData),
       lastMessage_text: lastMessage_text == null && nullToAbsent
           ? const Value.absent()
           : Value(lastMessage_text),
@@ -294,6 +303,7 @@ class DBChannel extends DataClass implements Insertable<DBChannel> {
           String name,
           Uint8List sharedSecret,
           Uint8List nodeId,
+          String channelData,
           String lastMessage_text,
           String lastMessage_user}) =>
       DBChannel(
@@ -301,6 +311,7 @@ class DBChannel extends DataClass implements Insertable<DBChannel> {
         name: name ?? this.name,
         sharedSecret: sharedSecret ?? this.sharedSecret,
         nodeId: nodeId ?? this.nodeId,
+        channelData: channelData ?? this.channelData,
         lastMessage_text: lastMessage_text ?? this.lastMessage_text,
         lastMessage_user: lastMessage_user ?? this.lastMessage_user,
       );
@@ -311,6 +322,7 @@ class DBChannel extends DataClass implements Insertable<DBChannel> {
           ..write('name: $name, ')
           ..write('sharedSecret: $sharedSecret, ')
           ..write('nodeId: $nodeId, ')
+          ..write('channelData: $channelData, ')
           ..write('lastMessage_text: $lastMessage_text, ')
           ..write('lastMessage_user: $lastMessage_user')
           ..write(')'))
@@ -326,8 +338,10 @@ class DBChannel extends DataClass implements Insertable<DBChannel> {
               sharedSecret.hashCode,
               $mrjc(
                   nodeId.hashCode,
-                  $mrjc(lastMessage_text.hashCode,
-                      lastMessage_user.hashCode))))));
+                  $mrjc(
+                      channelData.hashCode,
+                      $mrjc(lastMessage_text.hashCode,
+                          lastMessage_user.hashCode)))))));
   @override
   bool operator ==(dynamic other) =>
       identical(this, other) ||
@@ -336,6 +350,7 @@ class DBChannel extends DataClass implements Insertable<DBChannel> {
           other.name == this.name &&
           other.sharedSecret == this.sharedSecret &&
           other.nodeId == this.nodeId &&
+          other.channelData == this.channelData &&
           other.lastMessage_text == this.lastMessage_text &&
           other.lastMessage_user == this.lastMessage_user);
 }
@@ -345,6 +360,7 @@ class DBChannelsCompanion extends UpdateCompanion<DBChannel> {
   final Value<String> name;
   final Value<Uint8List> sharedSecret;
   final Value<Uint8List> nodeId;
+  final Value<String> channelData;
   final Value<String> lastMessage_text;
   final Value<String> lastMessage_user;
   const DBChannelsCompanion({
@@ -352,6 +368,7 @@ class DBChannelsCompanion extends UpdateCompanion<DBChannel> {
     this.name = const Value.absent(),
     this.sharedSecret = const Value.absent(),
     this.nodeId = const Value.absent(),
+    this.channelData = const Value.absent(),
     this.lastMessage_text = const Value.absent(),
     this.lastMessage_user = const Value.absent(),
   });
@@ -360,6 +377,7 @@ class DBChannelsCompanion extends UpdateCompanion<DBChannel> {
     @required String name,
     @required Uint8List sharedSecret,
     @required Uint8List nodeId,
+    this.channelData = const Value.absent(),
     this.lastMessage_text = const Value.absent(),
     this.lastMessage_user = const Value.absent(),
   })  : name = Value(name),
@@ -370,6 +388,7 @@ class DBChannelsCompanion extends UpdateCompanion<DBChannel> {
       Value<String> name,
       Value<Uint8List> sharedSecret,
       Value<Uint8List> nodeId,
+      Value<String> channelData,
       Value<String> lastMessage_text,
       Value<String> lastMessage_user}) {
     return DBChannelsCompanion(
@@ -377,6 +396,7 @@ class DBChannelsCompanion extends UpdateCompanion<DBChannel> {
       name: name ?? this.name,
       sharedSecret: sharedSecret ?? this.sharedSecret,
       nodeId: nodeId ?? this.nodeId,
+      channelData: channelData ?? this.channelData,
       lastMessage_text: lastMessage_text ?? this.lastMessage_text,
       lastMessage_user: lastMessage_user ?? this.lastMessage_user,
     );
@@ -432,6 +452,20 @@ class $DBChannelsTable extends DBChannels
     );
   }
 
+  final VerificationMeta _channelDataMeta =
+      const VerificationMeta('channelData');
+  GeneratedTextColumn _channelData;
+  @override
+  GeneratedTextColumn get channelData =>
+      _channelData ??= _constructChannelData();
+  GeneratedTextColumn _constructChannelData() {
+    return GeneratedTextColumn(
+      'channel_data',
+      $tableName,
+      true,
+    );
+  }
+
   final VerificationMeta _lastMessage_textMeta =
       const VerificationMeta('lastMessage_text');
   GeneratedTextColumn _lastMessage_text;
@@ -461,8 +495,15 @@ class $DBChannelsTable extends DBChannels
   }
 
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, name, sharedSecret, nodeId, lastMessage_text, lastMessage_user];
+  List<GeneratedColumn> get $columns => [
+        id,
+        name,
+        sharedSecret,
+        nodeId,
+        channelData,
+        lastMessage_text,
+        lastMessage_user
+      ];
   @override
   $DBChannelsTable get asDslTable => this;
   @override
@@ -495,6 +536,10 @@ class $DBChannelsTable extends DBChannels
           _nodeIdMeta, nodeId.isAcceptableValue(d.nodeId.value, _nodeIdMeta));
     } else if (isInserting) {
       context.missing(_nodeIdMeta);
+    }
+    if (d.channelData.present) {
+      context.handle(_channelDataMeta,
+          channelData.isAcceptableValue(d.channelData.value, _channelDataMeta));
     }
     if (d.lastMessage_text.present) {
       context.handle(
@@ -534,6 +579,9 @@ class $DBChannelsTable extends DBChannels
     }
     if (d.nodeId.present) {
       map['node_id'] = Variable<Uint8List, BlobType>(d.nodeId.value);
+    }
+    if (d.channelData.present) {
+      map['channel_data'] = Variable<String, StringType>(d.channelData.value);
     }
     if (d.lastMessage_text.present) {
       map['last_message_text'] =

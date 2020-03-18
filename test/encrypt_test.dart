@@ -10,9 +10,20 @@ import 'package:redpanda_light_client/src/main/NodeId.dart';
 import 'package:redpanda_light_client/src/main/Utils.dart';
 import 'package:test/test.dart';
 
+AppDatabase appDatabase;
+
 void main() {
   group('Test basic encryption', () {
-    setUp(() {});
+    setUp(() async {
+      if (ConnectionService.appDatabase == null) {
+        ConnectionService.pathToDatabase = 'data';
+        await new Directory(ConnectionService.pathToDatabase).create(recursive: true);
+        appDatabase = new AppDatabase();
+        ConnectionService.appDatabase = appDatabase;
+      } else {
+        appDatabase = ConnectionService.appDatabase;
+      }
+    });
 
     test('Test enc Cipher Stream CTR', () {
       AESFastEngine aes = AESFastEngine();
@@ -26,7 +37,7 @@ void main() {
       ByteBuffer b = ByteBuffer(1);
 
       Uint8List encBytes = ctrStreamCipher.process(b.readBytes(b.remaining()));
-      print("enc byte: " + Utils.hexEncode(encBytes));
+//      print("enc byte: " + Utils.hexEncode(encBytes));
 
       CTRStreamCipher dec = CTRStreamCipher(aes);
       dec.init(false, parametersWithIV);
@@ -67,7 +78,7 @@ void main() {
       padding.addPadding(paddedBuffer.array(), b.offset);
 
       Uint8List encBytes = cbcBlockCipher.process(paddedBuffer.array());
-      print("enc byte: " + Utils.hexEncode(encBytes));
+//      print("enc byte: " + Utils.hexEncode(encBytes));
 
       var dec = CBCBlockCipher(AESFastEngine());
       dec.init(false, parametersWithIV);
@@ -79,7 +90,7 @@ void main() {
 
       int padCount = padding2.padCount(decBytes);
 
-      print('pad cnt: ' + padCount.toString());
+//      print('pad cnt: ' + padCount.toString());
 
       //remove padding
       decBytes = decBytes.sublist(0, decBytes.lengthInBytes - padCount);
@@ -93,14 +104,7 @@ void main() {
       expect(buffer.readByte(), 8);
     });
 
-
     test('Test Channel AES Block Cipher implementation', () async {
-      ConnectionService.pathToDatabase = 'data';
-
-      await new Directory(ConnectionService.pathToDatabase).create(recursive: true);
-
-      var appDatabase = new AppDatabase();
-
       var allChannels = await appDatabase.getAllChannels();
 
       if (allChannels.length == 0) {

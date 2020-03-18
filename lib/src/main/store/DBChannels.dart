@@ -13,6 +13,8 @@ class DBChannels extends Table {
 
   BlobColumn get nodeId => blob()();
 
+  TextColumn get channelData => text().nullable()();
+
   TextColumn get lastMessage_text => text().nullable().withLength()();
 
   TextColumn get lastMessage_user => text().nullable().withLength()();
