@@ -1,37 +1,23 @@
 import 'dart:async';
 import 'dart:core';
-import 'dart:ffi';
 import 'dart:io';
 import 'dart:math';
-import 'dart:typed_data' hide ByteBuffer;
 
-import 'package:base58check/base58.dart';
-import 'package:base58check/base58check.dart';
-import 'package:buffer/buffer.dart';
-import 'package:byte_array/byte_array.dart';
-import 'dart:convert';
-
-import 'package:hex/hex.dart';
-import 'package:pointycastle/export.dart';
 import 'package:redpanda_light_client/src/main/ByteBuffer.dart';
+import 'package:redpanda_light_client/src/main/Command.dart';
 import 'package:redpanda_light_client/src/main/KademliaId.dart';
 import 'package:redpanda_light_client/src/main/Peer.dart';
+import 'package:redpanda_light_client/src/main/PeerList.dart';
 import 'package:redpanda_light_client/src/main/Settings.dart';
 import 'package:redpanda_light_client/src/main/Utils.dart';
 import 'package:redpanda_light_client/src/main/store/moor_database.dart';
 import 'package:sentry/sentry.dart';
 
-import 'package:convert/convert.dart';
-
 import 'NodeId.dart';
-//import 'package:crypto/crypto.dart';
-
-const String _bitcoinAlphabet =
-    "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
 class ConnectionService {
-  static final SentryClient sentry = new SentryClient(
-      dsn: "https://5ab6bb5e18a84fc1934b438139cc13d1@sentry.io/3871436");
+  static final SentryClient sentry =
+      new SentryClient(dsn: "https://5ab6bb5e18a84fc1934b438139cc13d1@sentry.io/3871436");
 
   static LocalSetting localSetting;
 
@@ -39,29 +25,44 @@ class ConnectionService {
 
   static NodeId nodeId;
   static KademliaId kademliaId;
-  List<Peer> peerlist;
   static AppDatabase appDatabase;
   Timer loopTimer;
+  static int myPort;
 
-  ConnectionService(String pathToDatabase) {
+  ConnectionService(String pathToDatabase, int mPort) {
     ConnectionService.pathToDatabase = pathToDatabase;
-
-    peerlist = new List();
+    myPort = mPort;
   }
 
-  void loop() {
-    if (peerlist.length < 3) {
+  Future<void> loop() async {
+    //todo we have to use the zone around each peer and not for the entire loop
+    runZoned<Future<void>>(() async {
+      loop2();
+    }, onError: (error, stackTrace) {
+      print(error);
+      print(stackTrace);
+      ConnectionService.sentry.captureException(exception: error, stackTrace: stackTrace);
+    });
+  }
+
+  Future<void> loop2() async {
+    if (PeerList.length() < 3) {
       reseed();
     }
 
-    for (Peer peer in peerlist) {
+    List<Peer> toRemove = [];
+
+    for (Peer peer in PeerList.getList()) {
+      print('Peer: ${peer.getKademliaId()} retries: ${peer.restries} ');
+
+      if (peer.restries > 10) {
+        toRemove.add(peer);
+        continue;
+      }
+
       if (peer.connecting || peer.connected) {
-        if (new DateTime.now().millisecondsSinceEpoch -
-                peer.lastActionOnConnection >
-            1000 * 5) {
-          if (peer.socket != null) {
-            peer.socket.destroy();
-          }
+        if (new DateTime.now().millisecondsSinceEpoch - peer.lastActionOnConnection > 1000 * 15) {
+          peer.disconnect();
 
           for (Function setState in Utils.states) {
             setState(() {
@@ -76,10 +77,24 @@ class ConnectionService {
           }
         }
 
+        if (peer.connected && peer.isEncryptionActive) {
+          ByteBuffer byteBuffer = new ByteBuffer(1);
+          byteBuffer.writeByte(Command.PING);
+
+          byteBuffer.flip();
+
+          await peer.sendEncrypt(byteBuffer);
+//          print('pinged peer...');
+        }
+
         continue;
       }
 
       connectTo(peer);
+    }
+
+    for (Peer peer in toRemove) {
+      PeerList.remove(peer);
     }
   }
 
@@ -93,33 +108,10 @@ class ConnectionService {
 
     appDatabase = new AppDatabase();
 
-    localSetting = await appDatabase.getLocalSettings;
-    if (localSetting == null) {
-      //no settings found
-
-      nodeId = NodeId.withNewKeyPair();
-      kademliaId = nodeId.getKademliaId();
-
-      LocalSettingsCompanion localSettingsCompanion =
-          LocalSettingsCompanion.insert(
-              privateKey: nodeId.exportWithPrivate(),
-              kademliaId: kademliaId.bytes);
-
-      appDatabase.save(localSettingsCompanion);
-      print('new localsettings saved!');
-    } else {
-      nodeId = NodeId.importWithPrivate(localSetting.privateKey);
-      kademliaId = KademliaId.fromBytes(localSetting.kademliaId);
-      print('Found KademliaId in db: ' + kademliaId.toString());
-      assert(nodeId.getKademliaId() == kademliaId);
-    }
+    await setupLocalSettings();
 
     print('test insert new channel');
-    ChannelsCompanion channelsCompanion = ChannelsCompanion.insert(
-        name: "Title1",
-        lastMessage_text: "last msg",
-        lastMessage_user: "james");
-    appDatabase.insertChannel(channelsCompanion);
+    await appDatabase.createNewChannel("Title1");
 
     print('My NodeId: ' + kademliaId.toString());
 
@@ -128,8 +120,32 @@ class ConnectionService {
      * timed out peers and establish connections.
      */
     loop();
-    const oneSec = const Duration(seconds: 5);
+    const oneSec = Duration(seconds: 5);
     loopTimer = new Timer.periodic(oneSec, (Timer t) => {loop()});
+  }
+
+  static Future<void> setupLocalSettings() async {
+    localSetting = await appDatabase.getLocalSettings;
+    if (localSetting == null) {
+      //no settings found
+
+      nodeId = NodeId.withNewKeyPair();
+      kademliaId = nodeId.getKademliaId();
+
+      LocalSettingsCompanion localSettingsCompanion = LocalSettingsCompanion.insert(
+          privateKey: nodeId.exportWithPrivate(),
+          kademliaId: kademliaId.bytes,
+          myUserId: Utils.randomString(12),
+          defaultName: "Unknown");
+
+      await appDatabase.save(localSettingsCompanion);
+      print('new localsettings saved!');
+    } else {
+      nodeId = NodeId.importWithPrivate(localSetting.privateKey);
+      kademliaId = KademliaId.fromBytes(localSetting.kademliaId);
+      print('Found KademliaId in db: ' + kademliaId.toString());
+      assert(nodeId.getKademliaId() == kademliaId);
+    }
   }
 
   Future<void> connectTo(Peer peer) async {
@@ -145,6 +161,7 @@ class ConnectionService {
     }
 
     peer.lastActionOnConnection = new DateTime.now().millisecondsSinceEpoch;
+    peer.restries++;
 
     Socket.connect(peer.ip, peer.port).catchError(peer.onError).then((socket) {
       if (socket == null) {
@@ -152,6 +169,8 @@ class ConnectionService {
 //        print('error connecting...');
         return;
       }
+
+      peer.reset();
 
       peer.socket = socket;
 
@@ -164,13 +183,13 @@ class ConnectionService {
       //      socket.add(utf8.encode("3kgV"));
       //      socket.write(utf8.encode("3kgV"));
 
-      ByteBuffer byteBuffer =
-          new ByteBuffer(4 + 1 + KademliaId.ID_LENGTH_BYTES + 4);
+      ByteBuffer byteBuffer = new ByteBuffer(4 + 1 + 1 + KademliaId.ID_LENGTH_BYTES + 4);
       byteBuffer.writeList(Utils.MAGIC);
-      byteBuffer.writeByte(8);
+      byteBuffer.writeByte(8); //protocoll version code
+      byteBuffer.writeByte(129); //lightClient
       byteBuffer.writeList(kademliaId.bytes);
       print(byteBuffer.buffer.asUint8List());
-      byteBuffer.writeInt(59558);
+      byteBuffer.writeInt(myPort); //port
       print(byteBuffer.buffer.asUint8List());
 
       socket.add(byteBuffer.buffer.asInt8List());
@@ -180,6 +199,7 @@ class ConnectionService {
       //      socket.add(59558);
       //      socket.flush();
       socket.listen(peer.ondata);
+
       //      socket.destroy();
     });
   }
@@ -206,13 +226,7 @@ class ConnectionService {
         return;
       }
       Peer peer = new Peer(ip, port);
-
-      if (!peerlist.contains(peer)) {
-//        print('peer not in list add');
-        peerlist.add(peer);
-      } else {
-//        print('peer in list do not add');
-      }
+      PeerList.add(peer);
     }
   }
 
@@ -238,6 +252,7 @@ class ConnectionService {
       return;
     } else {
       // Send the Exception and Stacktrace to Sentry in Production mode.
+
       ConnectionService.sentry.captureException(
         exception: error,
         stackTrace: stackTrace,

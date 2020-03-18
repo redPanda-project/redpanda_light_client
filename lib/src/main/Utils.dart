@@ -9,14 +9,12 @@ import 'package:convert/convert.dart';
 class Utils {
   static Random random = Random.secure();
   static FortunaRandom secureRandom = FortunaRandom();
-  static const String _bitcoinAlphabet =
-      "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+  static const String _bitcoinAlphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+  static const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
   static Base58Codec base58codec = new Base58Codec(_bitcoinAlphabet);
   static final MAGIC = Utf8Codec().encode("k3gV");
   static List<Function> states = new List();
   static SHA256Digest sha256Digest = new SHA256Digest();
-
-
 
   static Uint8List randBytes(int n) {
     final Uint8List bytes = Uint8List(n);
@@ -56,10 +54,11 @@ class Utils {
     var i = -1;
     return list1.every((val) {
       i++;
-      if (val is List && list2[i] is List)
+      if (val is List && list2[i] is List) {
         return listsAreEqual(val, list2[i]);
-      else
+      } else {
         return list2[i] == val;
+      }
     });
   }
 
@@ -70,5 +69,17 @@ class Utils {
     }
     secureRandom.seed(new KeyParameter(new Uint8List.fromList(seeds)));
     return secureRandom;
+  }
+
+  static int getCurrentTimeMillis() {
+    return new DateTime.now().millisecondsSinceEpoch;
+  }
+
+  static String randomString(int strlen) {
+    String result = "";
+    for (var i = 0; i < strlen; i++) {
+      result += chars[random.nextInt(chars.length)];
+    }
+    return result;
   }
 }

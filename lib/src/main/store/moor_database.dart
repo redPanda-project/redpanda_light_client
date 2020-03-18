@@ -3,7 +3,14 @@ import 'dart:io';
 import 'package:moor/moor.dart';
 import 'package:moor_ffi/moor_ffi.dart';
 import 'package:path/path.dart' as p;
+import 'package:redpanda_light_client/src/main/Channel.dart';
 import 'package:redpanda_light_client/src/main/ConnectionService.dart';
+import 'package:redpanda_light_client/src/main/KademliaId.dart';
+import 'package:redpanda_light_client/src/main/NodeId.dart';
+import 'package:redpanda_light_client/src/main/Utils.dart';
+import 'package:redpanda_light_client/src/main/store/DBChannels.dart';
+import 'package:redpanda_light_client/src/main/store/DBPeers.dart';
+import 'package:redpanda_light_client/src/main/store/DBPeersDao.dart';
 
 /**
  * Here we define the tables in the sqlite database. The code can be generated with
@@ -18,28 +25,18 @@ part 'moor_database.g.dart';
 class LocalSettings extends Table {
   IntColumn get id => integer().autoIncrement()();
 
-  TextColumn get privateKey => text()();
+  TextColumn get myUserId => text()();
+
+  BlobColumn get privateKey => blob()();
 
   BlobColumn get kademliaId => blob()();
-}
 
-/**
- * Sqlite schema for Channels, will generate a class Channel which then holds
- * all data for the communication.
- */
-class Channels extends Table {
-  IntColumn get id => integer().autoIncrement()();
-
-  TextColumn get name => text().withLength(min: 3, max: 32)();
-
-  TextColumn get lastMessage_text => text().withLength()();
-
-  TextColumn get lastMessage_user => text().withLength()();
+  TextColumn get defaultName => text()();
 }
 
 // this annotation tells moor to prepare a database class that uses both of the
 // tables we just defined. We'll see how to use that database class in a moment.
-@UseMoor(tables: [LocalSettings, Channels])
+@UseMoor(tables: [LocalSettings, DBChannels, DBPeers], daos: [DBPeersDao])
 class AppDatabase extends _$AppDatabase {
   // we tell the database where to store the data with this constructor
   AppDatabase() : super(_openConnection());
@@ -47,10 +44,9 @@ class AppDatabase extends _$AppDatabase {
   // you should bump this number whenever you change or add a table definition.
   // Migrations are covered below.
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 19;
 
-  Future<LocalSetting> get getLocalSettings =>
-      select(localSettings).getSingle();
+  Future<LocalSetting> get getLocalSettings => select(localSettings).getSingle();
 
   // returns the generated id
   Future<int> save(Insertable<LocalSetting> entry) async {
@@ -75,30 +71,67 @@ class AppDatabase extends _$AppDatabase {
       print("dropping table " + table.actualTableName);
     }
 
-    migrator.createAll();
+    await migrator.createAll();
   }
 
   // watches all Channel entries. The stream will automatically
   // emit new items whenever the underlying data changes.
-  Stream<List<Channel>> watchChannelEntries() {
-    return select(channels).watch();
+  Stream<List<DBChannel>> watchDBChannelEntries() {
+    return select(dBChannels).watch();
   }
 
   /**
-   * Returns the id...
+   * Returns the id of the new channel in db, uses only the channel name for insert and generates a new sharedSecret
+   * and private key for the NodeId.
    */
-  Future<int> insertChannel(Insertable<Channel> entry) async {
-    return into(channels).insert(entry);
+  Future<int> createNewChannel(String name) async {
+    var nodeId = new NodeId.withNewKeyPair();
+
+    DBChannelsCompanion entry =
+        DBChannelsCompanion.insert(name: name, sharedSecret: Utils.randBytes(32), nodeId: nodeId.exportWithPrivate());
+    print("insert channel");
+    return into(dBChannels).insert(entry);
   }
 
   Future<int> removeChannel(int id) async {
-    return (delete(channels)..where((tbl) => tbl.id.equals(id))).go();
+    return (delete(dBChannels)..where((tbl) => tbl.id.equals(id))).go();
   }
 
   Future<int> renameChannel(int id, String newname) async {
-    return (update(channels)..where((tbl) => tbl.id.equals(id)))
-        .write(ChannelsCompanion(name: Value(newname)));
+    return (update(dBChannels)..where((tbl) => tbl.id.equals(id))).write(DBChannelsCompanion(name: Value(newname)));
   }
+
+  Future<int> updateChannelData(int id, String channelDataString) async {
+    print('update channel data ${channelDataString}');
+    return (update(dBChannels)..where((tbl) => tbl.id.equals(id)))
+        .write(DBChannelsCompanion(channelData: Value(channelDataString)));
+  }
+
+  Future<DBChannel> getChannelById(int id) {
+    return (select(dBChannels)..where((tbl) => tbl.id.equals(id))).getSingle();
+  }
+
+  Future<List<DBChannel>> getAllChannels() {
+    return select(dBChannels).get();
+  }
+
+//  /**
+//   * Returns the id of the new Peer in db.
+//   */
+//  Future<int> insertNewPeer(String ip, int port, KademliaId kademliaId, Uint8List publicKey) async {
+//    DBPeersCompanion entry = DBPeersCompanion.insert(
+//        ip: ip,
+//        port: port,
+//        knownSince: Utils.getCurrentTimeMillis(),
+//        kademliaId: kademliaId.bytes,
+//        publicKey: publicKey);
+//    print("insert peer");
+//    return into(dBPeers).insert(entry);
+//  }
+//
+//  Future<DBPeer> getPeerByKademliaId(KademliaId kademliaId) {
+//    return (select(dBPeers)..where((tbl) => tbl.kademliaId.equals(kademliaId.bytes))).getSingle();
+//  }
 }
 
 LazyDatabase _openConnection() {

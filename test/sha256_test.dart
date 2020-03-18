@@ -1,6 +1,5 @@
 import 'dart:typed_data';
 
-import 'package:pointycastle/export.dart';
 import 'package:redpanda_light_client/src/main/Utils.dart';
 import 'package:test/test.dart';
 

@@ -1,7 +1,9 @@
+import 'dart:async';
+
 import 'package:redpanda_light_client/export.dart';
 import 'dart:io';
 
-main() async {
+void main() async {
   String dataFolderPath = 'data';
 
   /**
@@ -9,11 +11,15 @@ main() async {
    */
   await new Directory(dataFolderPath).create(recursive: true);
 
-  RedPandaLightClient.init(dataFolderPath);
+  await RedPandaLightClient.init(dataFolderPath, 5500);
+
+  const oneSec = const Duration(seconds: 5);
+  new Timer(oneSec, () => RedPandaLightClient.shutdown());
 }
 
 //todo documentation of used licenses
 /**
  * sqlite for windows: https://www.sqlite.org/copyright.html
- * moor: MIT License https://github.com/simolus3/moor/blob/master/LICENSE
+ * moor: MIT License: https://github.com/simolus3/moor/blob/master/LICENSE
+ * asn1lib: BSD3: https://github.com/wstrange/asn1lib/blob/master/LICENSE
  */
