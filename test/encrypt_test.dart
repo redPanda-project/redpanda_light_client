@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:moor/moor.dart';
@@ -92,8 +93,11 @@ void main() {
       expect(buffer.readByte(), 8);
     });
 
+
     test('Test Channel AES Block Cipher implementation', () async {
       ConnectionService.pathToDatabase = 'data';
+
+      await new Directory(ConnectionService.pathToDatabase).create(recursive: true);
 
       var appDatabase = new AppDatabase();
 
