@@ -10,6 +10,7 @@ class Utils {
   static Random random = Random.secure();
   static FortunaRandom secureRandom = FortunaRandom();
   static const String _bitcoinAlphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+  static const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
   static Base58Codec base58codec = new Base58Codec(_bitcoinAlphabet);
   static final MAGIC = Utf8Codec().encode("k3gV");
   static List<Function> states = new List();
@@ -72,5 +73,13 @@ class Utils {
 
   static int getCurrentTimeMillis() {
     return new DateTime.now().millisecondsSinceEpoch;
+  }
+
+  static String randomString(int strlen) {
+    String result = "";
+    for (var i = 0; i < strlen; i++) {
+      result += chars[random.nextInt(chars.length)];
+    }
+    return result;
   }
 }

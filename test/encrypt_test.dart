@@ -14,16 +14,16 @@ AppDatabase appDatabase;
 
 void main() {
   group('Test basic encryption', () {
-    setUp(() async {
-      if (ConnectionService.appDatabase == null) {
-        ConnectionService.pathToDatabase = 'data';
-        await new Directory(ConnectionService.pathToDatabase).create(recursive: true);
-        appDatabase = new AppDatabase();
-        ConnectionService.appDatabase = appDatabase;
-      } else {
-        appDatabase = ConnectionService.appDatabase;
-      }
-    });
+//    setUp(() async {
+//      if (ConnectionService.appDatabase == null) {
+//        ConnectionService.pathToDatabase = 'data';
+//        await new Directory(ConnectionService.pathToDatabase).create(recursive: true);
+//        appDatabase = new AppDatabase();
+//        ConnectionService.appDatabase = appDatabase;
+//      } else {
+//        appDatabase = ConnectionService.appDatabase;
+//      }
+//    });
 
     test('Test enc Cipher Stream CTR', () {
       AESFastEngine aes = AESFastEngine();
@@ -104,31 +104,6 @@ void main() {
       expect(buffer.readByte(), 8);
     });
 
-    test('Test Channel AES Block Cipher implementation', () async {
-      var allChannels = await appDatabase.getAllChannels();
 
-      if (allChannels.length == 0) {
-        await appDatabase.createNewChannel("Name 1");
-        allChannels = await appDatabase.getAllChannels();
-      }
-
-      var channel = new Channel(allChannels[0]);
-
-      print(channel);
-
-      var iv = Utils.randBytes(16);
-
-      ByteBuffer b = ByteBuffer(2);
-
-      b.writeByte(8);
-      b.writeByte(125);
-
-      var encryptAES = channel.encryptAES(b.array(), iv);
-
-      var decryptAES = channel.decryptAES(encryptAES, iv);
-
-      expect(decryptAES.length, b.length);
-      expect(ByteBuffer.fromList(decryptAES).readByte(), 8);
-    });
   });
 }

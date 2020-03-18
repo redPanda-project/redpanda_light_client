@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:core';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:redpanda_light_client/src/main/ByteBuffer.dart';
 import 'package:redpanda_light_client/src/main/Command.dart';
@@ -107,24 +108,7 @@ class ConnectionService {
 
     appDatabase = new AppDatabase();
 
-    localSetting = await appDatabase.getLocalSettings;
-    if (localSetting == null) {
-      //no settings found
-
-      nodeId = NodeId.withNewKeyPair();
-      kademliaId = nodeId.getKademliaId();
-
-      LocalSettingsCompanion localSettingsCompanion =
-          LocalSettingsCompanion.insert(privateKey: nodeId.exportWithPrivate(), kademliaId: kademliaId.bytes);
-
-      await appDatabase.save(localSettingsCompanion);
-      print('new localsettings saved!');
-    } else {
-      nodeId = NodeId.importWithPrivate(localSetting.privateKey);
-      kademliaId = KademliaId.fromBytes(localSetting.kademliaId);
-      print('Found KademliaId in db: ' + kademliaId.toString());
-      assert(nodeId.getKademliaId() == kademliaId);
-    }
+    await setupLocalSettings();
 
     print('test insert new channel');
     await appDatabase.createNewChannel("Title1");
@@ -138,6 +122,30 @@ class ConnectionService {
     loop();
     const oneSec = Duration(seconds: 5);
     loopTimer = new Timer.periodic(oneSec, (Timer t) => {loop()});
+  }
+
+  static Future<void> setupLocalSettings() async {
+    localSetting = await appDatabase.getLocalSettings;
+    if (localSetting == null) {
+      //no settings found
+
+      nodeId = NodeId.withNewKeyPair();
+      kademliaId = nodeId.getKademliaId();
+
+      LocalSettingsCompanion localSettingsCompanion = LocalSettingsCompanion.insert(
+          privateKey: nodeId.exportWithPrivate(),
+          kademliaId: kademliaId.bytes,
+          myUserId: Utils.randomString(12),
+          defaultName: "Unknown");
+
+      await appDatabase.save(localSettingsCompanion);
+      print('new localsettings saved!');
+    } else {
+      nodeId = NodeId.importWithPrivate(localSetting.privateKey);
+      kademliaId = KademliaId.fromBytes(localSetting.kademliaId);
+      print('Found KademliaId in db: ' + kademliaId.toString());
+      assert(nodeId.getKademliaId() == kademliaId);
+    }
   }
 
   Future<void> connectTo(Peer peer) async {

@@ -5,9 +5,12 @@ import 'package:moor_ffi/moor_ffi.dart';
 import 'package:path/path.dart' as p;
 import 'package:redpanda_light_client/src/main/Channel.dart';
 import 'package:redpanda_light_client/src/main/ConnectionService.dart';
+import 'package:redpanda_light_client/src/main/KademliaId.dart';
 import 'package:redpanda_light_client/src/main/NodeId.dart';
 import 'package:redpanda_light_client/src/main/Utils.dart';
 import 'package:redpanda_light_client/src/main/store/DBChannels.dart';
+import 'package:redpanda_light_client/src/main/store/DBPeers.dart';
+import 'package:redpanda_light_client/src/main/store/DBPeersDao.dart';
 
 /**
  * Here we define the tables in the sqlite database. The code can be generated with
@@ -22,14 +25,18 @@ part 'moor_database.g.dart';
 class LocalSettings extends Table {
   IntColumn get id => integer().autoIncrement()();
 
+  TextColumn get myUserId => text()();
+
   BlobColumn get privateKey => blob()();
 
   BlobColumn get kademliaId => blob()();
+
+  TextColumn get defaultName => text()();
 }
 
 // this annotation tells moor to prepare a database class that uses both of the
 // tables we just defined. We'll see how to use that database class in a moment.
-@UseMoor(tables: [LocalSettings, DBChannels])
+@UseMoor(tables: [LocalSettings, DBChannels, DBPeers], daos: [DBPeersDao])
 class AppDatabase extends _$AppDatabase {
   // we tell the database where to store the data with this constructor
   AppDatabase() : super(_openConnection());
@@ -37,7 +44,7 @@ class AppDatabase extends _$AppDatabase {
   // you should bump this number whenever you change or add a table definition.
   // Migrations are covered below.
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 19;
 
   Future<LocalSetting> get getLocalSettings => select(localSettings).getSingle();
 
@@ -95,6 +102,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<int> updateChannelData(int id, String channelDataString) async {
+    print('update channel data ${channelDataString}');
     return (update(dBChannels)..where((tbl) => tbl.id.equals(id)))
         .write(DBChannelsCompanion(channelData: Value(channelDataString)));
   }
@@ -106,6 +114,24 @@ class AppDatabase extends _$AppDatabase {
   Future<List<DBChannel>> getAllChannels() {
     return select(dBChannels).get();
   }
+
+//  /**
+//   * Returns the id of the new Peer in db.
+//   */
+//  Future<int> insertNewPeer(String ip, int port, KademliaId kademliaId, Uint8List publicKey) async {
+//    DBPeersCompanion entry = DBPeersCompanion.insert(
+//        ip: ip,
+//        port: port,
+//        knownSince: Utils.getCurrentTimeMillis(),
+//        kademliaId: kademliaId.bytes,
+//        publicKey: publicKey);
+//    print("insert peer");
+//    return into(dBPeers).insert(entry);
+//  }
+//
+//  Future<DBPeer> getPeerByKademliaId(KademliaId kademliaId) {
+//    return (select(dBPeers)..where((tbl) => tbl.kademliaId.equals(kademliaId.bytes))).getSingle();
+//  }
 }
 
 LazyDatabase _openConnection() {

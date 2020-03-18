@@ -1,17 +1,18 @@
+import 'dart:convert';
+
 import 'package:moor/moor.dart';
 import 'package:pointycastle/api.dart';
 import 'package:pointycastle/block/aes_fast.dart';
 import 'package:pointycastle/block/modes/cbc.dart';
 import 'package:redpanda_light_client/export.dart';
 import 'package:redpanda_light_client/src/main/ByteBuffer.dart';
-import 'package:redpanda_light_client/src/main/ChannelData.dart';
 import 'package:redpanda_light_client/src/main/Utils.dart';
 
 class Channel {
   DBChannel _dbChannel;
   String _name;
   NodeId _nodeId;
-  ChannelData _channelData;
+  Map<String, dynamic> _channelData;
 
   Channel(this._dbChannel) {
     _name = _dbChannel.name;
@@ -93,18 +94,23 @@ class Channel {
 
   DBChannel get dbChannel => _dbChannel;
 
-  ChannelData getChannelData() {
+  Map<String, dynamic> getChannelData() {
     if (_channelData == null) {
       if (_dbChannel.channelData != null) {
-        _channelData = ChannelData.decodeToJson(_dbChannel.channelData);
+//        _channelData = ChannelData.fromJson(jsonDecode(_dbChannel.channelData));
+        _channelData = jsonDecode(_dbChannel.channelData);
       } else {
-        _channelData = new ChannelData();
+        _channelData = {};
       }
     }
     return _channelData;
   }
 
-  saveChannelData() {
-    ConnectionService.appDatabase.updateChannelData(_dbChannel.id, _channelData.encodeToJson());
+  Future<void> saveChannelData() async {
+    await ConnectionService.appDatabase.updateChannelData(_dbChannel.id, jsonEncode(_channelData));
+  }
+
+  void setUserData(String myUserId, Map<String, dynamic> myUserdata) {
+    _channelData["userdata"][myUserId] = myUserdata;
   }
 }
