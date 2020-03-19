@@ -3,6 +3,7 @@ import 'dart:core';
 import 'dart:io';
 
 import 'package:logging/logging.dart';
+import 'package:redpanda_light_client/export.dart';
 import 'package:redpanda_light_client/src/main/ByteBuffer.dart';
 import 'package:redpanda_light_client/src/main/Command.dart';
 import 'package:redpanda_light_client/src/main/KademliaId.dart';
@@ -16,7 +17,6 @@ import 'package:sentry/sentry.dart';
 import 'NodeId.dart';
 
 class ConnectionService {
-
   static final log = Logger('RedPandaLightClient');
   static final SentryClient sentry =
       new SentryClient(dsn: "https://5ab6bb5e18a84fc1934b438139cc13d1@sentry.io/3871436");
@@ -48,11 +48,13 @@ class ConnectionService {
   }
 
   Future<void> loop2() async {
-    if (PeerList.length() < 3) {
+    if (PeerList.size() < 3) {
       reseed();
     }
 
     List<Peer> toRemove = [];
+
+    log.finest('loop through peers');
 
     for (Peer peer in PeerList.getList()) {
       log.finest('Peer: ${peer.getKademliaId()} retries: ${peer.restries} ');
@@ -93,10 +95,15 @@ class ConnectionService {
       }
 
       await connectTo(peer);
+      //only connect to one node each time
+      break;
     }
 
+    const oneSec = Duration(seconds: 1);
+    new Timer(oneSec, () => RedPandaLightClient.maintain());
+
     for (Peer peer in toRemove) {
-      PeerList.remove(peer);
+      await PeerList.remove(peer);
     }
   }
 
@@ -112,8 +119,12 @@ class ConnectionService {
 
     await setupLocalSettings();
 
-    log.finest('test insert new channel');
-    await appDatabase.createNewChannel("Title1");
+    var list = await appDatabase.getAllChannels();
+
+    if (list.isEmpty) {
+      log.finest('test insert first channel');
+      await appDatabase.createNewChannel("Title1");
+    }
 
     log.fine('My NodeId: ' + kademliaId.toString());
 
@@ -122,7 +133,7 @@ class ConnectionService {
      * timed out peers and establish connections.
      */
     await loop();
-    const oneSec = Duration(seconds: 5);
+    const oneSec = Duration(seconds: 10);
     loopTimer = new Timer.periodic(oneSec, (Timer t) => {loop()});
   }
 
@@ -177,7 +188,8 @@ class ConnectionService {
       peer.socket = socket;
 
       log.finer('Connected to: '
-          '${socket.remoteAddress.address}:${socket.remotePort}');
+          '${socket.remoteAddress.address}:${socket.remotePort}'
+          ' ${peer.getKademliaId().toString()}');
       socket.handleError(peer.onError);
 
       socket.done.then((value) => {peer.onError(value)});

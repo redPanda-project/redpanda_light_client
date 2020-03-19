@@ -16,8 +16,8 @@ void main() async {
 //  const oneSec = const Duration(seconds: 5);
 //  new Timer(oneSec, () => RedPandaLightClient.shutdown());
 
-  const oneSec = const Duration(seconds: 5);
-  new Timer(oneSec, () => RedPandaLightClient.maintain());
+//  const oneSec = const Duration(seconds: 5);
+//  new Timer(oneSec, () => RedPandaLightClient.maintain());
 }
 
 //todo documentation of used licenses

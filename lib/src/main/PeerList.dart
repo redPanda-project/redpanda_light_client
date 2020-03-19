@@ -1,6 +1,8 @@
 import 'dart:collection';
 
 import 'package:logging/logging.dart';
+import 'package:moor/moor.dart';
+import 'package:redpanda_light_client/src/main/ByteBuffer.dart';
 import 'package:redpanda_light_client/src/main/KademliaId.dart';
 import 'package:redpanda_light_client/src/main/Peer.dart';
 
@@ -8,7 +10,7 @@ class PeerList {
   static final log = Logger('PeerList');
   static final HashMap<KademliaId, Peer> _hashMap = HashMap<KademliaId, Peer>();
   static final HashMap<int, Peer> _hashMapIpPort = HashMap<int, Peer>();
-  static final List<Peer> _peerlist = [];
+  static final List<Peer> _peerlist = <Peer>[];
 
   static bool add(Peer peer) {
     if (peer.getKademliaId() != null) {
@@ -36,7 +38,10 @@ class PeerList {
     }
   }
 
-  static bool remove(Peer peer) {
+  static Future<bool> remove(Peer peer) async {
+    print("asd: " + peer.toString());
+    print("asd: " + _peerlist.toString());
+
     var remove2 = _peerlist.remove(peer);
     _hashMapIpPort.remove(peer.getIpPortHash());
 
@@ -50,11 +55,20 @@ class PeerList {
     return remove != null;
   }
 
-  static int length() {
+  static int size() {
     return _peerlist.length;
   }
 
   static List<Peer> getList() {
     return _peerlist;
+  }
+
+  static void sendIntegrated(ByteBuffer bytes) async {
+    for (Peer p in _peerlist) {
+      if (p.connected) {
+        p.sendEncrypt(bytes);
+        return;
+      }
+    }
   }
 }

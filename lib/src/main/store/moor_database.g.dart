@@ -10,12 +10,14 @@ part of 'moor_database.dart';
 class LocalSetting extends DataClass implements Insertable<LocalSetting> {
   final int id;
   final String myUserId;
+  final String fcmToken;
   final Uint8List privateKey;
   final Uint8List kademliaId;
   final String defaultName;
   LocalSetting(
       {@required this.id,
       @required this.myUserId,
+      this.fcmToken,
       @required this.privateKey,
       @required this.kademliaId,
       @required this.defaultName});
@@ -29,6 +31,8 @@ class LocalSetting extends DataClass implements Insertable<LocalSetting> {
       id: intType.mapFromDatabaseResponse(data['${effectivePrefix}id']),
       myUserId: stringType
           .mapFromDatabaseResponse(data['${effectivePrefix}my_user_id']),
+      fcmToken: stringType
+          .mapFromDatabaseResponse(data['${effectivePrefix}fcm_token']),
       privateKey: uint8ListType
           .mapFromDatabaseResponse(data['${effectivePrefix}private_key']),
       kademliaId: uint8ListType
@@ -43,6 +47,7 @@ class LocalSetting extends DataClass implements Insertable<LocalSetting> {
     return LocalSetting(
       id: serializer.fromJson<int>(json['id']),
       myUserId: serializer.fromJson<String>(json['myUserId']),
+      fcmToken: serializer.fromJson<String>(json['fcmToken']),
       privateKey: serializer.fromJson<Uint8List>(json['privateKey']),
       kademliaId: serializer.fromJson<Uint8List>(json['kademliaId']),
       defaultName: serializer.fromJson<String>(json['defaultName']),
@@ -54,6 +59,7 @@ class LocalSetting extends DataClass implements Insertable<LocalSetting> {
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'myUserId': serializer.toJson<String>(myUserId),
+      'fcmToken': serializer.toJson<String>(fcmToken),
       'privateKey': serializer.toJson<Uint8List>(privateKey),
       'kademliaId': serializer.toJson<Uint8List>(kademliaId),
       'defaultName': serializer.toJson<String>(defaultName),
@@ -67,6 +73,9 @@ class LocalSetting extends DataClass implements Insertable<LocalSetting> {
       myUserId: myUserId == null && nullToAbsent
           ? const Value.absent()
           : Value(myUserId),
+      fcmToken: fcmToken == null && nullToAbsent
+          ? const Value.absent()
+          : Value(fcmToken),
       privateKey: privateKey == null && nullToAbsent
           ? const Value.absent()
           : Value(privateKey),
@@ -82,12 +91,14 @@ class LocalSetting extends DataClass implements Insertable<LocalSetting> {
   LocalSetting copyWith(
           {int id,
           String myUserId,
+          String fcmToken,
           Uint8List privateKey,
           Uint8List kademliaId,
           String defaultName}) =>
       LocalSetting(
         id: id ?? this.id,
         myUserId: myUserId ?? this.myUserId,
+        fcmToken: fcmToken ?? this.fcmToken,
         privateKey: privateKey ?? this.privateKey,
         kademliaId: kademliaId ?? this.kademliaId,
         defaultName: defaultName ?? this.defaultName,
@@ -97,6 +108,7 @@ class LocalSetting extends DataClass implements Insertable<LocalSetting> {
     return (StringBuffer('LocalSetting(')
           ..write('id: $id, ')
           ..write('myUserId: $myUserId, ')
+          ..write('fcmToken: $fcmToken, ')
           ..write('privateKey: $privateKey, ')
           ..write('kademliaId: $kademliaId, ')
           ..write('defaultName: $defaultName')
@@ -109,14 +121,17 @@ class LocalSetting extends DataClass implements Insertable<LocalSetting> {
       id.hashCode,
       $mrjc(
           myUserId.hashCode,
-          $mrjc(privateKey.hashCode,
-              $mrjc(kademliaId.hashCode, defaultName.hashCode)))));
+          $mrjc(
+              fcmToken.hashCode,
+              $mrjc(privateKey.hashCode,
+                  $mrjc(kademliaId.hashCode, defaultName.hashCode))))));
   @override
   bool operator ==(dynamic other) =>
       identical(this, other) ||
       (other is LocalSetting &&
           other.id == this.id &&
           other.myUserId == this.myUserId &&
+          other.fcmToken == this.fcmToken &&
           other.privateKey == this.privateKey &&
           other.kademliaId == this.kademliaId &&
           other.defaultName == this.defaultName);
@@ -125,12 +140,14 @@ class LocalSetting extends DataClass implements Insertable<LocalSetting> {
 class LocalSettingsCompanion extends UpdateCompanion<LocalSetting> {
   final Value<int> id;
   final Value<String> myUserId;
+  final Value<String> fcmToken;
   final Value<Uint8List> privateKey;
   final Value<Uint8List> kademliaId;
   final Value<String> defaultName;
   const LocalSettingsCompanion({
     this.id = const Value.absent(),
     this.myUserId = const Value.absent(),
+    this.fcmToken = const Value.absent(),
     this.privateKey = const Value.absent(),
     this.kademliaId = const Value.absent(),
     this.defaultName = const Value.absent(),
@@ -138,6 +155,7 @@ class LocalSettingsCompanion extends UpdateCompanion<LocalSetting> {
   LocalSettingsCompanion.insert({
     this.id = const Value.absent(),
     @required String myUserId,
+    this.fcmToken = const Value.absent(),
     @required Uint8List privateKey,
     @required Uint8List kademliaId,
     @required String defaultName,
@@ -148,12 +166,14 @@ class LocalSettingsCompanion extends UpdateCompanion<LocalSetting> {
   LocalSettingsCompanion copyWith(
       {Value<int> id,
       Value<String> myUserId,
+      Value<String> fcmToken,
       Value<Uint8List> privateKey,
       Value<Uint8List> kademliaId,
       Value<String> defaultName}) {
     return LocalSettingsCompanion(
       id: id ?? this.id,
       myUserId: myUserId ?? this.myUserId,
+      fcmToken: fcmToken ?? this.fcmToken,
       privateKey: privateKey ?? this.privateKey,
       kademliaId: kademliaId ?? this.kademliaId,
       defaultName: defaultName ?? this.defaultName,
@@ -184,6 +204,18 @@ class $LocalSettingsTable extends LocalSettings
       'my_user_id',
       $tableName,
       false,
+    );
+  }
+
+  final VerificationMeta _fcmTokenMeta = const VerificationMeta('fcmToken');
+  GeneratedTextColumn _fcmToken;
+  @override
+  GeneratedTextColumn get fcmToken => _fcmToken ??= _constructFcmToken();
+  GeneratedTextColumn _constructFcmToken() {
+    return GeneratedTextColumn(
+      'fcm_token',
+      $tableName,
+      true,
     );
   }
 
@@ -227,7 +259,7 @@ class $LocalSettingsTable extends LocalSettings
 
   @override
   List<GeneratedColumn> get $columns =>
-      [id, myUserId, privateKey, kademliaId, defaultName];
+      [id, myUserId, fcmToken, privateKey, kademliaId, defaultName];
   @override
   $LocalSettingsTable get asDslTable => this;
   @override
@@ -246,6 +278,10 @@ class $LocalSettingsTable extends LocalSettings
           myUserId.isAcceptableValue(d.myUserId.value, _myUserIdMeta));
     } else if (isInserting) {
       context.missing(_myUserIdMeta);
+    }
+    if (d.fcmToken.present) {
+      context.handle(_fcmTokenMeta,
+          fcmToken.isAcceptableValue(d.fcmToken.value, _fcmTokenMeta));
     }
     if (d.privateKey.present) {
       context.handle(_privateKeyMeta,
@@ -284,6 +320,9 @@ class $LocalSettingsTable extends LocalSettings
     }
     if (d.myUserId.present) {
       map['my_user_id'] = Variable<String, StringType>(d.myUserId.value);
+    }
+    if (d.fcmToken.present) {
+      map['fcm_token'] = Variable<String, StringType>(d.fcmToken.value);
     }
     if (d.privateKey.present) {
       map['private_key'] = Variable<Uint8List, BlobType>(d.privateKey.value);

@@ -1,12 +1,16 @@
 // TODO: Put public facing types in this file.
 
+import 'dart:convert';
+
 import 'package:logging/logging.dart';
+import 'package:moor/moor.dart';
 import 'package:redpanda_light_client/export.dart';
 import 'package:redpanda_light_client/src/main/Channel.dart';
 import 'package:redpanda_light_client/src/main/ConnectionService.dart';
 import 'package:redpanda_light_client/src/main/Peer.dart';
 import 'package:redpanda_light_client/src/main/PeerList.dart';
 import 'package:redpanda_light_client/src/main/Utils.dart';
+import 'package:redpanda_light_client/src/main/kademlia/KadContent.dart';
 
 /// Checks if you are awesome. Spoiler: you are.
 class RedPandaLightClient {
@@ -94,19 +98,37 @@ class RedPandaLightClient {
         channelData['userdata'] = {};
       }
 
+      bool updated = false;
+
       if (userData == null) {
 //        print('no userdata found from us...');
 
         channel.setUserData(myUserId, myUserdata);
         await channel.saveChannelData();
+        updated = true;
       } else {
 //        print('found userdata');
         int generated = userData['generated'];
-        if (Utils.getCurrentTimeMillis() - generated > 1000 * 120) {
+        if (Utils.getCurrentTimeMillis() - generated > 1000 * 10) {
 //          print('found userdata is too old...');
           channel.setUserData(myUserId, myUserdata);
           await channel.saveChannelData();
+          updated = true;
         }
+      }
+
+      if (updated) {
+        String channelDataString = jsonEncode(channel.getChannelData());
+        var channelDataStringBytes = Utils.encodeUTF8(channelDataString);
+
+        KadContent kadContent = new KadContent.createNow(channel.getNodeId().exportPublic(), channelDataStringBytes);
+
+        kadContent.encryptWith(channel);
+
+        kadContent.signWith(channel.getNodeId());
+
+        PeerList.sendIntegrated(kadContent.toCommand());
+        log.finest("send to integrated....");
       }
 
       log.finest("");

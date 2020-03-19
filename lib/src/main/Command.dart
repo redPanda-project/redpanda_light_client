@@ -16,4 +16,10 @@ class Command {
   static final int UPDATE_ANSWER_TIMESTAMP = 10;
   static final int UPDATE_REQUEST_CONTENT = 11;
   static final int UPDATE_ANSWER_CONTENT = 12;
+
+  //kademlia cmds
+  static final int KADEMLIA_STORE = 120;
+  static final int KADEMLIA_GET = 121;
+  static final int KADEMLIA_GET_ANSWER = 122;
+  static final int JOB_ACK = 130;
 }

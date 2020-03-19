@@ -40,6 +40,14 @@ class Utils {
     return hex.decode(string);
   }
 
+  static Uint8List encodeUTF8(String s) {
+    return Utf8Codec().encode(s);
+  }
+
+  static String decodeUTF8(Uint8List s) {
+    return Utf8Codec().decode(s);
+  }
+
   /**
    * Create sha256 single round of bytes.
    */

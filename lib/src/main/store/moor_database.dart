@@ -30,6 +30,8 @@ class LocalSettings extends Table {
 
   TextColumn get myUserId => text()();
 
+  TextColumn get fcmToken => text().nullable()();
+
   BlobColumn get privateKey => blob()();
 
   BlobColumn get kademliaId => blob()();
@@ -47,7 +49,7 @@ class AppDatabase extends _$AppDatabase {
   // you should bump this number whenever you change or add a table definition.
   // Migrations are covered below.
   @override
-  int get schemaVersion => 20;
+  int get schemaVersion => 24;
 
   Future<LocalSetting> get getLocalSettings => select(localSettings).getSingle();
 
@@ -55,6 +57,14 @@ class AppDatabase extends _$AppDatabase {
   Future<int> save(Insertable<LocalSetting> entry) async {
     await delete(localSettings).go();
     return into(localSettings).insert(entry);
+  }
+
+  Future<int> insertFCMToken(String fcmToken) async {
+    return update(localSettings).write(LocalSettingsCompanion(fcmToken: Value(fcmToken)));
+  }
+
+  Future<int> setNickname(String nick) async {
+    return update(localSettings).write(LocalSettingsCompanion(defaultName: Value(nick)));
   }
 
   @override

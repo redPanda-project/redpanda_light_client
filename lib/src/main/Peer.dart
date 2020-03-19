@@ -72,6 +72,9 @@ class Peer {
   }
 
   KademliaId getKademliaId() {
+    if (_kademliaId == null && _nodeId != null) {
+      _kademliaId = _nodeId.getKademliaId();
+    }
     return _kademliaId;
   }
 
@@ -142,13 +145,17 @@ class Peer {
         lastActionOnConnection = new DateTime.now().millisecondsSinceEpoch;
 //        print('received pong...');
       } else if (decryptedCommand == Command.SEND_PEERLIST) {
-        log.finer('received peerlist...');
+        log.finer('received peerlist... ' + ip);
 
         int toReadBytes = decryptBuffer.readInt();
 
         List<int> readBytes = decryptBuffer.readBytes(toReadBytes);
 
         FBPeerList fbPeerList = new FBPeerList(readBytes);
+
+        if (fbPeerList == null || fbPeerList.peers.isEmpty) {
+          return;
+        }
 
         for (FBPeer fbPeer in fbPeerList.peers) {
           if (fbPeer.nodeId == null) {
@@ -422,7 +429,7 @@ class Peer {
 
 //    print('enc cmd: ' + encBytes.toString());
 
-    socket.handleError((e) => {log.finer("error2: "+ e.toString())});
+    socket.handleError((e) => {log.finer("error2: " + e.toString())});
 
     socket.add(encBytes);
   }
@@ -492,7 +499,7 @@ class Peer {
   }
 
   void sendPublicKeyToPeer() {
-    print('sendPublicKeyToPeer...');
+    log.finest('sendPublicKeyToPeer...');
 
     ECPublicKey publicKey = ConnectionService.nodeId.getKeyPair().publicKey;
     Uint8List encoded = publicKey.Q.getEncoded(false);
