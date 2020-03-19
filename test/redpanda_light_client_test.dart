@@ -1,4 +1,3 @@
-import 'dart:io';
 
 import 'package:redpanda_light_client/export.dart';
 import 'package:test/test.dart';

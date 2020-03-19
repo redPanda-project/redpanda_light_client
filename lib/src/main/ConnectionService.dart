@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:core';
 import 'dart:io';
-import 'dart:math';
 
 import 'package:logging/logging.dart';
 import 'package:redpanda_light_client/src/main/ByteBuffer.dart';
@@ -93,7 +92,7 @@ class ConnectionService {
         continue;
       }
 
-      connectTo(peer);
+      await connectTo(peer);
     }
 
     for (Peer peer in toRemove) {
@@ -122,7 +121,7 @@ class ConnectionService {
      * We run loop immediately and every 5 seconds, this method will check for
      * timed out peers and establish connections.
      */
-    loop();
+    await loop();
     const oneSec = Duration(seconds: 5);
     loopTimer = new Timer.periodic(oneSec, (Timer t) => {loop()});
   }
@@ -256,7 +255,7 @@ class ConnectionService {
     } else {
       // Send the Exception and Stacktrace to Sentry in Production mode.
 
-      ConnectionService.sentry.captureException(
+      await ConnectionService.sentry.captureException(
         exception: error,
         stackTrace: stackTrace,
       );

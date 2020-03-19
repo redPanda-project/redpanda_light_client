@@ -1,5 +1,4 @@
 import 'package:moor/moor.dart';
-import 'package:redpanda_light_client/src/main/Utils.dart';
 
 /**
  * Sqlite schema for Messages.

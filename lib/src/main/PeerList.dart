@@ -8,7 +8,7 @@ class PeerList {
   static final log = Logger('PeerList');
   static final HashMap<KademliaId, Peer> _hashMap = HashMap<KademliaId, Peer>();
   static final HashMap<int, Peer> _hashMapIpPort = HashMap<int, Peer>();
-  static final List<Peer> _peerlist = List<Peer>();
+  static final List<Peer> _peerlist = [];
 
   static bool add(Peer peer) {
     if (peer.getKademliaId() != null) {

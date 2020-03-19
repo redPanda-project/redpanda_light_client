@@ -27,9 +27,7 @@ class Channel {
   }
 
   NodeId getNodeId() {
-    if (_nodeId == null) {
-      _nodeId = NodeId.importWithPrivate(_dbChannel.nodeId);
-    }
+    _nodeId ??= NodeId.importWithPrivate(_dbChannel.nodeId);
 
     return _nodeId;
   }

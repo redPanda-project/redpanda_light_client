@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:redpanda_light_client/export.dart';
@@ -64,7 +63,7 @@ void main() {
 
       print(data);
 
-      channel.saveChannelData();
+      await channel.saveChannelData();
 
       for (DBChannel c in await appDatabase.getAllChannels()) {
         print("${c.id} ${c.channelData}");
@@ -107,7 +106,7 @@ void main() {
       var appDatabase = ConnectionService.appDatabase;
       var allChannels = await appDatabase.getAllChannels();
 
-      if (allChannels.length == 0) {
+      if (allChannels.isEmpty) {
         await appDatabase.createNewChannel("Name 1");
         allChannels = await appDatabase.getAllChannels();
       }

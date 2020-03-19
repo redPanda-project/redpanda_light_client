@@ -4,9 +4,7 @@ import 'package:logging/logging.dart';
 import 'package:moor/moor.dart';
 import 'package:moor_ffi/moor_ffi.dart';
 import 'package:path/path.dart' as p;
-import 'package:redpanda_light_client/src/main/Channel.dart';
 import 'package:redpanda_light_client/src/main/ConnectionService.dart';
-import 'package:redpanda_light_client/src/main/KademliaId.dart';
 import 'package:redpanda_light_client/src/main/NodeId.dart';
 import 'package:redpanda_light_client/src/main/Utils.dart';
 import 'package:redpanda_light_client/src/main/store/DBChannels.dart';
@@ -49,7 +47,7 @@ class AppDatabase extends _$AppDatabase {
   // you should bump this number whenever you change or add a table definition.
   // Migrations are covered below.
   @override
-  int get schemaVersion => 19;
+  int get schemaVersion => 20;
 
   Future<LocalSetting> get getLocalSettings => select(localSettings).getSingle();
 
@@ -71,7 +69,7 @@ class AppDatabase extends _$AppDatabase {
    * Migration will drop all tables and create database from scratch.
    */
   Future<void> onUpgrade(Migrator migrator, int old, int n) async {
-    for (final TableInfo<Table, DataClass> table in this.allTables) {
+    for (final TableInfo<Table, DataClass> table in allTables) {
       await migrator.deleteTable(table.actualTableName);
       print("dropping table " + table.actualTableName);
     }

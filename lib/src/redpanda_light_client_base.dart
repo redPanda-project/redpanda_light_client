@@ -1,7 +1,5 @@
 // TODO: Put public facing types in this file.
 
-import 'dart:collection';
-
 import 'package:logging/logging.dart';
 import 'package:redpanda_light_client/export.dart';
 import 'package:redpanda_light_client/src/main/Channel.dart';
@@ -32,7 +30,8 @@ class RedPandaLightClient {
     Logger.root.level = Level.ALL; // defaults to Level.INFO
     Logger.root.onRecord.listen((record) {
 //      print('${record.level.name}: ${record.time}: ${record.message}');
-      print('${formatToMinLen(record.loggerName,30)}: ${record.time}:    ${record.message}');
+      print(
+          '${formatToMinLen(record.loggerName, 30)}: ${formatToMinLen(record.time.toString(), 26)}:    ${record.message}');
     });
 
     // create sqlite database folder otherwise the database opening will fail
@@ -80,7 +79,7 @@ class RedPandaLightClient {
 
       Map<String, dynamic> channelData = channel.getChannelData();
 
-      print("chan object[${dbChannel.id}]: ${dbChannel.channelData}");
+      log.finest("chan object[${dbChannel.id}]: ${dbChannel.channelData}");
 
       if (channelData == null) {
         continue;
@@ -96,21 +95,21 @@ class RedPandaLightClient {
       }
 
       if (userData == null) {
-        print('no userdata found from us...');
+//        print('no userdata found from us...');
 
         channel.setUserData(myUserId, myUserdata);
         await channel.saveChannelData();
       } else {
-        print('found userdata');
+//        print('found userdata');
         int generated = userData['generated'];
         if (Utils.getCurrentTimeMillis() - generated > 1000 * 120) {
-          print('found userdata is too old...');
+//          print('found userdata is too old...');
           channel.setUserData(myUserId, myUserdata);
           await channel.saveChannelData();
         }
       }
 
-      print("");
+      log.finest("");
     }
   }
 
