@@ -9,6 +9,8 @@ import 'package:redpanda_light_client/src/main/KademliaId.dart';
 import 'package:redpanda_light_client/src/main/NodeId.dart';
 import 'package:redpanda_light_client/src/main/Utils.dart';
 import 'package:redpanda_light_client/src/main/store/DBChannels.dart';
+import 'package:redpanda_light_client/src/main/store/DBMessages.dart';
+import 'package:redpanda_light_client/src/main/store/DBMessagesDao.dart';
 import 'package:redpanda_light_client/src/main/store/DBPeers.dart';
 import 'package:redpanda_light_client/src/main/store/DBPeersDao.dart';
 
@@ -36,7 +38,7 @@ class LocalSettings extends Table {
 
 // this annotation tells moor to prepare a database class that uses both of the
 // tables we just defined. We'll see how to use that database class in a moment.
-@UseMoor(tables: [LocalSettings, DBChannels, DBPeers], daos: [DBPeersDao])
+@UseMoor(tables: [LocalSettings, DBChannels, DBPeers, DBMessages], daos: [DBPeersDao, DBMessagesDao])
 class AppDatabase extends _$AppDatabase {
   // we tell the database where to store the data with this constructor
   AppDatabase() : super(_openConnection());

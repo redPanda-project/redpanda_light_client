@@ -1052,6 +1052,363 @@ class $DBPeersTable extends DBPeers with TableInfo<$DBPeersTable, DBPeer> {
   }
 }
 
+class DBMessage extends DataClass implements Insertable<DBMessage> {
+  final int id;
+  final int channelId;
+  final int timestamp;
+  final String content;
+  final String fromName;
+  final bool delivered;
+  final bool read;
+  DBMessage(
+      {@required this.id,
+      @required this.channelId,
+      @required this.timestamp,
+      @required this.content,
+      @required this.fromName,
+      @required this.delivered,
+      @required this.read});
+  factory DBMessage.fromData(Map<String, dynamic> data, GeneratedDatabase db,
+      {String prefix}) {
+    final effectivePrefix = prefix ?? '';
+    final intType = db.typeSystem.forDartType<int>();
+    final stringType = db.typeSystem.forDartType<String>();
+    final boolType = db.typeSystem.forDartType<bool>();
+    return DBMessage(
+      id: intType.mapFromDatabaseResponse(data['${effectivePrefix}id']),
+      channelId:
+          intType.mapFromDatabaseResponse(data['${effectivePrefix}channel_id']),
+      timestamp:
+          intType.mapFromDatabaseResponse(data['${effectivePrefix}timestamp']),
+      content:
+          stringType.mapFromDatabaseResponse(data['${effectivePrefix}content']),
+      fromName: stringType
+          .mapFromDatabaseResponse(data['${effectivePrefix}from_name']),
+      delivered:
+          boolType.mapFromDatabaseResponse(data['${effectivePrefix}delivered']),
+      read: boolType.mapFromDatabaseResponse(data['${effectivePrefix}read']),
+    );
+  }
+  factory DBMessage.fromJson(Map<String, dynamic> json,
+      {ValueSerializer serializer}) {
+    serializer ??= moorRuntimeOptions.defaultSerializer;
+    return DBMessage(
+      id: serializer.fromJson<int>(json['id']),
+      channelId: serializer.fromJson<int>(json['channelId']),
+      timestamp: serializer.fromJson<int>(json['timestamp']),
+      content: serializer.fromJson<String>(json['content']),
+      fromName: serializer.fromJson<String>(json['fromName']),
+      delivered: serializer.fromJson<bool>(json['delivered']),
+      read: serializer.fromJson<bool>(json['read']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer serializer}) {
+    serializer ??= moorRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'channelId': serializer.toJson<int>(channelId),
+      'timestamp': serializer.toJson<int>(timestamp),
+      'content': serializer.toJson<String>(content),
+      'fromName': serializer.toJson<String>(fromName),
+      'delivered': serializer.toJson<bool>(delivered),
+      'read': serializer.toJson<bool>(read),
+    };
+  }
+
+  @override
+  DBMessagesCompanion createCompanion(bool nullToAbsent) {
+    return DBMessagesCompanion(
+      id: id == null && nullToAbsent ? const Value.absent() : Value(id),
+      channelId: channelId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(channelId),
+      timestamp: timestamp == null && nullToAbsent
+          ? const Value.absent()
+          : Value(timestamp),
+      content: content == null && nullToAbsent
+          ? const Value.absent()
+          : Value(content),
+      fromName: fromName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(fromName),
+      delivered: delivered == null && nullToAbsent
+          ? const Value.absent()
+          : Value(delivered),
+      read: read == null && nullToAbsent ? const Value.absent() : Value(read),
+    );
+  }
+
+  DBMessage copyWith(
+          {int id,
+          int channelId,
+          int timestamp,
+          String content,
+          String fromName,
+          bool delivered,
+          bool read}) =>
+      DBMessage(
+        id: id ?? this.id,
+        channelId: channelId ?? this.channelId,
+        timestamp: timestamp ?? this.timestamp,
+        content: content ?? this.content,
+        fromName: fromName ?? this.fromName,
+        delivered: delivered ?? this.delivered,
+        read: read ?? this.read,
+      );
+  @override
+  String toString() {
+    return (StringBuffer('DBMessage(')
+          ..write('id: $id, ')
+          ..write('channelId: $channelId, ')
+          ..write('timestamp: $timestamp, ')
+          ..write('content: $content, ')
+          ..write('fromName: $fromName, ')
+          ..write('delivered: $delivered, ')
+          ..write('read: $read')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => $mrjf($mrjc(
+      id.hashCode,
+      $mrjc(
+          channelId.hashCode,
+          $mrjc(
+              timestamp.hashCode,
+              $mrjc(
+                  content.hashCode,
+                  $mrjc(fromName.hashCode,
+                      $mrjc(delivered.hashCode, read.hashCode)))))));
+  @override
+  bool operator ==(dynamic other) =>
+      identical(this, other) ||
+      (other is DBMessage &&
+          other.id == this.id &&
+          other.channelId == this.channelId &&
+          other.timestamp == this.timestamp &&
+          other.content == this.content &&
+          other.fromName == this.fromName &&
+          other.delivered == this.delivered &&
+          other.read == this.read);
+}
+
+class DBMessagesCompanion extends UpdateCompanion<DBMessage> {
+  final Value<int> id;
+  final Value<int> channelId;
+  final Value<int> timestamp;
+  final Value<String> content;
+  final Value<String> fromName;
+  final Value<bool> delivered;
+  final Value<bool> read;
+  const DBMessagesCompanion({
+    this.id = const Value.absent(),
+    this.channelId = const Value.absent(),
+    this.timestamp = const Value.absent(),
+    this.content = const Value.absent(),
+    this.fromName = const Value.absent(),
+    this.delivered = const Value.absent(),
+    this.read = const Value.absent(),
+  });
+  DBMessagesCompanion.insert({
+    this.id = const Value.absent(),
+    @required int channelId,
+    @required int timestamp,
+    @required String content,
+    @required String fromName,
+    this.delivered = const Value.absent(),
+    this.read = const Value.absent(),
+  })  : channelId = Value(channelId),
+        timestamp = Value(timestamp),
+        content = Value(content),
+        fromName = Value(fromName);
+  DBMessagesCompanion copyWith(
+      {Value<int> id,
+      Value<int> channelId,
+      Value<int> timestamp,
+      Value<String> content,
+      Value<String> fromName,
+      Value<bool> delivered,
+      Value<bool> read}) {
+    return DBMessagesCompanion(
+      id: id ?? this.id,
+      channelId: channelId ?? this.channelId,
+      timestamp: timestamp ?? this.timestamp,
+      content: content ?? this.content,
+      fromName: fromName ?? this.fromName,
+      delivered: delivered ?? this.delivered,
+      read: read ?? this.read,
+    );
+  }
+}
+
+class $DBMessagesTable extends DBMessages
+    with TableInfo<$DBMessagesTable, DBMessage> {
+  final GeneratedDatabase _db;
+  final String _alias;
+  $DBMessagesTable(this._db, [this._alias]);
+  final VerificationMeta _idMeta = const VerificationMeta('id');
+  GeneratedIntColumn _id;
+  @override
+  GeneratedIntColumn get id => _id ??= _constructId();
+  GeneratedIntColumn _constructId() {
+    return GeneratedIntColumn('id', $tableName, false,
+        hasAutoIncrement: true, declaredAsPrimaryKey: true);
+  }
+
+  final VerificationMeta _channelIdMeta = const VerificationMeta('channelId');
+  GeneratedIntColumn _channelId;
+  @override
+  GeneratedIntColumn get channelId => _channelId ??= _constructChannelId();
+  GeneratedIntColumn _constructChannelId() {
+    return GeneratedIntColumn(
+      'channel_id',
+      $tableName,
+      false,
+    );
+  }
+
+  final VerificationMeta _timestampMeta = const VerificationMeta('timestamp');
+  GeneratedIntColumn _timestamp;
+  @override
+  GeneratedIntColumn get timestamp => _timestamp ??= _constructTimestamp();
+  GeneratedIntColumn _constructTimestamp() {
+    return GeneratedIntColumn(
+      'timestamp',
+      $tableName,
+      false,
+    );
+  }
+
+  final VerificationMeta _contentMeta = const VerificationMeta('content');
+  GeneratedTextColumn _content;
+  @override
+  GeneratedTextColumn get content => _content ??= _constructContent();
+  GeneratedTextColumn _constructContent() {
+    return GeneratedTextColumn('content', $tableName, false,
+        minTextLength: 3, maxTextLength: 32);
+  }
+
+  final VerificationMeta _fromNameMeta = const VerificationMeta('fromName');
+  GeneratedTextColumn _fromName;
+  @override
+  GeneratedTextColumn get fromName => _fromName ??= _constructFromName();
+  GeneratedTextColumn _constructFromName() {
+    return GeneratedTextColumn('from_name', $tableName, false,
+        minTextLength: 3, maxTextLength: 32);
+  }
+
+  final VerificationMeta _deliveredMeta = const VerificationMeta('delivered');
+  GeneratedBoolColumn _delivered;
+  @override
+  GeneratedBoolColumn get delivered => _delivered ??= _constructDelivered();
+  GeneratedBoolColumn _constructDelivered() {
+    return GeneratedBoolColumn('delivered', $tableName, false,
+        defaultValue: const Constant(false));
+  }
+
+  final VerificationMeta _readMeta = const VerificationMeta('read');
+  GeneratedBoolColumn _read;
+  @override
+  GeneratedBoolColumn get read => _read ??= _constructRead();
+  GeneratedBoolColumn _constructRead() {
+    return GeneratedBoolColumn('read', $tableName, false,
+        defaultValue: const Constant(false));
+  }
+
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, channelId, timestamp, content, fromName, delivered, read];
+  @override
+  $DBMessagesTable get asDslTable => this;
+  @override
+  String get $tableName => _alias ?? 'd_b_messages';
+  @override
+  final String actualTableName = 'd_b_messages';
+  @override
+  VerificationContext validateIntegrity(DBMessagesCompanion d,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    if (d.id.present) {
+      context.handle(_idMeta, id.isAcceptableValue(d.id.value, _idMeta));
+    }
+    if (d.channelId.present) {
+      context.handle(_channelIdMeta,
+          channelId.isAcceptableValue(d.channelId.value, _channelIdMeta));
+    } else if (isInserting) {
+      context.missing(_channelIdMeta);
+    }
+    if (d.timestamp.present) {
+      context.handle(_timestampMeta,
+          timestamp.isAcceptableValue(d.timestamp.value, _timestampMeta));
+    } else if (isInserting) {
+      context.missing(_timestampMeta);
+    }
+    if (d.content.present) {
+      context.handle(_contentMeta,
+          content.isAcceptableValue(d.content.value, _contentMeta));
+    } else if (isInserting) {
+      context.missing(_contentMeta);
+    }
+    if (d.fromName.present) {
+      context.handle(_fromNameMeta,
+          fromName.isAcceptableValue(d.fromName.value, _fromNameMeta));
+    } else if (isInserting) {
+      context.missing(_fromNameMeta);
+    }
+    if (d.delivered.present) {
+      context.handle(_deliveredMeta,
+          delivered.isAcceptableValue(d.delivered.value, _deliveredMeta));
+    }
+    if (d.read.present) {
+      context.handle(
+          _readMeta, read.isAcceptableValue(d.read.value, _readMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  DBMessage map(Map<String, dynamic> data, {String tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : null;
+    return DBMessage.fromData(data, _db, prefix: effectivePrefix);
+  }
+
+  @override
+  Map<String, Variable> entityToSql(DBMessagesCompanion d) {
+    final map = <String, Variable>{};
+    if (d.id.present) {
+      map['id'] = Variable<int, IntType>(d.id.value);
+    }
+    if (d.channelId.present) {
+      map['channel_id'] = Variable<int, IntType>(d.channelId.value);
+    }
+    if (d.timestamp.present) {
+      map['timestamp'] = Variable<int, IntType>(d.timestamp.value);
+    }
+    if (d.content.present) {
+      map['content'] = Variable<String, StringType>(d.content.value);
+    }
+    if (d.fromName.present) {
+      map['from_name'] = Variable<String, StringType>(d.fromName.value);
+    }
+    if (d.delivered.present) {
+      map['delivered'] = Variable<bool, BoolType>(d.delivered.value);
+    }
+    if (d.read.present) {
+      map['read'] = Variable<bool, BoolType>(d.read.value);
+    }
+    return map;
+  }
+
+  @override
+  $DBMessagesTable createAlias(String alias) {
+    return $DBMessagesTable(_db, alias);
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(SqlTypeSystem.defaultInstance, e);
   $LocalSettingsTable _localSettings;
@@ -1061,11 +1418,16 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   $DBChannelsTable get dBChannels => _dBChannels ??= $DBChannelsTable(this);
   $DBPeersTable _dBPeers;
   $DBPeersTable get dBPeers => _dBPeers ??= $DBPeersTable(this);
+  $DBMessagesTable _dBMessages;
+  $DBMessagesTable get dBMessages => _dBMessages ??= $DBMessagesTable(this);
   DBPeersDao _dBPeersDao;
   DBPeersDao get dBPeersDao => _dBPeersDao ??= DBPeersDao(this as AppDatabase);
+  DBMessagesDao _dBMessagesDao;
+  DBMessagesDao get dBMessagesDao =>
+      _dBMessagesDao ??= DBMessagesDao(this as AppDatabase);
   @override
   Iterable<TableInfo> get allTables => allSchemaEntities.whereType<TableInfo>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities =>
-      [localSettings, dBChannels, dBPeers];
+      [localSettings, dBChannels, dBPeers, dBMessages];
 }
