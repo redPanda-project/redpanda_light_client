@@ -32,6 +32,10 @@ class Channel {
     return _nodeId;
   }
 
+  set nodeId(NodeId value) {
+    _nodeId = value;
+  }
+
   /**
    * Uses the sharedSecrete from the underlying DBChannel to encrypt the given data.
    */
@@ -91,6 +95,11 @@ class Channel {
   String get name => _name;
 
   DBChannel get dbChannel => _dbChannel;
+
+
+  set dbChannel(DBChannel value) {
+    _dbChannel = value;
+  }
 
   Map<String, dynamic> getChannelData() {
     if (_channelData == null) {

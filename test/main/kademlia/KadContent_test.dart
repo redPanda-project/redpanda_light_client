@@ -2,7 +2,9 @@ import 'dart:typed_data';
 
 import 'package:redpanda_light_client/export.dart';
 import 'package:redpanda_light_client/src/main/ByteBuffer.dart';
+import 'package:redpanda_light_client/src/main/Channel.dart';
 import 'package:redpanda_light_client/src/main/NodeId.dart';
+import 'package:redpanda_light_client/src/main/Utils.dart';
 import 'package:redpanda_light_client/src/main/kademlia/KadContent.dart';
 import 'package:test/test.dart';
 
@@ -23,6 +25,12 @@ void main() {
       expect(kadContent.getKademliaId() != null, true);
 
       expect(kadContent.getKademliaId() != kadContentOld.getKademliaId(), true);
+
+      var channel = new Channel.newWithName("name");
+
+      channel.dbChannel = new DBChannel(id: null, name: null, sharedSecret: Utils.randBytes(32), nodeId: null);
+
+      kadContent.encryptWith(channel);
 
       kadContent.signWith(nodeId);
 
