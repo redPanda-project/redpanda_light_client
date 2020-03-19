@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:logging/logging.dart';
 import 'package:moor/moor.dart';
 import 'package:moor_ffi/moor_ffi.dart';
 import 'package:path/path.dart' as p;
@@ -20,6 +21,8 @@ import 'package:redpanda_light_client/src/main/store/DBPeersDao.dart';
  * This will generate the file moor_database.g.dart which will then be used by dart
  */
 part 'moor_database.g.dart';
+
+final log = Logger('moor_database');
 
 // this will generate a table called LocalSettings for us. The rows of that table will
 // be represented by a class called LocalSetting.
@@ -91,7 +94,7 @@ class AppDatabase extends _$AppDatabase {
 
     DBChannelsCompanion entry =
         DBChannelsCompanion.insert(name: name, sharedSecret: Utils.randBytes(32), nodeId: nodeId.exportWithPrivate());
-    print("insert channel");
+    log.finest("insert channel");
     return into(dBChannels).insert(entry);
   }
 
@@ -104,7 +107,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<int> updateChannelData(int id, String channelDataString) async {
-    print('update channel data ${channelDataString}');
+    log.info('update channel data ${channelDataString}');
     return (update(dBChannels)..where((tbl) => tbl.id.equals(id)))
         .write(DBChannelsCompanion(channelData: Value(channelDataString)));
   }

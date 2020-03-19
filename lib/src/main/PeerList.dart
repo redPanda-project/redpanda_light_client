@@ -1,9 +1,11 @@
 import 'dart:collection';
 
+import 'package:logging/logging.dart';
 import 'package:redpanda_light_client/src/main/KademliaId.dart';
 import 'package:redpanda_light_client/src/main/Peer.dart';
 
 class PeerList {
+  static final log = Logger('PeerList');
   static final HashMap<KademliaId, Peer> _hashMap = HashMap<KademliaId, Peer>();
   static final HashMap<int, Peer> _hashMapIpPort = HashMap<int, Peer>();
   static final List<Peer> _peerlist = List<Peer>();
@@ -15,7 +17,7 @@ class PeerList {
       bool containsKey = _hashMap.containsKey(kademliaId);
 
       if (!containsKey) {
-        print('new peer which was not in our list....');
+        log.finest('new peer which was not in our list....');
         _hashMap.putIfAbsent(kademliaId, () => peer);
         _hashMapIpPort.update(peer.getIpPortHash(), (oldPeer) => peer, ifAbsent: () => peer);
         _peerlist.add(peer);

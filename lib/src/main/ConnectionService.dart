@@ -3,6 +3,7 @@ import 'dart:core';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:logging/logging.dart';
 import 'package:redpanda_light_client/src/main/ByteBuffer.dart';
 import 'package:redpanda_light_client/src/main/Command.dart';
 import 'package:redpanda_light_client/src/main/KademliaId.dart';
@@ -16,6 +17,8 @@ import 'package:sentry/sentry.dart';
 import 'NodeId.dart';
 
 class ConnectionService {
+
+  static final log = Logger('RedPandaLightClient');
   static final SentryClient sentry =
       new SentryClient(dsn: "https://5ab6bb5e18a84fc1934b438139cc13d1@sentry.io/3871436");
 
@@ -53,7 +56,7 @@ class ConnectionService {
     List<Peer> toRemove = [];
 
     for (Peer peer in PeerList.getList()) {
-      print('Peer: ${peer.getKademliaId()} retries: ${peer.restries} ');
+      log.finest('Peer: ${peer.getKademliaId()} retries: ${peer.restries} ');
 
       if (peer.restries > 10) {
         toRemove.add(peer);
@@ -110,10 +113,10 @@ class ConnectionService {
 
     await setupLocalSettings();
 
-    print('test insert new channel');
+    log.finest('test insert new channel');
     await appDatabase.createNewChannel("Title1");
 
-    print('My NodeId: ' + kademliaId.toString());
+    log.fine('My NodeId: ' + kademliaId.toString());
 
     /**
      * We run loop immediately and every 5 seconds, this method will check for
@@ -174,7 +177,7 @@ class ConnectionService {
 
       peer.socket = socket;
 
-      print('Connected to: '
+      log.finer('Connected to: '
           '${socket.remoteAddress.address}:${socket.remotePort}');
       socket.handleError(peer.onError);
 
@@ -188,9 +191,9 @@ class ConnectionService {
       byteBuffer.writeByte(8); //protocoll version code
       byteBuffer.writeByte(129); //lightClient
       byteBuffer.writeList(kademliaId.bytes);
-      print(byteBuffer.buffer.asUint8List());
+//      print(byteBuffer.buffer.asUint8List());
       byteBuffer.writeInt(myPort); //port
-      print(byteBuffer.buffer.asUint8List());
+//      print(byteBuffer.buffer.asUint8List());
 
       socket.add(byteBuffer.buffer.asInt8List());
 

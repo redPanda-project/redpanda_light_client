@@ -2,6 +2,7 @@
 
 import 'dart:collection';
 
+import 'package:logging/logging.dart';
 import 'package:redpanda_light_client/export.dart';
 import 'package:redpanda_light_client/src/main/Channel.dart';
 import 'package:redpanda_light_client/src/main/ConnectionService.dart';
@@ -13,8 +14,27 @@ import 'package:redpanda_light_client/src/main/Utils.dart';
 class RedPandaLightClient {
   static ConnectionService connectionService;
   static bool running = false;
+  static final log = Logger('RedPandaLightClient');
+
+  static String formatToMinLen(String s, int len) {
+    int toAdd = len - s.length;
+    if (toAdd < 1) {
+      return s;
+    }
+
+    for (int i = 0; i < toAdd; i++) {
+      s += " ";
+    }
+    return s;
+  }
 
   static Future<void> init(String dataFolderPath, int myPort) async {
+    Logger.root.level = Level.ALL; // defaults to Level.INFO
+    Logger.root.onRecord.listen((record) {
+//      print('${record.level.name}: ${record.time}: ${record.message}');
+      print('${formatToMinLen(record.loggerName,30)}: ${record.time}:    ${record.message}');
+    });
+
     // create sqlite database folder otherwise the database opening will fail
     // with: SqliteException: bad parameter or other API misuse, unable to open database file
 //    if (Platform.isWindows) {
@@ -22,18 +42,17 @@ class RedPandaLightClient {
 //    }
 
     if (running) {
-      print("RedPandaLightClient already running skipping new init...");
+      log.info("RedPandaLightClient already running skipping new init...");
       return;
     }
     running = true;
 
     connectionService = ConnectionService(dataFolderPath, myPort);
     await connectionService.start();
-    print('db: ' + ConnectionService.appDatabase.toString());
   }
 
   static Future<void> shutdown() async {
-    print("RedPandaLightClient shutting down...");
+    log.info("RedPandaLightClient shutting down...");
     running = false;
     await ConnectionService.appDatabase.close();
     await connectionService.loopTimer.cancel();
@@ -84,7 +103,7 @@ class RedPandaLightClient {
       } else {
         print('found userdata');
         int generated = userData['generated'];
-        if (Utils.getCurrentTimeMillis() - generated > 1000 * 10) {
+        if (Utils.getCurrentTimeMillis() - generated > 1000 * 120) {
           print('found userdata is too old...');
           channel.setUserData(myUserId, myUserdata);
           await channel.saveChannelData();

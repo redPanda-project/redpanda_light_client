@@ -5,6 +5,7 @@ import 'dart:typed_data' hide ByteBuffer;
 import 'dart:typed_data';
 
 import 'package:buffer/buffer.dart';
+import 'package:logging/logging.dart';
 import 'package:pointycastle/api.dart';
 import 'package:pointycastle/export.dart';
 import 'package:redpanda_light_client/src/main/ByteBuffer.dart';
@@ -20,6 +21,7 @@ import 'package:convert/convert.dart';
 import 'package:redpanda_light_client/src/main/commands/FBPeerList_im.redpanda.commands_generated.dart';
 
 class Peer {
+  static final log = Logger('Peer');
   static final int IVbytelen = 16;
   static final int IVbytelenHalf = 8;
 
@@ -140,7 +142,7 @@ class Peer {
         lastActionOnConnection = new DateTime.now().millisecondsSinceEpoch;
 //        print('received pong...');
       } else if (decryptedCommand == Command.SEND_PEERLIST) {
-        print('received peerlist...');
+        log.finer('received peerlist...');
 
         int toReadBytes = decryptBuffer.readInt();
 
@@ -161,7 +163,7 @@ class Peer {
             continue;
           }
 
-          print("peer in fblist: " + fbPeer.ip + " " + kademliaId.toString());
+          log.finer("peer in fblist: " + fbPeer.ip + " " + kademliaId.toString());
 
           PeerList.add(new Peer.withKademliaId(fbPeer.ip, fbPeer.port, kademliaId));
         }
@@ -177,7 +179,7 @@ class Peer {
          */
         bool b = parseHandshake(buffer);
 
-        print('handshake ok: $b');
+        log.finest('handshake ok: $b');
       } else {
         /**
          * The status indicates that the first handshake was already parsed before for this
@@ -198,14 +200,14 @@ class Peer {
 
           NodeId peerNodeId = NodeId.importPublic(Uint8List.fromList(bytesForPublicKey));
 
-          print('new nodeid from peer: ' + peerNodeId.toString());
+          log.finer('new nodeid from peer: ' + peerNodeId.toString());
 
           if (_kademliaId != peerNodeId.getKademliaId()) {
             /**
              * We obtained a public key which does not match the KademliaId of this Peer
              * and should cancel that connection here.
              */
-            print('wrong public key for node id found, disconnecting...');
+            log.warning('wrong public key for node id found, disconnecting...');
             handshakeStatus = 2;
             SentryLogger.log("Error code: g4bdghstg3f4");
             disconnect();
@@ -224,7 +226,7 @@ class Peer {
 
           //lets read the random bytes from them
           if (buffer.remaining() < IVbytelenHalf) {
-            print("not enough bytes for encryption... " + buffer.remaining().toString());
+            log.warning("not enough bytes for encryption... " + buffer.remaining().toString());
             disconnect();
             return;
           }
@@ -234,7 +236,7 @@ class Peer {
           randomFromThem = Uint8List.fromList(bytesForPublicKey);
           waitingForEncryption = true;
 
-          print('obtained activate enc cmd and bytes for IV');
+          log.finest('obtained activate enc cmd and bytes for IV');
         }
       }
 
@@ -248,7 +250,7 @@ class Peer {
         byteBuffer.writeList(getRandomFromUs());
         socket.add(byteBuffer.array());
 
-        print("written bytes for ACTIVATE_ENCRYPTION");
+        log.finer("written bytes for ACTIVATE_ENCRYPTION");
 
         weSendOurRandom = true;
       }
@@ -256,7 +258,7 @@ class Peer {
       if (handshakeStatus == -1 && waitingForEncryption && hasPublicKey()) {
         waitingForEncryption = false;
 
-        print("lets generate the shared secret");
+        log.finest("lets generate the shared secret");
 
         calculateSharedSecret();
 
@@ -282,14 +284,14 @@ class Peer {
       /**
        * The encryption is active in this section, lets check that first ping
        */
-      print("received first encrypted command...");
+      log.finer("received first encrypted command...");
 
       ByteBuffer decryptBuffer = decrypt(buffer);
 
       int decryptedCommand = decryptBuffer.readByte();
 
       if (decryptedCommand == Command.PING) {
-        print("received first ping...");
+        log.finer("received first ping...");
 
         /**
          * We can now safely transfer the open connection from the peerInHandshake to the
@@ -420,18 +422,18 @@ class Peer {
 
 //    print('enc cmd: ' + encBytes.toString());
 
-    socket.handleError((e) => {print(e.toString())});
+    socket.handleError((e) => {log.finer("error2: "+ e.toString())});
 
     socket.add(encBytes);
   }
 
   void calculateSharedSecret() {
-    print('calculateSharedSecret');
+    log.finest('calculateSharedSecret');
 
     ECPublicKey publicKey = _nodeId.getKeyPair().publicKey;
     Uint8List encoded = generateIntermediateSharedSecret(ConnectionService.nodeId.getKeyPair(), publicKey.Q);
 
-    print('intermediateSharedSecret: ' + Utils.hexEncode(encoded).toString());
+    log.finest('intermediateSharedSecret: ' + Utils.hexEncode(encoded).toString());
 
     ByteBuffer bytesForPrivateAESkeySend = ByteBuffer(32 + IVbytelen);
     ByteBuffer bytesForPrivateAESkeyReceive = ByteBuffer(32 + IVbytelen);
@@ -505,32 +507,32 @@ class Peer {
   bool parseHandshake(ByteBuffer buffer) {
     //    print(buffer.readBytes(4));
     if (!Utils.listsAreEqual(Utils.MAGIC, buffer.readBytes(4))) {
-      print("wrong magic, disconnect!");
+      log.fine("wrong magic, disconnect!");
       return false;
     }
 
     int version = buffer.readByte();
-    print("version $version");
+    log.finest("version $version");
 
     int lightClient = buffer.readByte();
-    print("lightclient code: $lightClient");
+    log.finest("lightclient code: $lightClient");
 
     Uint8List nonce = buffer.readBytes(20);
 //    print("server identity: " + HEX.encode(nonce).toUpperCase());
 
     _kademliaId = new KademliaId.fromBytes(nonce);
 
-    print('Found node with id: ' + _kademliaId.toString());
+    log.finest('Found node with id: ' + _kademliaId.toString());
 
     if (_nodeId == null || _nodeId.getKeyPair() == null) {
       //we have to request the public key of the node
       requestPublicKey();
-      print('requested public key from peer...');
+      log.finest('requested public key from peer...');
     } else {
       handshakeStatus = -1;
     }
 
-    print(buffer.readUnsignedShort());
+//    print(buffer.readUnsignedShort());
     return true;
   }
 
@@ -556,7 +558,7 @@ class Peer {
 
   void onError(error) {
 //    print("error found: $error");
-    print("error found... " + error.toString());
+    log.info("error found... " + error.toString());
   }
 
   void requestPublicKey() {

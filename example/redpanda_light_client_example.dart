@@ -13,8 +13,11 @@ void main() async {
 
   await RedPandaLightClient.init(dataFolderPath, 5500);
 
+//  const oneSec = const Duration(seconds: 5);
+//  new Timer(oneSec, () => RedPandaLightClient.shutdown());
+
   const oneSec = const Duration(seconds: 5);
-  new Timer(oneSec, () => RedPandaLightClient.shutdown());
+  new Timer(oneSec, () => RedPandaLightClient.maintain());
 }
 
 //todo documentation of used licenses
