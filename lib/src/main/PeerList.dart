@@ -66,7 +66,8 @@ class PeerList {
   static void sendIntegrated(ByteBuffer bytes) async {
     for (Peer p in _peerlist) {
       if (p.connected) {
-        p.sendEncrypt(bytes);
+       await p.sendEncrypt(bytes);
+        print("send to: " + p.getKademliaId().toString());
         return;
       }
     }

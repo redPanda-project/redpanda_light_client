@@ -423,7 +423,7 @@ class Peer {
   Future<void> sendEncrypt(ByteBuffer buffer) async {
 //    print('len bytes to send enc: ' + buffer.remaining().toString() + " cmd: " + buffer.array().toString());
 
-    Uint8List encBytes = ctrStreamCipherSend.process(buffer.array());
+    Uint8List encBytes = await ctrStreamCipherSend.process(buffer.array());
 
 //    print('len bytes to send enc: ' + encBytes.length.toString());
 
@@ -431,7 +431,8 @@ class Peer {
 
     socket.handleError((e) => {log.finer("error2: " + e.toString())});
 
-    socket.add(encBytes);
+    await socket.add(encBytes);
+    await socket.flush();
   }
 
   void calculateSharedSecret() {
@@ -599,7 +600,7 @@ class Peer {
     //todo maybe we need to do some more?
 
     if (socket != null) {
-      socket.close();
+//      socket.close();
       socket.destroy();
     }
 

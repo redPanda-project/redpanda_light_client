@@ -78,7 +78,13 @@ class RedPandaLightClient {
 
     String myUserId = localSettings.myUserId;
 
-    for (DBChannel dbChannel in await allChannels) {
+    int cntUpdatedChannels = 0;
+
+    for (DBChannel dbChannel in allChannels) {
+      if (cntUpdatedChannels >= 1) {
+        break;
+      }
+
       Channel channel = new Channel(dbChannel);
 
       Map<String, dynamic> channelData = channel.getChannelData();
@@ -109,7 +115,7 @@ class RedPandaLightClient {
       } else {
 //        print('found userdata');
         int generated = userData['generated'];
-        if (Utils.getCurrentTimeMillis() - generated > 1000 * 10) {
+        if (Utils.getCurrentTimeMillis() - generated > 1000 * 60 * 10) {
 //          print('found userdata is too old...');
           channel.setUserData(myUserId, myUserdata);
           await channel.saveChannelData();
@@ -118,17 +124,18 @@ class RedPandaLightClient {
       }
 
       if (updated) {
+        cntUpdatedChannels++;
         String channelDataString = jsonEncode(channel.getChannelData());
         var channelDataStringBytes = Utils.encodeUTF8(channelDataString);
 
         KadContent kadContent = new KadContent.createNow(channel.getNodeId().exportPublic(), channelDataStringBytes);
 
-        kadContent.encryptWith(channel);
+        await kadContent.encryptWith(channel);
 
-        kadContent.signWith(channel.getNodeId());
+        await kadContent.signWith(channel.getNodeId());
 
-        PeerList.sendIntegrated(kadContent.toCommand());
-        log.finest("send to integrated....");
+        await PeerList.sendIntegrated(kadContent.toCommand());
+        log.finest("send to integrated.... " + kadContent.getKademliaId().toString());
       }
 
       log.finest("");

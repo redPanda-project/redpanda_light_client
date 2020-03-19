@@ -63,7 +63,7 @@ class KadContent {
     return Utils.sha256(buffer.array());
   }
 
-  void encryptWith(Channel channel) {
+  Future<void> encryptWith(Channel channel) async {
     var iv = Utils.getSecureRandom().nextBytes(16);
 
     var encryptAES = channel.encryptAES(_content, iv);
@@ -77,7 +77,7 @@ class KadContent {
     _content = ivAndContentBuffer.array();
   }
 
-  void signWith(NodeId nodeId) {
+  Future<void>  signWith(NodeId nodeId) async {
     if (!_encrypted) {
       throw new Exception('KadContent has to be encrypted before signing!');
     }
@@ -101,7 +101,7 @@ class KadContent {
     }
 
     ByteBuffer writeBuffer = ByteBuffer(
-        1 + 4 + KademliaId.ID_LENGTH_BYTES + 8 + pubkey.length + 8 + _content.length + getSignature().length);
+        1 + 4 + KademliaId.ID_LENGTH_BYTES + 8 + pubkey.length + 4 + _content.length + getSignature().length);
     writeBuffer.writeByte(Command.KADEMLIA_STORE);
     writeBuffer.writeInt(Utils.random.nextInt(6000)); //todo check for ack with this id?
     writeBuffer.writeList(getKademliaId().bytes);
@@ -110,6 +110,12 @@ class KadContent {
     writeBuffer.writeInt(_content.length);
     writeBuffer.writeList(_content);
     writeBuffer.writeList(getSignature());
+
+    //todo can be removed later
+    if (writeBuffer.offset != writeBuffer.length) {
+      throw new Exception("ByteBuffer for KadContent cmd was wrong!");
+    }
+
     return writeBuffer;
   }
 }

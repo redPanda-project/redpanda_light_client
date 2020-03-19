@@ -133,7 +133,7 @@ class ConnectionService {
      * timed out peers and establish connections.
      */
     await loop();
-    const oneSec = Duration(seconds: 10);
+    const oneSec = Duration(seconds: 5);
     loopTimer = new Timer.periodic(oneSec, (Timer t) => {loop()});
   }
 
