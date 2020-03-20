@@ -30,7 +30,7 @@ class ConnectionService {
 
   static NodeId nodeId;
   static KademliaId kademliaId;
-  static AppDatabase appDatabase;
+  static AppDatabase _appDatabase;
   Timer loopTimer;
   static int myPort;
 
@@ -38,6 +38,8 @@ class ConnectionService {
     ConnectionService.pathToDatabase = pathToDatabase;
     myPort = mPort;
   }
+
+  static AppDatabase get appDatabase => _appDatabase;
 
   Future<void> loop() async {
     //todo we have to use the zone around each peer and not for the entire loop
@@ -119,15 +121,15 @@ class ConnectionService {
      * Setup database and LocalSettings...
      */
 
-    appDatabase = new AppDatabase();
+    _appDatabase = new AppDatabase();
 
     await setupLocalSettings();
 
-    var list = await appDatabase.getAllChannels();
+    var list = await _appDatabase.getAllChannels();
 
     if (list.isEmpty) {
       log.finest('test insert first channel');
-      await appDatabase.createNewChannel("Title1");
+      await _appDatabase.createNewChannel("Title1");
     }
 
     log.fine('My NodeId: ' + kademliaId.toString());
@@ -148,7 +150,7 @@ class ConnectionService {
   }
 
   static Future<void> setupLocalSettings() async {
-    localSetting = await appDatabase.getLocalSettings;
+    localSetting = await _appDatabase.getLocalSettings;
     if (localSetting == null) {
       //no settings found
 
@@ -161,7 +163,7 @@ class ConnectionService {
           myUserId: Utils.randomString(12),
           defaultName: "Unknown");
 
-      await appDatabase.save(localSettingsCompanion);
+      await _appDatabase.save(localSettingsCompanion);
       print('new localsettings saved!');
     } else {
       nodeId = NodeId.importWithPrivate(localSetting.privateKey);
@@ -276,13 +278,11 @@ class ConnectionService {
   }
 
   static Future<void> maintain() async {
-    var appDatabase = ConnectionService.appDatabase;
-
-    LocalSetting localSettings = await appDatabase.getLocalSettings;
+    LocalSetting localSettings = await _appDatabase.getLocalSettings;
 
     Map<String, dynamic> myUserdata = await generateMyUserData(localSettings);
 
-    List<DBChannel> allChannels = await appDatabase.getAllChannels();
+    List<DBChannel> allChannels = await _appDatabase.getAllChannels();
 
     print('channels: ' + allChannels.length.toString());
 
@@ -291,9 +291,13 @@ class ConnectionService {
     int cntUpdatedChannels = 0;
 
     for (DBChannel dbChannel in allChannels) {
-      if (cntUpdatedChannels >= 1) {
+      if (cntUpdatedChannels >= 20) {
         break;
       }
+
+      print("sleep");
+      await new Future.delayed(const Duration(seconds: 1), () => "1");
+      print("sleep end");
 
       Channel channel = new Channel(dbChannel);
 
@@ -320,7 +324,7 @@ class ConnectionService {
 //        print('no userdata found from us...');
 
         channel.setUserData(myUserId, myUserdata);
-        await channel.saveChannelData();
+        await channel.saveChannelData(_appDatabase);
         updated = true;
       } else {
 //        print('found userdata');
@@ -328,7 +332,7 @@ class ConnectionService {
         if (Utils.getCurrentTimeMillis() - generated > 1000 * 60 * 10) {
 //          print('found userdata is too old...');
           channel.setUserData(myUserId, myUserdata);
-          await channel.saveChannelData();
+          await channel.saveChannelData(_appDatabase);
           updated = true;
         }
       }

@@ -113,8 +113,8 @@ class Channel {
     return _channelData;
   }
 
-  Future<void> saveChannelData() async {
-    await ConnectionService.appDatabase.updateChannelData(_dbChannel.id, jsonEncode(_channelData));
+  Future<void> saveChannelData(AppDatabase appDatabase) async {
+    await appDatabase.updateChannelData(_dbChannel.id, jsonEncode(_channelData));
   }
 
   void setUserData(String myUserId, Map<String, dynamic> myUserdata) {
