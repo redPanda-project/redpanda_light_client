@@ -1,16 +1,19 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:core';
 import 'dart:io';
 
 import 'package:logging/logging.dart';
 import 'package:redpanda_light_client/export.dart';
 import 'package:redpanda_light_client/src/main/ByteBuffer.dart';
+import 'package:redpanda_light_client/src/main/Channel.dart';
 import 'package:redpanda_light_client/src/main/Command.dart';
 import 'package:redpanda_light_client/src/main/KademliaId.dart';
 import 'package:redpanda_light_client/src/main/Peer.dart';
 import 'package:redpanda_light_client/src/main/PeerList.dart';
 import 'package:redpanda_light_client/src/main/Settings.dart';
 import 'package:redpanda_light_client/src/main/Utils.dart';
+import 'package:redpanda_light_client/src/main/kademlia/KadContent.dart';
 import 'package:redpanda_light_client/src/main/store/moor_database.dart';
 import 'package:sentry/sentry.dart';
 
@@ -57,7 +60,7 @@ class ConnectionService {
     log.finest('loop through peers');
 
     for (Peer peer in PeerList.getList()) {
-      log.finest('Peer: ${peer.getKademliaId()} retries: ${peer.restries} ');
+      log.finest('Peer: ${peer.getKademliaId()} retries: ${peer.restries} ip: ${peer.ip}');
 
       if (peer.restries > 10) {
         toRemove.add(peer);
@@ -67,18 +70,6 @@ class ConnectionService {
       if (peer.connecting || peer.connected) {
         if (new DateTime.now().millisecondsSinceEpoch - peer.lastActionOnConnection > 1000 * 15) {
           peer.disconnect();
-
-          for (Function setState in Utils.states) {
-            setState(() {
-              // This call to setState tells the Flutter framework that something has
-              // changed in this State, which causes it to rerun the build method below
-              // so that the display can reflect the updated values. If we changed
-              // _counter without calling setState(), then the build method would not be
-              // called again, and so nothing would appear to happen.
-              peer.connecting = false;
-              peer.connected = false;
-            });
-          }
         }
 
         if (peer.connected && peer.isEncryptionActive) {
@@ -87,20 +78,33 @@ class ConnectionService {
 
           byteBuffer.flip();
 
-          await peer.sendEncrypt(byteBuffer);
+          runZoned<Future<void>>(() async {
+            await peer.sendEncrypt(byteBuffer);
+          }, onError: (error, stackTrace) {
+            print("failed to ping peer... captured for peer: " + peer.ip);
+            peer.disconnect();
+//            print("failed to ping peer... captured for peer: " + peer.ip + " : " + error.toString());
+//            print(stackTrace);
+            ConnectionService.sentry.captureException(exception: error, stackTrace: stackTrace);
+          });
 //          print('pinged peer...');
         }
 
         continue;
       }
 
-      await connectTo(peer);
+      runZoned<Future<void>>(() async {
+        await connectTo(peer);
+      }, onError: (error, stackTrace) {
+        peer.disconnect();
+        print("captured for peer: " + peer.ip + " : " + error.toString());
+        print(stackTrace);
+        ConnectionService.sentry.captureException(exception: error, stackTrace: stackTrace);
+      });
+
       //only connect to one node each time
       break;
     }
-
-    const oneSec = Duration(seconds: 1);
-    new Timer(oneSec, () => RedPandaLightClient.maintain());
 
     for (Peer peer in toRemove) {
       await PeerList.remove(peer);
@@ -133,8 +137,14 @@ class ConnectionService {
      * timed out peers and establish connections.
      */
     await loop();
-    const oneSec = Duration(seconds: 5);
-    loopTimer = new Timer.periodic(oneSec, (Timer t) => {loop()});
+    const timeRepeatConectionMaintain = Duration(seconds: 10);
+    loopTimer = new Timer.periodic(timeRepeatConectionMaintain, (Timer t) => {loop()});
+
+    const initFireChannelMaintain = Duration(seconds: 1);
+    new Timer(initFireChannelMaintain, () => maintain());
+
+    const timeRepeatChannelMaintain = Duration(seconds: 20);
+    new Timer(timeRepeatChannelMaintain, () => maintain());
   }
 
   static Future<void> setupLocalSettings() async {
@@ -162,16 +172,7 @@ class ConnectionService {
   }
 
   Future<void> connectTo(Peer peer) async {
-    for (Function setState in Utils.states) {
-      setState(() {
-        // This call to setState tells the Flutter framework that something has
-        // changed in this State, which causes it to rerun the build method below
-        // so that the display can reflect the updated values. If we changed
-        // _counter without calling setState(), then the build method would not be
-        // called again, and so nothing would appear to happen.
-        peer.connecting = true;
-      });
-    }
+    peer.connecting = true;
 
     peer.lastActionOnConnection = new DateTime.now().millisecondsSinceEpoch;
     peer.restries++;
@@ -272,5 +273,87 @@ class ConnectionService {
         stackTrace: stackTrace,
       );
     }
+  }
+
+  static Future<void> maintain() async {
+    var appDatabase = ConnectionService.appDatabase;
+
+    LocalSetting localSettings = await appDatabase.getLocalSettings;
+
+    Map<String, dynamic> myUserdata = await generateMyUserData(localSettings);
+
+    List<DBChannel> allChannels = await appDatabase.getAllChannels();
+
+    print('channels: ' + allChannels.length.toString());
+
+    String myUserId = localSettings.myUserId;
+
+    int cntUpdatedChannels = 0;
+
+    for (DBChannel dbChannel in allChannels) {
+      if (cntUpdatedChannels >= 1) {
+        break;
+      }
+
+      Channel channel = new Channel(dbChannel);
+
+      Map<String, dynamic> channelData = channel.getChannelData();
+
+//      log.finest("chan object[${dbChannel.id}]: ${dbChannel.channelData}");
+
+      if (channelData == null) {
+        continue;
+      }
+
+      Map<String, dynamic> userData = null;
+      Map<String, dynamic> channelData2 = channelData['userdata'];
+
+      if (channelData2 != null) {
+        userData = channelData2[myUserId];
+      } else {
+        channelData['userdata'] = {};
+      }
+
+      bool updated = false;
+
+      if (userData == null) {
+//        print('no userdata found from us...');
+
+        channel.setUserData(myUserId, myUserdata);
+        await channel.saveChannelData();
+        updated = true;
+      } else {
+//        print('found userdata');
+        int generated = userData['generated'];
+        if (Utils.getCurrentTimeMillis() - generated > 1000 * 60 * 10) {
+//          print('found userdata is too old...');
+          channel.setUserData(myUserId, myUserdata);
+          await channel.saveChannelData();
+          updated = true;
+        }
+      }
+
+      if (updated) {
+        cntUpdatedChannels++;
+        String channelDataString = jsonEncode(channel.getChannelData());
+        var channelDataStringBytes = Utils.encodeUTF8(channelDataString);
+
+        KadContent kadContent = new KadContent.createNow(channel.getNodeId().exportPublic(), channelDataStringBytes);
+
+        await kadContent.encryptWith(channel);
+
+        await kadContent.signWith(channel.getNodeId());
+
+        await PeerList.sendIntegrated(kadContent.toCommand());
+        log.finest("send to integrated.... " + kadContent.getKademliaId().toString());
+      }
+
+//      log.finest("");
+    }
+  }
+
+  static Map<String, dynamic> generateMyUserData(LocalSetting localSettings) {
+    var data = {"nick": localSettings.defaultName, "generated": Utils.getCurrentTimeMillis()};
+    return data;
   }
 }

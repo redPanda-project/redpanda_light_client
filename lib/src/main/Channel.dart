@@ -48,7 +48,7 @@ class Channel {
 
     int bytesWithFullBlock = 16 - bytes.length % 16;
 
-    print(bytes.length + bytesWithFullBlock);
+//    print(bytes.length + bytesWithFullBlock);
 
     var paddedBuffer = ByteBuffer(bytes.length + bytesWithFullBlock);
     paddedBuffer.writeList(bytes);
@@ -59,7 +59,7 @@ class Channel {
     padding.addPadding(paddedBuffer.array(), bytes.length);
 
     Uint8List encBytes = cbcBlockCipher.process(paddedBuffer.array());
-    print("enc byte: " + Utils.hexEncode(encBytes));
+//    print("enc byte: " + Utils.hexEncode(encBytes));
 
     return encBytes;
   }

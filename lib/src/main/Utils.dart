@@ -13,7 +13,6 @@ class Utils {
   static const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
   static Base58Codec base58codec = new Base58Codec(_bitcoinAlphabet);
   static final MAGIC = Utf8Codec().encode("k3gV");
-  static List<Function> states = new List();
   static SHA256Digest sha256Digest = new SHA256Digest();
 
   static Uint8List randBytes(int n) {

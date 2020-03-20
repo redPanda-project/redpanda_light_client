@@ -431,6 +431,8 @@ class Peer {
 
     socket.handleError((e) => {log.finer("error2: " + e.toString())});
 
+    log.finest("trying to add bytes for peer: " + ip);
+
     await socket.add(encBytes);
     await socket.flush();
   }
@@ -528,7 +530,7 @@ class Peer {
     Uint8List nonce = buffer.readBytes(20);
 //    print("server identity: " + HEX.encode(nonce).toUpperCase());
 
-    _kademliaId = new KademliaId.fromBytes(nonce);
+    updateKademliaId(new KademliaId.fromBytes(nonce));
 
     log.finest('Found node with id: ' + _kademliaId.toString());
 
@@ -554,19 +556,19 @@ class Peer {
     return (hex.length & 1 == 0) ? hex : '0$hex';
   }
 
-  @override
-  bool operator ==(other) {
-    Peer otherPeer = other as Peer;
-
-    //todo add port...
-    if (otherPeer.ip == ip) {
-      return true;
-    }
-  }
+//  @override
+//  bool operator ==(other) {
+//    Peer otherPeer = other as Peer;
+//
+//    //todo add port...
+//    if (otherPeer.ip == ip) {
+//      return true;
+//    }
+//  }
 
   void onError(error) {
 //    print("error found: $error");
-    log.info("error found... " + error.toString());
+    log.info("error found... ${ip} " + error.toString());
   }
 
   void requestPublicKey() {
@@ -602,6 +604,7 @@ class Peer {
     if (socket != null) {
 //      socket.close();
       socket.destroy();
+      socket = null;
     }
 
     // resets all variables such that the handshake can start from beginning
@@ -615,5 +618,10 @@ class Peer {
   static int generateIpPortHash(String ip, int port) {
     //ToDo: we need later a better method
     return ip.hashCode + port;
+  }
+
+  void updateKademliaId(KademliaId kademliaId) {
+    PeerList.updateKademliaId(this, _kademliaId, kademliaId);
+    _kademliaId = kademliaId;
   }
 }

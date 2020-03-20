@@ -77,7 +77,7 @@ class KadContent {
     _content = ivAndContentBuffer.array();
   }
 
-  Future<void>  signWith(NodeId nodeId) async {
+  Future<void> signWith(NodeId nodeId) async {
     if (!_encrypted) {
       throw new Exception('KadContent has to be encrypted before signing!');
     }
@@ -99,6 +99,8 @@ class KadContent {
     if (_signature == null) {
       throw new Exception('KadContent has to be signed before writing to a peer!');
     }
+
+    //todo kadId has to be computed from the public key and time stamp, remove from send
 
     ByteBuffer writeBuffer = ByteBuffer(
         1 + 4 + KademliaId.ID_LENGTH_BYTES + 8 + pubkey.length + 4 + _content.length + getSignature().length);

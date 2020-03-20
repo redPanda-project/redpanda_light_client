@@ -48,7 +48,7 @@ class PeerList {
     if (peer.getKademliaId() == null) {
       return remove2 != null;
     }
-    KademliaId kademliaId = peer.getNodeId().getKademliaId();
+    KademliaId kademliaId = peer.getKademliaId();
 
     var remove = _hashMap.remove(kademliaId);
 
@@ -65,11 +65,16 @@ class PeerList {
 
   static void sendIntegrated(ByteBuffer bytes) async {
     for (Peer p in _peerlist) {
-      if (p.connected) {
-       await p.sendEncrypt(bytes);
+      if (p.connected && p.socket != null) {
+        await p.sendEncrypt(bytes);
         print("send to: " + p.getKademliaId().toString());
         return;
       }
     }
+  }
+
+  static void updateKademliaId(Peer peer, KademliaId oldId, KademliaId newId) {
+    _hashMap.remove(oldId);
+    _hashMap.putIfAbsent(newId, () => peer);
   }
 }
