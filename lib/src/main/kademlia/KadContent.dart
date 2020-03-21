@@ -30,21 +30,21 @@ class KadContent {
    * KademliaId has to be computed from timestamp and pubkey to verify write permissions and support key rotation.
    */
   KademliaId getKademliaId() {
-    if (_id == null) {
-      final formattedStr = formatDate(DateTime.fromMillisecondsSinceEpoch(timestamp), [dd, '.', mm, '.', yy]);
-
-      List<int> formatedTimeBytes = formattedStr.codeUnits;
-
-      ByteBuffer byteBuffer = ByteBuffer(formatedTimeBytes.length + pubkey.length);
-      byteBuffer.writeList(formatedTimeBytes);
-      byteBuffer.writeList(pubkey);
-
-      Uint8List sha256 = Utils.sha256(byteBuffer.array());
-
-      _id = KademliaId.fromFirstBytes(sha256);
-    }
-
+    _id ??= createKademliaId(timestamp, pubkey);
     return _id;
+  }
+
+  static KademliaId createKademliaId(int timestamp, Uint8List pubkey) {
+    final formattedStr = formatDate(DateTime.fromMillisecondsSinceEpoch(timestamp), [dd, '.', mm, '.', yy]);
+
+    List<int> formatedTimeBytes = formattedStr.codeUnits;
+
+    ByteBuffer byteBuffer = ByteBuffer(formatedTimeBytes.length + pubkey.length);
+    byteBuffer.writeList(formatedTimeBytes);
+    byteBuffer.writeList(pubkey);
+
+    Uint8List sha256 = Utils.sha256(byteBuffer.array());
+    return KademliaId.fromFirstBytes(sha256);
   }
 
   Uint8List getSignature() {

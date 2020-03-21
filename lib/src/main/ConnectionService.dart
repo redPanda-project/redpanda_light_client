@@ -87,7 +87,7 @@ class ConnectionService {
             peer.disconnect();
 //            print("failed to ping peer... captured for peer: " + peer.ip + " : " + error.toString());
 //            print(stackTrace);
-            ConnectionService.sentry.captureException(exception: error, stackTrace: stackTrace);
+//            ConnectionService.sentry.captureException(exception: error, stackTrace: stackTrace);
           });
 //          print('pinged peer...');
         }
@@ -101,7 +101,7 @@ class ConnectionService {
         peer.disconnect();
         print("captured for peer: " + peer.ip + " : " + error.toString());
         print(stackTrace);
-        ConnectionService.sentry.captureException(exception: error, stackTrace: stackTrace);
+//        ConnectionService.sentry.captureException(exception: error, stackTrace: stackTrace);
       });
 
       //only connect to one node each time
@@ -139,14 +139,14 @@ class ConnectionService {
      * timed out peers and establish connections.
      */
     await loop();
-    const timeRepeatConectionMaintain = Duration(seconds: 10);
+    const timeRepeatConectionMaintain = Duration(seconds: 5);
     loopTimer = new Timer.periodic(timeRepeatConectionMaintain, (Timer t) => {loop()});
 
-    const initFireChannelMaintain = Duration(seconds: 1);
+    const initFireChannelMaintain = Duration(seconds: 6);
     new Timer(initFireChannelMaintain, () => maintain());
 
     const timeRepeatChannelMaintain = Duration(seconds: 20);
-    new Timer(timeRepeatChannelMaintain, () => maintain());
+    new Timer.periodic(timeRepeatChannelMaintain, (Timer t) => maintain());
   }
 
   static Future<void> setupLocalSettings() async {
@@ -295,9 +295,7 @@ class ConnectionService {
         break;
       }
 
-      print("sleep");
-      await new Future.delayed(const Duration(seconds: 1), () => "1");
-      print("sleep end");
+
 
       Channel channel = new Channel(dbChannel);
 
@@ -329,7 +327,7 @@ class ConnectionService {
       } else {
 //        print('found userdata');
         int generated = userData['generated'];
-        if (Utils.getCurrentTimeMillis() - generated > 1000 * 60 * 10) {
+        if (Utils.getCurrentTimeMillis() - generated > 1000 * 10) {
 //          print('found userdata is too old...');
           channel.setUserData(myUserId, myUserdata);
           await channel.saveChannelData(_appDatabase);
@@ -338,6 +336,21 @@ class ConnectionService {
       }
 
       if (updated) {
+        //lets seach the DHT network for fresh channel data
+
+        ByteBuffer writeBuffer = ByteBuffer(1 + 4 + KademliaId.ID_LENGTH_BYTES);
+        writeBuffer.writeByte(Command.KADEMLIA_GET);
+        writeBuffer.writeInt(Utils.random.nextInt(6000)); //todo check for ack with this id?
+        writeBuffer.writeList(
+            KadContent.createKademliaId(Utils.getCurrentTimeMillis(), channel.getNodeId().exportPublic()).bytes);
+        await PeerList.sendIntegrated(writeBuffer);
+
+
+        print("sleep");
+        await new Future.delayed(const Duration(seconds: 2), () => "1");
+        print("sleep end");
+
+
         cntUpdatedChannels++;
         String channelDataString = jsonEncode(channel.getChannelData());
         var channelDataStringBytes = Utils.encodeUTF8(channelDataString);
