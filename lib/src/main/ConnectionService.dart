@@ -48,6 +48,11 @@ class ConnectionService {
 
   static AppDatabase get appDatabase => _appDatabase;
 
+
+  static set appDatabase(AppDatabase value) {
+    _appDatabase = value;
+  }
+
   Future<void> loop() async {
     //todo we have to use the zone around each peer and not for the entire loop
     runZoned<Future<void>>(() async {
