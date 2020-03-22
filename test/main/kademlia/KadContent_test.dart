@@ -30,11 +30,15 @@ void main() {
 
       channel.dbChannel = new DBChannel(id: null, name: null, sharedSecret: Utils.randBytes(32), nodeId: null);
 
-      kadContent.encryptWith(channel);
+      await kadContent.encryptWith(channel);
 
-      kadContent.signWith(nodeId);
+      await kadContent.signWith(nodeId);
 
       expect(kadContent.verify(), true);
+
+      await kadContent.decryptWith(channel);
+
+      expect(Utils.listsAreEqual(byteBuffer.array(), kadContent.getContent()), true);
     });
   });
 }

@@ -4,6 +4,8 @@ import 'package:moor/moor.dart';
 import 'package:pointycastle/export.dart';
 import 'package:redpanda_light_client/export.dart';
 import 'package:redpanda_light_client/src/main/ByteBuffer.dart';
+import 'package:redpanda_light_client/src/main/Channel.dart';
+import 'package:redpanda_light_client/src/main/NodeId.dart';
 import 'package:redpanda_light_client/src/main/Peer.dart';
 import 'package:redpanda_light_client/src/main/PeerList.dart';
 import 'package:redpanda_light_client/src/main/Utils.dart';
@@ -103,6 +105,32 @@ void main() {
       expect(buffer.readByte(), 8);
     });
 
+    test('Test Channel enc dec', () {
+      var dbChannel = new DBChannel(
+          id: 1,
+          name: "name",
+          sharedSecret: Utils.randBytes(32),
+          nodeId: new NodeId.withNewKeyPair().exportWithPrivate());
 
+      var channel = new Channel(dbChannel);
+
+      ByteBuffer bytes = ByteBuffer(10265);
+      bytes.writeByte(8);
+      bytes.writeByte(125);
+
+      var iv = Utils.randBytes(16);
+
+      var encryptAES = channel.encryptAES(bytes.array(), iv);
+
+      var decryptAES = channel.decryptAES(encryptAES, iv);
+
+      var byteBuffer = ByteBuffer.fromList(decryptAES);
+
+      bytes.flip();
+      expect(byteBuffer.readByte(), bytes.readByte());
+      expect(byteBuffer.readByte(), bytes.readByte());
+
+      expect(bytes.length, byteBuffer.length);
+    });
   });
 }

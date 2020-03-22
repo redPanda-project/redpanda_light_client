@@ -32,7 +32,7 @@ class Channel {
     return _nodeId;
   }
 
-  set nodeId(NodeId value) {
+  setNodeId(NodeId value) {
     _nodeId = value;
   }
 
@@ -48,7 +48,9 @@ class Channel {
 
     int bytesWithFullBlock = 16 - bytes.length % 16;
 
-//    print(bytes.length + bytesWithFullBlock);
+    int fullLen = bytes.length + bytesWithFullBlock;
+
+//    print("full length: " + (bytes.length + bytesWithFullBlock).toString());
 
     var paddedBuffer = ByteBuffer(bytes.length + bytesWithFullBlock);
     paddedBuffer.writeList(bytes);
@@ -56,9 +58,22 @@ class Channel {
     var padding = new Padding("PKCS7");
     padding.init();
 
+//    print("offset: " + bytes.length.toString());
     padding.addPadding(paddedBuffer.array(), bytes.length);
 
-    Uint8List encBytes = cbcBlockCipher.process(paddedBuffer.array());
+//    print("dec byte with pad: " + Utils.hexEncode(paddedBuffer.array()));
+
+    var encBytes = new Uint8List(fullLen);
+    int currentStart = 0;
+
+    int len = 0;
+    while (currentStart + 16 <= fullLen) {
+      len += cbcBlockCipher.processBlock(paddedBuffer.array(), currentStart, encBytes, currentStart);
+      currentStart += 16;
+    }
+
+//    print("len: " + len.toString());
+
 //    print("enc byte: " + Utils.hexEncode(encBytes));
 
     return encBytes;
@@ -74,28 +89,35 @@ class Channel {
     var dec = CBCBlockCipher(AESFastEngine());
     dec.init(false, parametersWithIV);
 
-    Uint8List decBytes = dec.process(bytes);
+    var decryptedBytes = new Uint8List(bytes.length);
+    int currentStart = 0;
+//    print("to dec bytes: " + bytes.length.toString());
+
+    while (currentStart + 16 <= bytes.length) {
+      dec.processBlock(bytes, currentStart, decryptedBytes, currentStart);
+      currentStart += 16;
+    }
 
     var padding2 = new Padding("PKCS7");
     padding2.init();
 
-    int padCount = padding2.padCount(decBytes);
+//    print("dec byte: " + Utils.hexEncode(decryptedBytes));
+    int padCount = padding2.padCount(decryptedBytes);
 
-    print('pad cnt: ' + padCount.toString());
+//    print('pad cnt: ' + padCount.toString());
 
     //remove padding
-    decBytes = decBytes.sublist(0, decBytes.lengthInBytes - padCount);
+    decryptedBytes = decryptedBytes.sublist(0, decryptedBytes.lengthInBytes - padCount);
 
-    print(Utils.hexEncode(decBytes));
-    print(decBytes.length);
+//    print(Utils.hexEncode(decryptedBytes));
+//    print(decryptedBytes.length);
 
-    return decBytes;
+    return decryptedBytes;
   }
 
   String get name => _name;
 
   DBChannel get dbChannel => _dbChannel;
-
 
   set dbChannel(DBChannel value) {
     _dbChannel = value;

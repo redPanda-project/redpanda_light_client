@@ -34,6 +34,7 @@ class RedPandaLightClient {
     // any answer
     //
 
+    print(newIsolateSendPort);
     newIsolateSendPort.send(CrossIsolatesMessage<String>(sender: port.sendPort, message: command, data: data));
 
     //
@@ -76,6 +77,11 @@ class RedPandaLightClient {
   static Future<void> removeChannel(int channelId) async {
     var data = {"channelId": channelId};
     return sendCommand(CHANNEL_REMOVE, data);
+  }
+
+  static Future<dynamic> getChannelById(int channelId) async {
+    var data = {"channelId": channelId};
+    return sendCommand(CHANNEL_GET_BY_ID, data);
   }
 
   static Stream<List<DBChannel>> watchDBChannelEntries() async* {

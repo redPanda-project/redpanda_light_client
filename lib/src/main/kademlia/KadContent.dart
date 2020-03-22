@@ -26,6 +26,10 @@ class KadContent {
     timestamp = Utils.getCurrentTimeMillis();
   }
 
+  KadContent.withEncryptedData(this.timestamp, this.pubkey, this._content, this._signature) {
+    _encrypted = true;
+  }
+
   /**
    * KademliaId has to be computed from timestamp and pubkey to verify write permissions and support key rotation.
    */
@@ -35,7 +39,8 @@ class KadContent {
   }
 
   static KademliaId createKademliaId(int timestamp, Uint8List pubkey) {
-    final formattedStr = formatDate(DateTime.fromMillisecondsSinceEpoch(timestamp), [dd, '.', mm, '.', yy]);
+    final formattedStr =
+        formatDate(DateTime.fromMillisecondsSinceEpoch(timestamp, isUtc: true), [dd, '.', mm, '.', yy]);
 
     List<int> formatedTimeBytes = formattedStr.codeUnits;
 
@@ -63,6 +68,10 @@ class KadContent {
     return Utils.sha256(buffer.array());
   }
 
+  /**
+   * Encrypts the content of this KadContent with the provided Channel.
+   * The local variable _content is overwritten with the encrypted content and the _encrypted flag is set to true.
+   */
   Future<void> encryptWith(Channel channel) async {
     var iv = Utils.getSecureRandom().nextBytes(16);
 
@@ -75,11 +84,36 @@ class KadContent {
 
     _encrypted = true;
     _content = ivAndContentBuffer.array();
+    print("content byte len: " + _content.length.toString());
   }
 
+  /**
+   * Decrypts the content of this KadContent with the provided Channel.
+   * The local variable _content is overwritten with the decrypted content and the _encrypted flag is set to false.
+   */
+  Future<void> decryptWith(Channel channel) async {
+    ByteBuffer buffer = ByteBuffer.fromList(_content);
+
+    Uint8List iv = buffer.readBytes(16);
+    Uint8List contentBytes = buffer.readBytes(buffer.remaining());
+
+    Uint8List decryptAES = channel.decryptAES(contentBytes, iv);
+
+    _encrypted = false;
+    _content = decryptAES;
+  }
+
+  /**
+   * The signature with the given NodeId is calculated and stored in the local variable _signature.
+   * Note that the public key of the Keypair of the NodeId has to coincide with the already provided public key,
+   * otherwise an exception is thrown.
+   */
   Future<void> signWith(NodeId nodeId) async {
     if (!_encrypted) {
       throw new Exception('KadContent has to be encrypted before signing!');
+    }
+    if (!Utils.listsAreEqual(nodeId.exportPublic(), pubkey)) {
+      throw new Exception('Public key of the NodeId has to coincide with the local pubkey of this object!');
     }
     Uint8List hash = createHash();
     _signature = nodeId.sign(hash);
@@ -102,11 +136,10 @@ class KadContent {
 
     //todo kadId has to be computed from the public key and time stamp, remove from send
 
-    ByteBuffer writeBuffer = ByteBuffer(
-        1 + 4 + KademliaId.ID_LENGTH_BYTES + 8 + pubkey.length + 4 + _content.length + getSignature().length);
+    ByteBuffer writeBuffer = ByteBuffer(1 + 4 + 8 + pubkey.length + 4 + _content.length + getSignature().length);
     writeBuffer.writeByte(Command.KADEMLIA_STORE);
     writeBuffer.writeInt(Utils.random.nextInt(6000)); //todo check for ack with this id?
-    writeBuffer.writeList(getKademliaId().bytes);
+//    writeBuffer.writeList(getKademliaId().bytes);
     writeBuffer.writeLong(timestamp);
     writeBuffer.writeList(pubkey);
     writeBuffer.writeInt(_content.length);
@@ -119,5 +152,9 @@ class KadContent {
     }
 
     return writeBuffer;
+  }
+
+  Uint8List getContent() {
+    return _content;
   }
 }

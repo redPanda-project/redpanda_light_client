@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data' hide ByteBuffer;
@@ -8,7 +9,9 @@ import 'package:buffer/buffer.dart';
 import 'package:logging/logging.dart';
 import 'package:pointycastle/api.dart';
 import 'package:pointycastle/export.dart';
+import 'package:redpanda_light_client/export.dart';
 import 'package:redpanda_light_client/src/main/ByteBuffer.dart';
+import 'package:redpanda_light_client/src/main/Channel.dart';
 import 'package:redpanda_light_client/src/main/Command.dart';
 import 'package:redpanda_light_client/src/main/ConnectionService.dart';
 import 'package:redpanda_light_client/src/main/KademliaId.dart';
@@ -19,6 +22,7 @@ import 'package:redpanda_light_client/src/main/Utils.dart';
 
 import 'package:convert/convert.dart';
 import 'package:redpanda_light_client/src/main/commands/FBPeerList_im.redpanda.commands_generated.dart';
+import 'package:redpanda_light_client/src/main/kademlia/KadContent.dart';
 
 class Peer {
   static final log = Logger('Peer');
@@ -90,7 +94,7 @@ class Peer {
     randomFromUs = null;
   }
 
-  void ondata(Uint8List data) {
+  void ondata(Uint8List data) async {
 //    print(data.toString());
 
     ByteDataReader byteDataReader = new ByteDataReader();
@@ -173,6 +177,33 @@ class Peer {
           log.finer("peer in fblist: " + fbPeer.ip + " " + kademliaId.toString());
 
           PeerList.add(new Peer.withKademliaId(fbPeer.ip, fbPeer.port, kademliaId));
+        }
+      } else if (decryptedCommand == Command.KADEMLIA_GET_ANSWER) {
+        int ackID = decryptBuffer.readInt();
+//        KademliaId kademliaId = new KademliaId.fromBytes(decryptBuffer.readBytes(KademliaId.ID_LENGTH));
+        int timestamp = decryptBuffer.readLong();
+        Uint8List pubkeyBytes = decryptBuffer.readBytes(NodeId.PUBLIC_KEYLEN);
+        int contentLength = decryptBuffer.readInt();
+        Uint8List content = decryptBuffer.readBytes(contentLength);
+        Uint8List signature = readSignature(decryptBuffer);
+
+        KadContent kadContent = new KadContent.withEncryptedData(timestamp, pubkeyBytes, content, signature);
+
+        var channelId = ConnectionService.currentKademliaIdtoChannelId[kadContent.getKademliaId()];
+        if (channelId == null) {
+          print("we could not map the KademliaId " + channelId.toString() + " to any channel in our db.");
+        } else {
+          DBChannel channel = await ConnectionService.appDatabase.getChannelById(channelId);
+          await kadContent.decryptWith(new Channel(channel));
+          print("obtained KadContent: " + kadContent.getKademliaId().toString());
+
+          var channelDataString = Utils.decodeUTF8(kadContent.getContent());
+          var decoded = jsonDecode(channelDataString);
+
+          print("obtained KadContent: ");
+          print(decoded);
+
+//          print("object")
         }
       }
 
@@ -623,5 +654,15 @@ class Peer {
   void updateKademliaId(KademliaId kademliaId) {
     PeerList.updateKademliaId(this, _kademliaId, kademliaId);
     _kademliaId = kademliaId;
+  }
+
+  static Uint8List readSignature(ByteBuffer readBuffer) {
+    //second byte of encoding gives the remaining bytes of the signature, cf. eg. https://crypto.stackexchange.com/questions/1795/how-can-i-convert-a-der-ecdsa-signature-to-asn-1
+    readBuffer.readByte();
+    int lenOfSignature = (readBuffer.readByte()) + 2;
+    readBuffer.offset = readBuffer.offset - 2;
+
+    Uint8List signature = readBuffer.readBytes(lenOfSignature);
+    return signature;
   }
 }

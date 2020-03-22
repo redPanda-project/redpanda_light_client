@@ -9,6 +9,7 @@ final String CHANNEL_CREATE = "createchannel";
 final String CHANNEL_RENAME = "renamechannel";
 final String CHANNEL_REMOVE = "removechannel";
 final String CHANNELS_WATCH = "watchchannels";
+final String CHANNEL_GET_BY_ID = "channelgetbyid";
 
 final log = Logger('redpanda_isolate');
 ConnectionService connectionService;
@@ -136,6 +137,10 @@ void parseIsolateCommands(CrossIsolatesMessage incomingMessage) async {
     var i = await ConnectionService.appDatabase.removeChannel(channelId);
     incomingMessage.sender.send(i);
     refreshChannelsWatching();
+  } else if (command == CHANNEL_GET_BY_ID) {
+    int channelId = data['channelId'];
+    var i = await ConnectionService.appDatabase.getChannelById(channelId);
+    incomingMessage.sender.send(i);
   } else if (command == CHANNELS_WATCH) {
     channelWatcher.add(incomingMessage.sender);
 

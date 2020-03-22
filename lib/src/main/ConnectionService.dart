@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:core';
 import 'dart:io';
+import 'dart:collection';
 
 import 'package:logging/logging.dart';
 import 'package:redpanda_light_client/export.dart';
@@ -27,6 +28,12 @@ class ConnectionService {
   static LocalSetting localSetting;
 
   static String pathToDatabase;
+
+  /**
+   * We have to maintain a list to map KademliaIds to the internal channel id of our database such that we can
+   * map KademliaIds to our channel if we get an answer from nodes.
+   */
+  static HashMap<KademliaId, int> currentKademliaIdtoChannelId = HashMap<KademliaId, int>();
 
   static NodeId nodeId;
   static KademliaId kademliaId;
@@ -295,8 +302,6 @@ class ConnectionService {
         break;
       }
 
-
-
       Channel channel = new Channel(dbChannel);
 
       Map<String, dynamic> channelData = channel.getChannelData();
@@ -338,18 +343,21 @@ class ConnectionService {
       if (updated) {
         //lets seach the DHT network for fresh channel data
 
+        KademliaId currentKademliaId =
+            KadContent.createKademliaId(Utils.getCurrentTimeMillis(), channel.getNodeId().exportPublic());
+        currentKademliaIdtoChannelId.putIfAbsent(currentKademliaId, () => channel.getId());
+
+        print("seaching for KadId: " + currentKademliaId.toString());
+
         ByteBuffer writeBuffer = ByteBuffer(1 + 4 + KademliaId.ID_LENGTH_BYTES);
         writeBuffer.writeByte(Command.KADEMLIA_GET);
         writeBuffer.writeInt(Utils.random.nextInt(6000)); //todo check for ack with this id?
-        writeBuffer.writeList(
-            KadContent.createKademliaId(Utils.getCurrentTimeMillis(), channel.getNodeId().exportPublic()).bytes);
+        writeBuffer.writeList(currentKademliaId.bytes);
         await PeerList.sendIntegrated(writeBuffer);
-
 
         print("sleep");
         await new Future.delayed(const Duration(seconds: 2), () => "1");
         print("sleep end");
-
 
         cntUpdatedChannels++;
         String channelDataString = jsonEncode(channel.getChannelData());

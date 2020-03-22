@@ -49,7 +49,7 @@ class AppDatabase extends _$AppDatabase {
   // you should bump this number whenever you change or add a table definition.
   // Migrations are covered below.
   @override
-  int get schemaVersion => 24;
+  int get schemaVersion => 25;
 
   Future<LocalSetting> get getLocalSettings => select(localSettings).getSingle();
 
