@@ -53,7 +53,7 @@ class AppDatabase extends _$AppDatabase {
   // you should bump this number whenever you change or add a table definition.
   // Migrations are covered below.
   @override
-  int get schemaVersion => 30;
+  int get schemaVersion => 32;
 
   Future<LocalSetting> get getLocalSettings => select(localSettings).getSingle();
 
@@ -106,6 +106,14 @@ class AppDatabase extends _$AppDatabase {
 
     DBChannelsCompanion entry =
         DBChannelsCompanion.insert(name: name, sharedSecret: Utils.randBytes(32), nodeId: nodeId.exportWithPrivate());
+    log.finest("insert channel");
+    return into(dBChannels).insert(entry);
+  }
+
+  Future<int> createChannelFromData(String name, Uint8List sharedSecret, Uint8List privateSigningKey) async {
+    var nodeId = new NodeId.importWithPrivate(privateSigningKey);
+    DBChannelsCompanion entry =
+        DBChannelsCompanion.insert(name: name, sharedSecret: sharedSecret, nodeId: nodeId.exportWithPrivate());
     log.finest("insert channel");
     return into(dBChannels).insert(entry);
   }

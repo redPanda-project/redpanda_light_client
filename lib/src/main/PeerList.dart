@@ -39,9 +39,6 @@ class PeerList {
   }
 
   static Future<bool> remove(Peer peer) async {
-    print("asd: " + peer.toString());
-    print("asd: " + _peerlist.toString());
-
     var remove2 = _peerlist.remove(peer);
     _hashMapIpPort.remove(peer.getIpPortHash());
 

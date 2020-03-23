@@ -147,7 +147,7 @@ class KadContent {
     writeBuffer.writeList(getSignature());
 
     //todo can be removed later
-    if (writeBuffer.offset != writeBuffer.length) {
+    if (writeBuffer.position() != writeBuffer.length) {
       throw new Exception("ByteBuffer for KadContent cmd was wrong!");
     }
 

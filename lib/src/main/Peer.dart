@@ -6,6 +6,7 @@ import 'dart:typed_data' hide ByteBuffer;
 import 'dart:typed_data';
 
 import 'package:buffer/buffer.dart';
+import 'package:date_format/date_format.dart';
 import 'package:logging/logging.dart';
 import 'package:pointycastle/api.dart';
 import 'package:pointycastle/export.dart';
@@ -24,6 +25,8 @@ import 'package:convert/convert.dart';
 import 'package:redpanda_light_client/src/main/commands/FBPeerList_im.redpanda.commands_generated.dart';
 import 'package:redpanda_light_client/src/main/kademlia/KadContent.dart';
 
+import 'package:redpanda_light_client/src/redpanda_isolate.dart';
+
 class Peer {
   static final log = Logger('Peer');
   static final int IVbytelen = 16;
@@ -39,6 +42,8 @@ class Peer {
   int handshakeStatus = 0;
   bool waitingForEncryption = false;
   bool weSendOurRandom = false;
+
+  ByteBuffer decryptBuffer;
 
   Uint8List randomFromThem;
   Uint8List randomFromUs;
@@ -130,82 +135,39 @@ class Peer {
     ByteBuffer buffer = ByteBuffer.fromBuffer(data.buffer);
 
     if (isEncryptionActive && connected) {
-      ByteBuffer decryptBuffer = decrypt(buffer);
+      ByteBuffer localDecrypted = decrypt(buffer);
 
-      int decryptedCommand = decryptBuffer.readByte();
+//      print("still to read bytes in buffer: ${decryptBuffer.remaining()}");
+//      print('data saved: ' + decryptBuffer.array().toString());
 
-//      print("received encrypted command: " + decryptedCommand.toString());
-//      print('on data: ' + decryptBuffer.array().toString());
+      decryptBuffer.compact();
 
-      if (decryptedCommand == Command.PING) {
-//        print("received ping...");
-        ByteBuffer byteBuffer = new ByteBuffer(1);
-        byteBuffer.writeByte(Command.PONG);
-        byteBuffer.flip();
+      while (localDecrypted.remaining() > decryptBuffer.remaining()) {
+        print("doubled the size of the read buffer... ${2 * decryptBuffer.length}");
+        var newBuffer = ByteBuffer(2 * decryptBuffer.length);
 
-        sendEncrypt(byteBuffer);
-//        print('ponged peer...');
-      } else if (decryptedCommand == Command.PONG) {
-        lastActionOnConnection = new DateTime.now().millisecondsSinceEpoch;
-//        print('received pong...');
-      } else if (decryptedCommand == Command.SEND_PEERLIST) {
-        log.finer('received peerlist... ' + ip);
-
-        int toReadBytes = decryptBuffer.readInt();
-
-        List<int> readBytes = decryptBuffer.readBytes(toReadBytes);
-
-        FBPeerList fbPeerList = new FBPeerList(readBytes);
-
-        if (fbPeerList == null || fbPeerList.peers.isEmpty) {
-          return;
-        }
-
-        for (FBPeer fbPeer in fbPeerList.peers) {
-          if (fbPeer.nodeId == null) {
-            //lets skip peers without a kademliaId...
-            continue;
-          }
-
-          KademliaId kademliaId = KademliaId.fromBytes(Uint8List.fromList(fbPeer.nodeId));
-
-          if (kademliaId == ConnectionService.kademliaId) {
-            //lets not add ourselves...
-            continue;
-          }
-
-          log.finer("peer in fblist: " + fbPeer.ip + " " + kademliaId.toString());
-
-          PeerList.add(new Peer.withKademliaId(fbPeer.ip, fbPeer.port, kademliaId));
-        }
-      } else if (decryptedCommand == Command.KADEMLIA_GET_ANSWER) {
-        int ackID = decryptBuffer.readInt();
-//        KademliaId kademliaId = new KademliaId.fromBytes(decryptBuffer.readBytes(KademliaId.ID_LENGTH));
-        int timestamp = decryptBuffer.readLong();
-        Uint8List pubkeyBytes = decryptBuffer.readBytes(NodeId.PUBLIC_KEYLEN);
-        int contentLength = decryptBuffer.readInt();
-        Uint8List content = decryptBuffer.readBytes(contentLength);
-        Uint8List signature = readSignature(decryptBuffer);
-
-        KadContent kadContent = new KadContent.withEncryptedData(timestamp, pubkeyBytes, content, signature);
-
-        var channelId = ConnectionService.currentKademliaIdtoChannelId[kadContent.getKademliaId()];
-        if (channelId == null) {
-          print("we could not map the KademliaId " + channelId.toString() + " to any channel in our db.");
-        } else {
-          DBChannel channel = await ConnectionService.appDatabase.getChannelById(channelId);
-          await kadContent.decryptWith(new Channel(channel));
-          print("obtained KadContent: " + kadContent.getKademliaId().toString());
-
-          var channelDataString = Utils.decodeUTF8(kadContent.getContent());
-          var decoded = jsonDecode(channelDataString);
-
-          print("obtained KadContent: ");
-          print(decoded);
-
-//          print("object")
-        }
+        decryptBuffer.flip();
+        newBuffer.writeBytes(decryptBuffer);
+        decryptBuffer = newBuffer;
       }
+
+      decryptBuffer.writeBytes(localDecrypted);
+      decryptBuffer.flip();
+
+      while (decryptBuffer.remaining() > 0) {
+        int posBeforeRead = decryptBuffer.position();
+        int readBytes = await readCommand();
+
+        if (readBytes == 0) {
+          //we have to wait for more data...
+          decryptBuffer.setPosition(posBeforeRead);
+          break;
+        }
+
+        int newPos = posBeforeRead + readBytes;
+        decryptBuffer.setPosition(newPos);
+      }
+//      print("still to read bytes in buffer2: ${decryptBuffer.remaining()}");
 
       return;
     }
@@ -324,9 +286,9 @@ class Peer {
        */
       log.finer("received first encrypted command...");
 
-      ByteBuffer decryptBuffer = decrypt(buffer);
+      ByteBuffer firstEncByte = decrypt(buffer);
 
-      int decryptedCommand = decryptBuffer.readByte();
+      int decryptedCommand = firstEncByte.readByte();
 
       if (decryptedCommand == Command.PING) {
         log.finer("received first ping...");
@@ -336,6 +298,8 @@ class Peer {
          * actual peer
          */
 
+        decryptBuffer = ByteBuffer(200);
+        decryptBuffer.flip();
         //todo setup connection
         connected = true;
         restries = 0;
@@ -660,9 +624,137 @@ class Peer {
     //second byte of encoding gives the remaining bytes of the signature, cf. eg. https://crypto.stackexchange.com/questions/1795/how-can-i-convert-a-der-ecdsa-signature-to-asn-1
     readBuffer.readByte();
     int lenOfSignature = (readBuffer.readByte()) + 2;
-    readBuffer.offset = readBuffer.offset - 2;
+    readBuffer.setPosition(readBuffer.position() - 2);
 
     Uint8List signature = readBuffer.readBytes(lenOfSignature);
     return signature;
+  }
+
+  Future<int> readCommand() async {
+    int decryptedCommand = decryptBuffer.readUnsignedByte();
+
+    print("received encrypted command: " + decryptedCommand.toString());
+//      print('on data: ' + decryptBuffer.array().toString());
+
+    if (decryptedCommand == Command.PING) {
+//        print("received ping...");
+      ByteBuffer byteBuffer = new ByteBuffer(1);
+      byteBuffer.writeByte(Command.PONG);
+      byteBuffer.flip();
+
+      sendEncrypt(byteBuffer);
+//        print('ponged peer...');
+      return 1;
+    } else if (decryptedCommand == Command.PONG) {
+      lastActionOnConnection = new DateTime.now().millisecondsSinceEpoch;
+//        print('received pong...');
+      return 1;
+    } else if (decryptedCommand == Command.SEND_PEERLIST) {
+      log.finer('received peerlist... ' + ip);
+
+      int toReadBytes = decryptBuffer.readInt();
+
+      List<int> readBytes = decryptBuffer.readBytes(toReadBytes);
+
+      FBPeerList fbPeerList = new FBPeerList(readBytes);
+
+      if (fbPeerList == null || fbPeerList.peers.isEmpty) {
+        return 1 + 4 + toReadBytes;
+      }
+
+      for (FBPeer fbPeer in fbPeerList.peers) {
+        if (fbPeer.nodeId == null) {
+          //lets skip peers without a kademliaId...
+          continue;
+        }
+
+        KademliaId kademliaId = KademliaId.fromBytes(Uint8List.fromList(fbPeer.nodeId));
+
+        if (kademliaId == ConnectionService.kademliaId) {
+          //lets not add ourselves...
+          continue;
+        }
+
+        log.finer("peer in fblist: " + fbPeer.ip + " " + kademliaId.toString());
+
+        PeerList.add(new Peer.withKademliaId(fbPeer.ip, fbPeer.port, kademliaId));
+      }
+
+      return 1 + 4 + toReadBytes;
+    } else if (decryptedCommand == Command.KADEMLIA_GET_ANSWER) {
+      int ackID = decryptBuffer.readInt();
+//        KademliaId kademliaId = new KademliaId.fromBytes(decryptBuffer.readBytes(KademliaId.ID_LENGTH));
+      int timestamp = decryptBuffer.readLong();
+      Uint8List pubkeyBytes = decryptBuffer.readBytes(NodeId.PUBLIC_KEYLEN);
+
+      int contentLength = decryptBuffer.readInt();
+
+      if (decryptBuffer.remaining() < contentLength + 4 + 65) {
+        return 0;
+      }
+
+      Uint8List content = decryptBuffer.readBytes(contentLength);
+      Uint8List signature = readSignature(decryptBuffer);
+
+      KadContent kadContent = new KadContent.withEncryptedData(timestamp, pubkeyBytes, content, signature);
+
+      var channelId = ConnectionService.currentKademliaIdtoChannelId[kadContent.getKademliaId()];
+      if (channelId == null) {
+        print("we could not map the KademliaId " + channelId.toString() + " to any channel in our db.");
+      } else {
+        DBChannel channel = await ConnectionService.appDatabase.getChannelById(channelId);
+        await kadContent.decryptWith(new Channel(channel));
+        print("obtained KadContent: " +
+            kadContent.getKademliaId().toString() +
+            " " +
+            formatDate(
+                DateTime.fromMillisecondsSinceEpoch(
+                  kadContent.timestamp,
+                ),
+                [HH, ':', nn, ':', ss]));
+
+        var channelDataString = Utils.decodeUTF8(kadContent.getContent());
+        var decoded = jsonDecode(channelDataString);
+
+        print("obtained KadContent: ");
+        print(decoded);
+
+        for (var msg in decoded['msgs']) {
+          int messageId = msg['id'];
+          String text = msg['content'];
+          int from = msg['from'];
+          int timestamp = msg['timestamp'];
+          await ConnectionService.appDatabase.dBMessagesDao
+              .updateMessage(channelId, messageId, 0, text, from, timestamp);
+          //todo check if anything actually changed...
+          refreshMessagesWatching(channelId);
+        }
+
+//          Map<String, dynamic> userdatas = decoded['userdata'];
+//          for (MapEntry<String, dynamic> ud in userdatas.entries) {
+//            int deliveredTo = int.parse(ud.key);
+//
+//
+//          }
+
+//          print("object")
+      }
+
+      return 1 + 4 + 8 + NodeId.PUBLIC_KEYLEN + 4 + contentLength + signature.length;
+    } else if (decryptedCommand == Command.JOB_ACK) {
+      var ackId = decryptBuffer.readInt();
+      return 1 + 4;
+    }
+
+    if (decryptedCommand == Command.REQUEST_PEERLIST || decryptedCommand == Command.UPDATE_REQUEST_TIMESTAMP) {
+      //commands are not supported for light clients,
+      //todo do not send to light clients....
+      return 1;
+    }
+
+    print("could not parse cmd: " + decryptedCommand.toString());
+    disconnect();
+    throw new Exception("could not parse cmd: " + decryptedCommand.toString());
+//    return 0;
   }
 }

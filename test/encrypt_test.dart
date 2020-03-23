@@ -76,7 +76,7 @@ void main() {
       var padding = new Padding("PKCS7");
       padding.init();
 
-      padding.addPadding(paddedBuffer.array(), b.offset);
+      padding.addPadding(paddedBuffer.array(), b.position());
 
       Uint8List encBytes = cbcBlockCipher.process(paddedBuffer.array());
 //      print("enc byte: " + Utils.hexEncode(encBytes));

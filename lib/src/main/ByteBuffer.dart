@@ -8,15 +8,22 @@ class ByteBuffer {
   ByteData _byteData;
   Endian endian;
   int _offset = 0;
+  int _limit;
+  int _capacity;
 
   ByteData get byteData => _byteData;
 
   ByteBuffer([int length = 0, this.endian = Endian.big]) {
     final buff = Uint8Buffer(length);
     _byteData = ByteData.view(buff.buffer);
+    _limit = length;
+    _capacity = length;
   }
 
-  ByteBuffer.fromByteData(this._byteData, [this.endian = Endian.big]);
+  ByteBuffer.fromByteData(this._byteData, [this.endian = Endian.big]) {
+    _limit = _byteData.lengthInBytes;
+    _capacity = _limit;
+  }
 
   factory ByteBuffer.fromBuffer(prefix0.ByteBuffer buffer,
       [int offset = 0, int length = null, Endian endian = Endian.big]) {
@@ -92,7 +99,7 @@ class ByteBuffer {
   ByteBuffer operator +(ByteBuffer other) => ByteBuffer(length + other.length)..writeBytes(this)..writeBytes(other);
 
   Iterable<int> byteStream() sync* {
-    while (offset < length) {
+    while (_offset < length) {
       yield this[offset++];
     }
   }
@@ -118,7 +125,7 @@ class ByteBuffer {
 
   @override
   int get hashCode {
-    final tempOffset = offset;
+    final tempOffset = _offset;
 
     const p = 16777619;
     var hash = 2166136261;
@@ -139,10 +146,10 @@ class ByteBuffer {
 
   /// Copies bytes from [bytes] to [this]
   void writeBytes(ByteBuffer bytes, [int offset = 0, int byteCount = 0]) {
-    if (byteCount == 0) byteCount = bytes.length;
+    if (byteCount == 0) byteCount = bytes._limit;
 
     // Copy old offset so we can reset it after copy
-    final oldOffset = bytes.offset;
+    final oldOffset = bytes._offset;
     bytes.offset = offset;
 
     for (var i = 0; i < byteCount; i++) {
@@ -155,12 +162,14 @@ class ByteBuffer {
   void _setNum<T extends num>(void Function(int, T, Endian) f, T value, int size) {
     if (_offset + size > length) throw RangeError('attempted to write to offset ${_offset + size}, length is $length');
 
-    f(offset, value, endian);
+    f(_offset, value, endian);
     _offset += size;
   }
 
   T _getNum<T extends num>(T Function(int, Endian) f, int size) {
     if (_offset + size > length) throw RangeError('attempted to read from offset ${_offset + size}, length is $length');
+
+    if (_offset + size > _limit) throw RangeError('attempted to read from offset ${_offset + size}, limit is $_limit');
 
     final data = f(_offset, endian);
     _offset += size;
@@ -171,13 +180,19 @@ class ByteBuffer {
 
   prefix0.ByteBuffer get buffer => _byteData.buffer;
 
-  int get bytesAvailable => length - _offset;
+  int get bytesAvailable => _limit - _offset;
 
   int remaining() {
     return bytesAvailable;
   }
 
   int get offset => _offset;
+
+  int position() => _offset;
+
+  void setPosition(int value) {
+    _offset = value;
+  }
 
   set offset(int value) {
     if (value < 0 || value > length) throw RangeError('attempting to set offset to $value, length is $length');
@@ -201,8 +216,16 @@ class ByteBuffer {
   }
 
   void flip() {
-    //todo we have to set the limit?
+    _limit = _offset;
     _offset = 0;
   }
 
+  void compact() {
+    var n = _limit - _offset;
+    for (int i = 0; i < n; i++) {
+      _byteData.setUint8(i, _byteData.getUint8(_offset + i));
+    }
+    _offset = n;
+    _limit = _capacity;
+  }
 }

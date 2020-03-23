@@ -161,7 +161,8 @@ class ConnectionService {
     const initFireChannelMaintain = Duration(seconds: 6);
     new Timer(initFireChannelMaintain, () => maintain());
 
-    const timeRepeatChannelMaintain = Duration(seconds: 20);
+    var seconds = 15 + Utils.random.nextInt(20);
+    var timeRepeatChannelMaintain = Duration(seconds: seconds);
     new Timer.periodic(timeRepeatChannelMaintain, (Timer t) => maintain());
   }
 
@@ -298,8 +299,6 @@ class ConnectionService {
   static Future<void> maintain() async {
     LocalSetting localSettings = await _appDatabase.getLocalSettings;
 
-    Map<String, dynamic> myUserdata = await generateMyUserData(localSettings);
-
     List<DBChannel> allChannels = await _appDatabase.getAllChannels();
 
     print('channels: ' + allChannels.length.toString());
@@ -334,6 +333,8 @@ class ConnectionService {
 
       bool updated = false;
 
+      Map<String, dynamic> myUserdata = await generateMyUserData(localSettings, channel.getId());
+
       if (userData == null) {
 //        print('no userdata found from us...');
 
@@ -343,7 +344,7 @@ class ConnectionService {
       } else {
 //        print('found userdata');
         int generated = userData['generated'];
-        if (Utils.getCurrentTimeMillis() - generated > 1000 * 10) {
+        if (Utils.getCurrentTimeMillis() - generated > 1000 * 5) {
 //          print('found userdata is too old...');
           channel.setUserData(myUserId, myUserdata);
           await channel.saveChannelData(_appDatabase);
@@ -371,7 +372,37 @@ class ConnectionService {
         print("sleep end");
 
         cntUpdatedChannels++;
-        String channelDataString = jsonEncode(channel.getChannelData());
+
+        var data = channel.getChannelData();
+        var watchDBMessageEntries = await ConnectionService.appDatabase.dBMessagesDao.getAllDBMessages(channel.getId());
+
+        var list = [];
+
+        int cnt = 0;
+        for (DBMessageWithFriend m in watchDBMessageEntries) {
+          if (!m.fromMe) {
+            continue;
+          }
+
+          cnt++;
+          if (cnt > 60) {
+            break;
+          }
+//          print("msg : " + m.message.content);
+          var datamsg = {
+            "id": m.message.messageId,
+            "from": m.message.from,
+            "timestamp": m.message.timestamp,
+            "content": m.message.content
+          };
+          list.add(datamsg);
+        }
+        data['msgs'] = list;
+
+//        print("data to write");
+//        print(data);
+
+        String channelDataString = jsonEncode(data);
         var channelDataStringBytes = Utils.encodeUTF8(channelDataString);
 
         KadContent kadContent = new KadContent.createNow(channel.getNodeId().exportPublic(), channelDataStringBytes);
@@ -381,6 +412,7 @@ class ConnectionService {
         await kadContent.signWith(channel.getNodeId());
 
         await PeerList.sendIntegrated(kadContent.toCommand());
+        print("send...");
         log.finest("send to integrated.... " + kadContent.getKademliaId().toString());
       }
 
@@ -388,8 +420,9 @@ class ConnectionService {
     }
   }
 
-  static Map<String, dynamic> generateMyUserData(LocalSetting localSettings) {
+  static Future<Map<String, dynamic>> generateMyUserData(LocalSetting localSettings, int channelId) async {
     var data = {"nick": localSettings.defaultName, "generated": Utils.getCurrentTimeMillis()};
+
     return data;
   }
 }

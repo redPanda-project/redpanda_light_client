@@ -2,18 +2,25 @@ import 'dart:collection';
 import 'dart:isolate';
 
 import 'package:logging/logging.dart';
+import 'package:moor/moor.dart';
 import 'package:redpanda_light_client/export.dart';
 import 'package:redpanda_light_client/src/main/ConnectionService.dart';
+import 'package:redpanda_light_client/src/main/IsolateCommand.dart';
 
-final String START = "start";
-final String START_DEBUG = "startdebug";
-final String CHANNEL_CREATE = "createchannel";
-final String CHANNEL_RENAME = "renamechannel";
-final String CHANNEL_REMOVE = "removechannel";
-final String CHANNELS_WATCH = "watchchannels";
-final String CHANNEL_GET_BY_ID = "channelgetbyid";
-final String MESSAGES_WATCH = "watchmessages";
-final String MESSAGES_SEND = "sendmessages";
+dynamic logLevel = Level.INFO; // defaults to Level.INFO
+
+//final String START = "start";
+//final String START_DEBUG = "startdebug";
+//final String CHANNEL_CREATE = "createchannel";
+//final String CHANNEL_FROM_DATA = "channelfromdata";
+//final String CHANNEL_RENAME = "renamechannel";
+//final String CHANNEL_REMOVE = "removechannel";
+//final String CHANNELS_WATCH = "watchchannels";
+//final String CHANNEL_GET_BY_ID = "channelgetbyid";
+//final String MESSAGES_WATCH = "watchmessages";
+//final String MESSAGES_GET_RECENT = "getrecentmsgs";
+//final String MESSAGES_SEND = "sendmessages";
+//final String MESSAGES_LISTEN_NEW = "msgslistennew";
 
 final log = Logger('redpanda_isolate');
 ConnectionService connectionService;
@@ -90,19 +97,19 @@ void callbackFunction(SendPort callerSendPort) {
 }
 
 void parseIsolateCommands(CrossIsolatesMessage incomingMessage) async {
-  String command = incomingMessage.message;
+  IsolateCommand command = incomingMessage.message;
   dynamic data = incomingMessage.data;
 
-  print("isolate cmd: " + command + " data: " + data.toString());
+  print("isolate cmd: " + command.toString() + " data: " + data.toString());
 
   //
   // Process the message
   //
-  if (command == START) {
+  if (command == IsolateCommand.START) {
     String dataFolderPath = data['dataFolderPath'];
     int myPort = data['myPort'];
 
-    Logger.root.level = Level.INFO; // defaults to Level.INFO
+    Logger.root.level = logLevel; // defaults to Level.INFO
     Logger.root.onRecord.listen((record) {
 //      print('${record.level.name}: ${record.time}: ${record.message}');
       print(
@@ -124,11 +131,11 @@ void parseIsolateCommands(CrossIsolatesMessage incomingMessage) async {
     connectionService = ConnectionService(dataFolderPath, myPort);
     await connectionService.start();
     incomingMessage.sender.send(null);
-  } else if (command == START_DEBUG) {
+  } else if (command == IsolateCommand.START_DEBUG) {
     String dataFolderPath = data['dataFolderPath'];
     int myPort = data['myPort'];
 
-    Logger.root.level = Level.ALL; // defaults to Level.INFO
+    Logger.root.level = logLevel; // defaults to Level.INFO
     Logger.root.onRecord.listen((record) {
 //      print('${record.level.name}: ${record.time}: ${record.message}');
       print(
@@ -152,27 +159,34 @@ void parseIsolateCommands(CrossIsolatesMessage incomingMessage) async {
     incomingMessage.sender.send(null);
   }
   // Channel operations
-  else if (command == CHANNEL_CREATE) {
+  else if (command == IsolateCommand.CHANNEL_CREATE) {
     String name = data['name'];
     var i = await ConnectionService.appDatabase.createNewChannel(name);
     incomingMessage.sender.send(i);
     refreshChannelsWatching();
-  } else if (command == CHANNEL_RENAME) {
+  } else if (command == IsolateCommand.CHANNEL_FROM_DATA) {
+    String name = data['name'];
+    Uint8List sharedSecret = data['sharedSecret'];
+    Uint8List privateSigningKey = data['privateSigningKey'];
+    var i = await ConnectionService.appDatabase.createChannelFromData(name, sharedSecret, privateSigningKey);
+    incomingMessage.sender.send(i);
+    refreshChannelsWatching();
+  } else if (command == IsolateCommand.CHANNEL_RENAME) {
     int channelId = data['channelId'];
     String name = data['newName'];
     var i = await ConnectionService.appDatabase.renameChannel(channelId, name);
     incomingMessage.sender.send(i);
     refreshChannelsWatching();
-  } else if (command == CHANNEL_REMOVE) {
+  } else if (command == IsolateCommand.CHANNEL_REMOVE) {
     int channelId = data['channelId'];
     var i = await ConnectionService.appDatabase.removeChannel(channelId);
     incomingMessage.sender.send(i);
     refreshChannelsWatching();
-  } else if (command == CHANNEL_GET_BY_ID) {
+  } else if (command == IsolateCommand.CHANNEL_GET_BY_ID) {
     int channelId = data['channelId'];
     var i = await ConnectionService.appDatabase.getChannelById(channelId);
     incomingMessage.sender.send(i);
-  } else if (command == CHANNELS_WATCH) {
+  } else if (command == IsolateCommand.CHANNELS_WATCH) {
     channelWatcher.add(incomingMessage.sender);
 
     refreshChannelsWatching();
@@ -184,7 +198,7 @@ void parseIsolateCommands(CrossIsolatesMessage incomingMessage) async {
 //    }
   }
   // all stuff related to messages
-  else if (command == MESSAGES_WATCH) {
+  else if (command == IsolateCommand.MESSAGES_WATCH) {
     print("messages watched");
     int channelId = data['channelId'];
     //todo add by channel id...
@@ -196,12 +210,17 @@ void parseIsolateCommands(CrossIsolatesMessage incomingMessage) async {
     var allmsgs = await ConnectionService.appDatabase.dBMessagesDao.getAllDBMessages(channelId);
 //    print("all msgs: " + allmsgs.toString());
     incomingMessage.sender.send(allmsgs);
-  } else if (command == MESSAGES_SEND) {
+  } else if (command == IsolateCommand.MESSAGES_SEND) {
     int channelId = data['channelId'];
     String text = data['text'];
     var newMessageId = await ConnectionService.appDatabase.dBMessagesDao.writeMessage(channelId, text);
     incomingMessage.sender.send(newMessageId);
-    refreshMessagessWatching(channelId);
+    refreshMessagesWatching(channelId);
+  } else if (command == IsolateCommand.MESSAGES_GET_RECENT) {
+    int channelId = data['channelId'];
+    String text = data['text'];
+    var allMsgs = await ConnectionService.appDatabase.dBMessagesDao.getAllDBMessages(channelId);
+    incomingMessage.sender.send(allMsgs);
   }
 
   //
@@ -211,7 +230,7 @@ void parseIsolateCommands(CrossIsolatesMessage incomingMessage) async {
   }
 }
 
-refreshMessagessWatching(int channelId) async {
+refreshMessagesWatching(int channelId) async {
   print('refreshing messages...');
 
   var mw = messageWatcher[channelId];

@@ -4,7 +4,11 @@ import 'package:moor/moor.dart';
  * Sqlite schema for Messages.
  */
 class DBMessages extends Table {
-  IntColumn get id => integer().autoIncrement()();
+  /**
+   * Message id has to be unique for all memebers of the Channel. Thus, we have to generate a random interger for the
+   * message id.
+   */
+  IntColumn get messageId => integer()();
 
   IntColumn get channelId => integer()();
 
@@ -16,7 +20,7 @@ class DBMessages extends Table {
 
   IntColumn get from => integer()();
 
-  BoolColumn get delivered => boolean().withDefault(const Constant(false))();
+  TextColumn get deliveredTo => text().nullable()();
 
   BoolColumn get read => boolean().withDefault(const Constant(false))();
 }

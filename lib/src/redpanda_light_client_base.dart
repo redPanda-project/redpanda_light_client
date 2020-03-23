@@ -4,9 +4,11 @@ import 'dart:async';
 import 'dart:isolate';
 
 import 'package:logging/logging.dart';
+import 'package:moor/moor.dart';
 import 'package:redpanda_light_client/export.dart';
 import 'package:redpanda_light_client/src/main/Channel.dart';
 import 'package:redpanda_light_client/src/main/ConnectionService.dart';
+import 'package:redpanda_light_client/src/main/IsolateCommand.dart';
 import 'package:redpanda_light_client/src/main/store/DBMessageWithFriend.dart';
 import 'package:redpanda_light_client/src/main/store/DBMessagesDao.dart';
 import 'package:redpanda_light_client/src/redpanda_isolate.dart';
@@ -16,6 +18,7 @@ class RedPandaLightClient {
   static ConnectionService connectionService;
   static bool running = false;
   static final log = Logger('RedPandaLightClient');
+  static Function onNewMessage;
 
 //
 // Method that sends a message to the new isolate
@@ -24,7 +27,7 @@ class RedPandaLightClient {
 // In this example, I consider that the communication
 // operates with Strings (sent and received data)
 //
-  static Future<dynamic> sendCommand(String command, [dynamic data]) async {
+  static Future<dynamic> sendCommand(IsolateCommand command, [dynamic data]) async {
     //
     // We create a temporary port to receive the answer
     //
@@ -37,7 +40,7 @@ class RedPandaLightClient {
     //
 
     print(newIsolateSendPort);
-    newIsolateSendPort.send(CrossIsolatesMessage<String>(sender: port.sendPort, message: command, data: data));
+    newIsolateSendPort.send(CrossIsolatesMessage<IsolateCommand>(sender: port.sendPort, message: command, data: data));
 
     //
     // Wait for the answer and return it
@@ -60,13 +63,16 @@ class RedPandaLightClient {
   static Future<void> init(String dataFolderPath, int myPort) async {
     await setupAndStartIsolate();
     var data = {"dataFolderPath": dataFolderPath, "myPort": myPort};
-    return sendCommand(START, data);
+
+    startOnNewMessageListener();
+
+    return sendCommand(IsolateCommand.START, data);
   }
 
   static Future<void> initForDebug(String dataFolderPath, int myPort) async {
     await setupAndStartIsolate();
     var data = {"dataFolderPath": dataFolderPath, "myPort": myPort};
-    return sendCommand(START_DEBUG, data);
+    return sendCommand(IsolateCommand.START_DEBUG, data);
   }
 
   /**
@@ -74,27 +80,32 @@ class RedPandaLightClient {
    */
   static Future<void> createNewChannel(String name) async {
     var data = {"name": name};
-    return sendCommand(CHANNEL_CREATE, data);
+    return sendCommand(IsolateCommand.CHANNEL_CREATE, data);
+  }
+
+  static Future<void> channelFromData(String nick, Uint8List sharedSecret, Uint8List privateSigningKey) async {
+    var data = {"name": nick, "sharedSecret": sharedSecret, "privateSigningKey": privateSigningKey};
+    return sendCommand(IsolateCommand.CHANNEL_FROM_DATA, data);
   }
 
   static Future<void> renameChannel(int channelId, String newName) async {
     var data = {"channelId": channelId, "newName": newName};
-    return sendCommand(CHANNEL_RENAME, data);
+    return sendCommand(IsolateCommand.CHANNEL_RENAME, data);
   }
 
   static Future<void> removeChannel(int channelId) async {
     var data = {"channelId": channelId};
-    return sendCommand(CHANNEL_REMOVE, data);
+    return sendCommand(IsolateCommand.CHANNEL_REMOVE, data);
   }
 
   static Future<dynamic> getChannelById(int channelId) async {
     var data = {"channelId": channelId};
-    return sendCommand(CHANNEL_GET_BY_ID, data);
+    return sendCommand(IsolateCommand.CHANNEL_GET_BY_ID, data);
   }
 
   static Stream<List<DBChannel>> watchDBChannelEntries() async* {
     ReceivePort port = ReceivePort();
-    newIsolateSendPort.send(CrossIsolatesMessage<String>(sender: port.sendPort, message: CHANNELS_WATCH));
+    newIsolateSendPort.send(CrossIsolatesMessage<IsolateCommand>(sender: port.sendPort, message: IsolateCommand.CHANNELS_WATCH));
 
     await for (List<DBChannel> a in port) {
       yield a;
@@ -105,7 +116,7 @@ class RedPandaLightClient {
     print("watchDBMessageEntries");
     var data = {"channelId": channelId};
     ReceivePort port = ReceivePort();
-    newIsolateSendPort.send(CrossIsolatesMessage<String>(sender: port.sendPort, message: MESSAGES_WATCH, data: data));
+    newIsolateSendPort.send(CrossIsolatesMessage<IsolateCommand>(sender: port.sendPort, message: IsolateCommand.MESSAGES_WATCH, data: data));
 
     print("awaiting messages...");
 
@@ -115,9 +126,15 @@ class RedPandaLightClient {
     }
   }
 
+  static Future<List<DBMessageWithFriend>> getAllMessages(int channelId) async {
+    print("getDBMessageEntries");
+    var data = {"channelId": channelId};
+    return sendCommand(IsolateCommand.MESSAGES_GET_RECENT, data);
+  }
+
   static Future<void> writeMessage(int channelId, String text) async {
     var data = {"channelId": channelId, "text": text};
-    return sendCommand(MESSAGES_SEND, data);
+    return sendCommand(IsolateCommand.MESSAGES_SEND, data);
   }
 
   static Future<void> shutdown() async {
@@ -129,6 +146,12 @@ class RedPandaLightClient {
 //    for (Peer peer in PeerList.getList()) {
 //      await peer.disconnect();
 //    }
+  }
+
+  static void startOnNewMessageListener() {
+
+
+
   }
 
 //  static List<Channel> getChannels() {
