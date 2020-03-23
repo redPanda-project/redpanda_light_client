@@ -8,6 +8,8 @@ import 'package:redpanda_light_client/src/main/ConnectionService.dart';
 import 'package:redpanda_light_client/src/main/NodeId.dart';
 import 'package:redpanda_light_client/src/main/Utils.dart';
 import 'package:redpanda_light_client/src/main/store/DBChannels.dart';
+import 'package:redpanda_light_client/src/main/store/DBFriends.dart';
+import 'package:redpanda_light_client/src/main/store/DBFriendsDao.dart';
 import 'package:redpanda_light_client/src/main/store/DBMessages.dart';
 import 'package:redpanda_light_client/src/main/store/DBMessagesDao.dart';
 import 'package:redpanda_light_client/src/main/store/DBPeers.dart';
@@ -28,7 +30,7 @@ final log = Logger('moor_database');
 class LocalSettings extends Table {
   IntColumn get id => integer().autoIncrement()();
 
-  TextColumn get myUserId => text()();
+  IntColumn get myUserId => integer()();
 
   TextColumn get fcmToken => text().nullable()();
 
@@ -41,7 +43,9 @@ class LocalSettings extends Table {
 
 // this annotation tells moor to prepare a database class that uses both of the
 // tables we just defined. We'll see how to use that database class in a moment.
-@UseMoor(tables: [LocalSettings, DBChannels, DBPeers, DBMessages], daos: [DBPeersDao, DBMessagesDao])
+@UseMoor(
+    tables: [LocalSettings, DBChannels, DBPeers, DBMessages, DBFriends],
+    daos: [DBPeersDao, DBMessagesDao, DBFriendsDao])
 class AppDatabase extends _$AppDatabase {
   // we tell the database where to store the data with this constructor
   AppDatabase() : super(_openConnection());
@@ -49,7 +53,7 @@ class AppDatabase extends _$AppDatabase {
   // you should bump this number whenever you change or add a table definition.
   // Migrations are covered below.
   @override
-  int get schemaVersion => 25;
+  int get schemaVersion => 30;
 
   Future<LocalSetting> get getLocalSettings => select(localSettings).getSingle();
 
@@ -115,7 +119,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<int> updateChannelData(int id, String channelDataString) async {
-    log.info('update channel data ${channelDataString}');
+    log.finer('update channel data ${channelDataString}');
     return (update(dBChannels)..where((tbl) => tbl.id.equals(id)))
         .write(DBChannelsCompanion(channelData: Value(channelDataString)));
   }

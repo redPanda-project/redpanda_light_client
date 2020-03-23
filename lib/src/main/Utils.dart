@@ -89,4 +89,11 @@ class Utils {
     }
     return result;
   }
+
+  /**
+   * Generates a random 4 byte integer compatible to java.
+   */
+  static int randInteger() {
+    return Utils.random.nextInt(2147483647 * 2) - 2147483647;
+  }
 }

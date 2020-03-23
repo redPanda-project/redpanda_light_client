@@ -7,6 +7,8 @@ import 'package:logging/logging.dart';
 import 'package:redpanda_light_client/export.dart';
 import 'package:redpanda_light_client/src/main/Channel.dart';
 import 'package:redpanda_light_client/src/main/ConnectionService.dart';
+import 'package:redpanda_light_client/src/main/store/DBMessageWithFriend.dart';
+import 'package:redpanda_light_client/src/main/store/DBMessagesDao.dart';
 import 'package:redpanda_light_client/src/redpanda_isolate.dart';
 
 /// Checks if you are awesome. Spoiler: you are.
@@ -61,6 +63,12 @@ class RedPandaLightClient {
     return sendCommand(START, data);
   }
 
+  static Future<void> initForDebug(String dataFolderPath, int myPort) async {
+    await setupAndStartIsolate();
+    var data = {"dataFolderPath": dataFolderPath, "myPort": myPort};
+    return sendCommand(START_DEBUG, data);
+  }
+
   /**
    * Creates a new Channel with the given name. Returns the new Channel Id.
    */
@@ -91,6 +99,25 @@ class RedPandaLightClient {
     await for (List<DBChannel> a in port) {
       yield a;
     }
+  }
+
+  static Stream<List<DBMessageWithFriend>> watchDBMessageEntries(int channelId) async* {
+    print("watchDBMessageEntries");
+    var data = {"channelId": channelId};
+    ReceivePort port = ReceivePort();
+    newIsolateSendPort.send(CrossIsolatesMessage<String>(sender: port.sendPort, message: MESSAGES_WATCH, data: data));
+
+    print("awaiting messages...");
+
+    await for (List<DBMessageWithFriend> a in port) {
+      print("pushing messages...");
+      yield a;
+    }
+  }
+
+  static Future<void> writeMessage(int channelId, String text) async {
+    var data = {"channelId": channelId, "text": text};
+    return sendCommand(MESSAGES_SEND, data);
   }
 
   static Future<void> shutdown() async {

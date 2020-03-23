@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:isolate';
 
 import 'package:logging/logging.dart';
@@ -5,17 +6,21 @@ import 'package:redpanda_light_client/export.dart';
 import 'package:redpanda_light_client/src/main/ConnectionService.dart';
 
 final String START = "start";
+final String START_DEBUG = "startdebug";
 final String CHANNEL_CREATE = "createchannel";
 final String CHANNEL_RENAME = "renamechannel";
 final String CHANNEL_REMOVE = "removechannel";
 final String CHANNELS_WATCH = "watchchannels";
 final String CHANNEL_GET_BY_ID = "channelgetbyid";
+final String MESSAGES_WATCH = "watchmessages";
+final String MESSAGES_SEND = "sendmessages";
 
 final log = Logger('redpanda_isolate');
 ConnectionService connectionService;
 bool running = false;
 
 List<SendPort> channelWatcher = [];
+Map<int, SendPort> messageWatcher = HashMap<int, SendPort>();
 
 //
 // The port of the new isolate
@@ -88,12 +93,38 @@ void parseIsolateCommands(CrossIsolatesMessage incomingMessage) async {
   String command = incomingMessage.message;
   dynamic data = incomingMessage.data;
 
-  print(data);
+  print("isolate cmd: " + command + " data: " + data.toString());
 
   //
   // Process the message
   //
   if (command == START) {
+    String dataFolderPath = data['dataFolderPath'];
+    int myPort = data['myPort'];
+
+    Logger.root.level = Level.INFO; // defaults to Level.INFO
+    Logger.root.onRecord.listen((record) {
+//      print('${record.level.name}: ${record.time}: ${record.message}');
+      print(
+          '${formatToMinLen(record.loggerName, 30)}: ${formatToMinLen(record.time.toString(), 26)}:    ${record.message}');
+    });
+
+    // create sqlite database folder otherwise the database opening will fail
+    // with: SqliteException: bad parameter or other API misuse, unable to open database file
+//    if (Platform.isWindows) {
+//    await new Directory('data').create(recursive: true);
+//    }
+
+    if (running) {
+      log.info("RedPandaLightClient already running skipping new init...");
+      return;
+    }
+    running = true;
+
+    connectionService = ConnectionService(dataFolderPath, myPort);
+    await connectionService.start();
+    incomingMessage.sender.send(null);
+  } else if (command == START_DEBUG) {
     String dataFolderPath = data['dataFolderPath'];
     int myPort = data['myPort'];
 
@@ -117,7 +148,7 @@ void parseIsolateCommands(CrossIsolatesMessage incomingMessage) async {
     running = true;
 
     connectionService = ConnectionService(dataFolderPath, myPort);
-    await connectionService.start();
+    await connectionService.start(debugOnly: true);
     incomingMessage.sender.send(null);
   }
   // Channel operations
@@ -152,11 +183,45 @@ void parseIsolateCommands(CrossIsolatesMessage incomingMessage) async {
 //      incomingMessage.sender.send(c);
 //    }
   }
+  // all stuff related to messages
+  else if (command == MESSAGES_WATCH) {
+    print("messages watched");
+    int channelId = data['channelId'];
+    //todo add by channel id...
+    messageWatcher.update(channelId, (value) => incomingMessage.sender, ifAbsent: () => incomingMessage.sender);
+
+    print("messages watched");
+
+    //getcomplete message list
+    var allmsgs = await ConnectionService.appDatabase.dBMessagesDao.getAllDBMessages(channelId);
+//    print("all msgs: " + allmsgs.toString());
+    incomingMessage.sender.send(allmsgs);
+  } else if (command == MESSAGES_SEND) {
+    int channelId = data['channelId'];
+    String text = data['text'];
+    var newMessageId = await ConnectionService.appDatabase.dBMessagesDao.writeMessage(channelId, text);
+    incomingMessage.sender.send(newMessageId);
+    refreshMessagessWatching(channelId);
+  }
+
   //
   else if (command == "unknown") {
     String newMessage = "asdg " + incomingMessage.message;
     incomingMessage.sender.send(newMessage);
   }
+}
+
+refreshMessagessWatching(int channelId) async {
+  print('refreshing messages...');
+
+  var mw = messageWatcher[channelId];
+  if (mw == null) {
+    return;
+  }
+
+  var allmsgs = await ConnectionService.appDatabase.dBMessagesDao.getAllDBMessages(channelId);
+//  print("all msgs: " + allmsgs.toString());
+  mw.send(allmsgs);
 }
 
 refreshChannelsWatching() async {

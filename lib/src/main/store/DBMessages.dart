@@ -10,9 +10,11 @@ class DBMessages extends Table {
 
   IntColumn get timestamp => integer()();
 
-  TextColumn get content => text().withLength(min: 3, max: 32)();
+  IntColumn get type => integer()();
 
-  TextColumn get fromName => text().withLength(min: 3, max: 32)();
+  TextColumn get content => text().nullable().withLength(min: 1, max: 1024)();
+
+  IntColumn get from => integer()();
 
   BoolColumn get delivered => boolean().withDefault(const Constant(false))();
 

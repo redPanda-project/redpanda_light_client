@@ -37,6 +37,7 @@ class ConnectionService {
 
   static NodeId nodeId;
   static KademliaId kademliaId;
+  static int myUserId;
   static AppDatabase _appDatabase;
   Timer loopTimer;
   static int myPort;
@@ -47,7 +48,6 @@ class ConnectionService {
   }
 
   static AppDatabase get appDatabase => _appDatabase;
-
 
   static set appDatabase(AppDatabase value) {
     _appDatabase = value;
@@ -128,7 +128,7 @@ class ConnectionService {
   /**
    * Method to start the ConnectionService.
    */
-  Future<void> start() async {
+  Future<void> start({bool debugOnly = false}) async {
     /**
      * Setup database and LocalSettings...
      */
@@ -145,6 +145,10 @@ class ConnectionService {
     }
 
     log.fine('My NodeId: ' + kademliaId.toString());
+
+    if (debugOnly) {
+      return;
+    }
 
     /**
      * We run loop immediately and every 5 seconds, this method will check for
@@ -168,11 +172,12 @@ class ConnectionService {
 
       nodeId = NodeId.withNewKeyPair();
       kademliaId = nodeId.getKademliaId();
+      myUserId = Utils.randInteger();
 
       LocalSettingsCompanion localSettingsCompanion = LocalSettingsCompanion.insert(
           privateKey: nodeId.exportWithPrivate(),
           kademliaId: kademliaId.bytes,
-          myUserId: Utils.randomString(12),
+          myUserId: myUserId,
           defaultName: "Unknown");
 
       await _appDatabase.save(localSettingsCompanion);
@@ -180,6 +185,7 @@ class ConnectionService {
     } else {
       nodeId = NodeId.importWithPrivate(localSetting.privateKey);
       kademliaId = KademliaId.fromBytes(localSetting.kademliaId);
+      myUserId = localSetting.myUserId;
       print('Found KademliaId in db: ' + kademliaId.toString());
       assert(nodeId.getKademliaId() == kademliaId);
     }
@@ -298,7 +304,7 @@ class ConnectionService {
 
     print('channels: ' + allChannels.length.toString());
 
-    String myUserId = localSettings.myUserId;
+    int myUserId = localSettings.myUserId;
 
     int cntUpdatedChannels = 0;
 
@@ -321,7 +327,7 @@ class ConnectionService {
       Map<String, dynamic> channelData2 = channelData['userdata'];
 
       if (channelData2 != null) {
-        userData = channelData2[myUserId];
+        userData = channelData2[myUserId.toString()];
       } else {
         channelData['userdata'] = {};
       }

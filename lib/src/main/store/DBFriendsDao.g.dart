@@ -1,12 +1,11 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'DBMessagesDao.dart';
+part of 'DBFriendsDao.dart';
 
 // **************************************************************************
 // DaoGenerator
 // **************************************************************************
 
-mixin _$DBMessagesDaoMixin on DatabaseAccessor<AppDatabase> {
-  $DBMessagesTable get dBMessages => db.dBMessages;
+mixin _$DBFriendsDaoMixin on DatabaseAccessor<AppDatabase> {
   $DBFriendsTable get dBFriends => db.dBFriends;
 }

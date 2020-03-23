@@ -9,7 +9,7 @@ part of 'moor_database.dart';
 // ignore_for_file: unnecessary_brace_in_string_interps, unnecessary_this
 class LocalSetting extends DataClass implements Insertable<LocalSetting> {
   final int id;
-  final String myUserId;
+  final int myUserId;
   final String fcmToken;
   final Uint8List privateKey;
   final Uint8List kademliaId;
@@ -29,8 +29,8 @@ class LocalSetting extends DataClass implements Insertable<LocalSetting> {
     final uint8ListType = db.typeSystem.forDartType<Uint8List>();
     return LocalSetting(
       id: intType.mapFromDatabaseResponse(data['${effectivePrefix}id']),
-      myUserId: stringType
-          .mapFromDatabaseResponse(data['${effectivePrefix}my_user_id']),
+      myUserId:
+          intType.mapFromDatabaseResponse(data['${effectivePrefix}my_user_id']),
       fcmToken: stringType
           .mapFromDatabaseResponse(data['${effectivePrefix}fcm_token']),
       privateKey: uint8ListType
@@ -46,7 +46,7 @@ class LocalSetting extends DataClass implements Insertable<LocalSetting> {
     serializer ??= moorRuntimeOptions.defaultSerializer;
     return LocalSetting(
       id: serializer.fromJson<int>(json['id']),
-      myUserId: serializer.fromJson<String>(json['myUserId']),
+      myUserId: serializer.fromJson<int>(json['myUserId']),
       fcmToken: serializer.fromJson<String>(json['fcmToken']),
       privateKey: serializer.fromJson<Uint8List>(json['privateKey']),
       kademliaId: serializer.fromJson<Uint8List>(json['kademliaId']),
@@ -58,7 +58,7 @@ class LocalSetting extends DataClass implements Insertable<LocalSetting> {
     serializer ??= moorRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
-      'myUserId': serializer.toJson<String>(myUserId),
+      'myUserId': serializer.toJson<int>(myUserId),
       'fcmToken': serializer.toJson<String>(fcmToken),
       'privateKey': serializer.toJson<Uint8List>(privateKey),
       'kademliaId': serializer.toJson<Uint8List>(kademliaId),
@@ -90,7 +90,7 @@ class LocalSetting extends DataClass implements Insertable<LocalSetting> {
 
   LocalSetting copyWith(
           {int id,
-          String myUserId,
+          int myUserId,
           String fcmToken,
           Uint8List privateKey,
           Uint8List kademliaId,
@@ -139,7 +139,7 @@ class LocalSetting extends DataClass implements Insertable<LocalSetting> {
 
 class LocalSettingsCompanion extends UpdateCompanion<LocalSetting> {
   final Value<int> id;
-  final Value<String> myUserId;
+  final Value<int> myUserId;
   final Value<String> fcmToken;
   final Value<Uint8List> privateKey;
   final Value<Uint8List> kademliaId;
@@ -154,7 +154,7 @@ class LocalSettingsCompanion extends UpdateCompanion<LocalSetting> {
   });
   LocalSettingsCompanion.insert({
     this.id = const Value.absent(),
-    @required String myUserId,
+    @required int myUserId,
     this.fcmToken = const Value.absent(),
     @required Uint8List privateKey,
     @required Uint8List kademliaId,
@@ -165,7 +165,7 @@ class LocalSettingsCompanion extends UpdateCompanion<LocalSetting> {
         defaultName = Value(defaultName);
   LocalSettingsCompanion copyWith(
       {Value<int> id,
-      Value<String> myUserId,
+      Value<int> myUserId,
       Value<String> fcmToken,
       Value<Uint8List> privateKey,
       Value<Uint8List> kademliaId,
@@ -196,11 +196,11 @@ class $LocalSettingsTable extends LocalSettings
   }
 
   final VerificationMeta _myUserIdMeta = const VerificationMeta('myUserId');
-  GeneratedTextColumn _myUserId;
+  GeneratedIntColumn _myUserId;
   @override
-  GeneratedTextColumn get myUserId => _myUserId ??= _constructMyUserId();
-  GeneratedTextColumn _constructMyUserId() {
-    return GeneratedTextColumn(
+  GeneratedIntColumn get myUserId => _myUserId ??= _constructMyUserId();
+  GeneratedIntColumn _constructMyUserId() {
+    return GeneratedIntColumn(
       'my_user_id',
       $tableName,
       false,
@@ -319,7 +319,7 @@ class $LocalSettingsTable extends LocalSettings
       map['id'] = Variable<int, IntType>(d.id.value);
     }
     if (d.myUserId.present) {
-      map['my_user_id'] = Variable<String, StringType>(d.myUserId.value);
+      map['my_user_id'] = Variable<int, IntType>(d.myUserId.value);
     }
     if (d.fcmToken.present) {
       map['fcm_token'] = Variable<String, StringType>(d.fcmToken.value);
@@ -1095,16 +1095,18 @@ class DBMessage extends DataClass implements Insertable<DBMessage> {
   final int id;
   final int channelId;
   final int timestamp;
+  final int type;
   final String content;
-  final String fromName;
+  final int from;
   final bool delivered;
   final bool read;
   DBMessage(
       {@required this.id,
       @required this.channelId,
       @required this.timestamp,
-      @required this.content,
-      @required this.fromName,
+      @required this.type,
+      this.content,
+      @required this.from,
       @required this.delivered,
       @required this.read});
   factory DBMessage.fromData(Map<String, dynamic> data, GeneratedDatabase db,
@@ -1119,10 +1121,10 @@ class DBMessage extends DataClass implements Insertable<DBMessage> {
           intType.mapFromDatabaseResponse(data['${effectivePrefix}channel_id']),
       timestamp:
           intType.mapFromDatabaseResponse(data['${effectivePrefix}timestamp']),
+      type: intType.mapFromDatabaseResponse(data['${effectivePrefix}type']),
       content:
           stringType.mapFromDatabaseResponse(data['${effectivePrefix}content']),
-      fromName: stringType
-          .mapFromDatabaseResponse(data['${effectivePrefix}from_name']),
+      from: intType.mapFromDatabaseResponse(data['${effectivePrefix}from']),
       delivered:
           boolType.mapFromDatabaseResponse(data['${effectivePrefix}delivered']),
       read: boolType.mapFromDatabaseResponse(data['${effectivePrefix}read']),
@@ -1135,8 +1137,9 @@ class DBMessage extends DataClass implements Insertable<DBMessage> {
       id: serializer.fromJson<int>(json['id']),
       channelId: serializer.fromJson<int>(json['channelId']),
       timestamp: serializer.fromJson<int>(json['timestamp']),
+      type: serializer.fromJson<int>(json['type']),
       content: serializer.fromJson<String>(json['content']),
-      fromName: serializer.fromJson<String>(json['fromName']),
+      from: serializer.fromJson<int>(json['from']),
       delivered: serializer.fromJson<bool>(json['delivered']),
       read: serializer.fromJson<bool>(json['read']),
     );
@@ -1148,8 +1151,9 @@ class DBMessage extends DataClass implements Insertable<DBMessage> {
       'id': serializer.toJson<int>(id),
       'channelId': serializer.toJson<int>(channelId),
       'timestamp': serializer.toJson<int>(timestamp),
+      'type': serializer.toJson<int>(type),
       'content': serializer.toJson<String>(content),
-      'fromName': serializer.toJson<String>(fromName),
+      'from': serializer.toJson<int>(from),
       'delivered': serializer.toJson<bool>(delivered),
       'read': serializer.toJson<bool>(read),
     };
@@ -1165,12 +1169,11 @@ class DBMessage extends DataClass implements Insertable<DBMessage> {
       timestamp: timestamp == null && nullToAbsent
           ? const Value.absent()
           : Value(timestamp),
+      type: type == null && nullToAbsent ? const Value.absent() : Value(type),
       content: content == null && nullToAbsent
           ? const Value.absent()
           : Value(content),
-      fromName: fromName == null && nullToAbsent
-          ? const Value.absent()
-          : Value(fromName),
+      from: from == null && nullToAbsent ? const Value.absent() : Value(from),
       delivered: delivered == null && nullToAbsent
           ? const Value.absent()
           : Value(delivered),
@@ -1182,16 +1185,18 @@ class DBMessage extends DataClass implements Insertable<DBMessage> {
           {int id,
           int channelId,
           int timestamp,
+          int type,
           String content,
-          String fromName,
+          int from,
           bool delivered,
           bool read}) =>
       DBMessage(
         id: id ?? this.id,
         channelId: channelId ?? this.channelId,
         timestamp: timestamp ?? this.timestamp,
+        type: type ?? this.type,
         content: content ?? this.content,
-        fromName: fromName ?? this.fromName,
+        from: from ?? this.from,
         delivered: delivered ?? this.delivered,
         read: read ?? this.read,
       );
@@ -1201,8 +1206,9 @@ class DBMessage extends DataClass implements Insertable<DBMessage> {
           ..write('id: $id, ')
           ..write('channelId: $channelId, ')
           ..write('timestamp: $timestamp, ')
+          ..write('type: $type, ')
           ..write('content: $content, ')
-          ..write('fromName: $fromName, ')
+          ..write('from: $from, ')
           ..write('delivered: $delivered, ')
           ..write('read: $read')
           ..write(')'))
@@ -1217,9 +1223,11 @@ class DBMessage extends DataClass implements Insertable<DBMessage> {
           $mrjc(
               timestamp.hashCode,
               $mrjc(
-                  content.hashCode,
-                  $mrjc(fromName.hashCode,
-                      $mrjc(delivered.hashCode, read.hashCode)))))));
+                  type.hashCode,
+                  $mrjc(
+                      content.hashCode,
+                      $mrjc(from.hashCode,
+                          $mrjc(delivered.hashCode, read.hashCode))))))));
   @override
   bool operator ==(dynamic other) =>
       identical(this, other) ||
@@ -1227,8 +1235,9 @@ class DBMessage extends DataClass implements Insertable<DBMessage> {
           other.id == this.id &&
           other.channelId == this.channelId &&
           other.timestamp == this.timestamp &&
+          other.type == this.type &&
           other.content == this.content &&
-          other.fromName == this.fromName &&
+          other.from == this.from &&
           other.delivered == this.delivered &&
           other.read == this.read);
 }
@@ -1237,16 +1246,18 @@ class DBMessagesCompanion extends UpdateCompanion<DBMessage> {
   final Value<int> id;
   final Value<int> channelId;
   final Value<int> timestamp;
+  final Value<int> type;
   final Value<String> content;
-  final Value<String> fromName;
+  final Value<int> from;
   final Value<bool> delivered;
   final Value<bool> read;
   const DBMessagesCompanion({
     this.id = const Value.absent(),
     this.channelId = const Value.absent(),
     this.timestamp = const Value.absent(),
+    this.type = const Value.absent(),
     this.content = const Value.absent(),
-    this.fromName = const Value.absent(),
+    this.from = const Value.absent(),
     this.delivered = const Value.absent(),
     this.read = const Value.absent(),
   });
@@ -1254,28 +1265,31 @@ class DBMessagesCompanion extends UpdateCompanion<DBMessage> {
     this.id = const Value.absent(),
     @required int channelId,
     @required int timestamp,
-    @required String content,
-    @required String fromName,
+    @required int type,
+    this.content = const Value.absent(),
+    @required int from,
     this.delivered = const Value.absent(),
     this.read = const Value.absent(),
   })  : channelId = Value(channelId),
         timestamp = Value(timestamp),
-        content = Value(content),
-        fromName = Value(fromName);
+        type = Value(type),
+        from = Value(from);
   DBMessagesCompanion copyWith(
       {Value<int> id,
       Value<int> channelId,
       Value<int> timestamp,
+      Value<int> type,
       Value<String> content,
-      Value<String> fromName,
+      Value<int> from,
       Value<bool> delivered,
       Value<bool> read}) {
     return DBMessagesCompanion(
       id: id ?? this.id,
       channelId: channelId ?? this.channelId,
       timestamp: timestamp ?? this.timestamp,
+      type: type ?? this.type,
       content: content ?? this.content,
-      fromName: fromName ?? this.fromName,
+      from: from ?? this.from,
       delivered: delivered ?? this.delivered,
       read: read ?? this.read,
     );
@@ -1320,22 +1334,37 @@ class $DBMessagesTable extends DBMessages
     );
   }
 
+  final VerificationMeta _typeMeta = const VerificationMeta('type');
+  GeneratedIntColumn _type;
+  @override
+  GeneratedIntColumn get type => _type ??= _constructType();
+  GeneratedIntColumn _constructType() {
+    return GeneratedIntColumn(
+      'type',
+      $tableName,
+      false,
+    );
+  }
+
   final VerificationMeta _contentMeta = const VerificationMeta('content');
   GeneratedTextColumn _content;
   @override
   GeneratedTextColumn get content => _content ??= _constructContent();
   GeneratedTextColumn _constructContent() {
-    return GeneratedTextColumn('content', $tableName, false,
-        minTextLength: 3, maxTextLength: 32);
+    return GeneratedTextColumn('content', $tableName, true,
+        minTextLength: 1, maxTextLength: 1024);
   }
 
-  final VerificationMeta _fromNameMeta = const VerificationMeta('fromName');
-  GeneratedTextColumn _fromName;
+  final VerificationMeta _fromMeta = const VerificationMeta('from');
+  GeneratedIntColumn _from;
   @override
-  GeneratedTextColumn get fromName => _fromName ??= _constructFromName();
-  GeneratedTextColumn _constructFromName() {
-    return GeneratedTextColumn('from_name', $tableName, false,
-        minTextLength: 3, maxTextLength: 32);
+  GeneratedIntColumn get from => _from ??= _constructFrom();
+  GeneratedIntColumn _constructFrom() {
+    return GeneratedIntColumn(
+      'from',
+      $tableName,
+      false,
+    );
   }
 
   final VerificationMeta _deliveredMeta = const VerificationMeta('delivered');
@@ -1358,7 +1387,7 @@ class $DBMessagesTable extends DBMessages
 
   @override
   List<GeneratedColumn> get $columns =>
-      [id, channelId, timestamp, content, fromName, delivered, read];
+      [id, channelId, timestamp, type, content, from, delivered, read];
   @override
   $DBMessagesTable get asDslTable => this;
   @override
@@ -1384,17 +1413,21 @@ class $DBMessagesTable extends DBMessages
     } else if (isInserting) {
       context.missing(_timestampMeta);
     }
+    if (d.type.present) {
+      context.handle(
+          _typeMeta, type.isAcceptableValue(d.type.value, _typeMeta));
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
     if (d.content.present) {
       context.handle(_contentMeta,
           content.isAcceptableValue(d.content.value, _contentMeta));
-    } else if (isInserting) {
-      context.missing(_contentMeta);
     }
-    if (d.fromName.present) {
-      context.handle(_fromNameMeta,
-          fromName.isAcceptableValue(d.fromName.value, _fromNameMeta));
+    if (d.from.present) {
+      context.handle(
+          _fromMeta, from.isAcceptableValue(d.from.value, _fromMeta));
     } else if (isInserting) {
-      context.missing(_fromNameMeta);
+      context.missing(_fromMeta);
     }
     if (d.delivered.present) {
       context.handle(_deliveredMeta,
@@ -1427,11 +1460,14 @@ class $DBMessagesTable extends DBMessages
     if (d.timestamp.present) {
       map['timestamp'] = Variable<int, IntType>(d.timestamp.value);
     }
+    if (d.type.present) {
+      map['type'] = Variable<int, IntType>(d.type.value);
+    }
     if (d.content.present) {
       map['content'] = Variable<String, StringType>(d.content.value);
     }
-    if (d.fromName.present) {
-      map['from_name'] = Variable<String, StringType>(d.fromName.value);
+    if (d.from.present) {
+      map['from'] = Variable<int, IntType>(d.from.value);
     }
     if (d.delivered.present) {
       map['delivered'] = Variable<bool, BoolType>(d.delivered.value);
@@ -1448,6 +1484,275 @@ class $DBMessagesTable extends DBMessages
   }
 }
 
+class DBFriend extends DataClass implements Insertable<DBFriend> {
+  final int id;
+  final String name;
+  final Uint8List image;
+  final String phoneNumber;
+  final String eMail;
+  DBFriend(
+      {@required this.id, this.name, this.image, this.phoneNumber, this.eMail});
+  factory DBFriend.fromData(Map<String, dynamic> data, GeneratedDatabase db,
+      {String prefix}) {
+    final effectivePrefix = prefix ?? '';
+    final intType = db.typeSystem.forDartType<int>();
+    final stringType = db.typeSystem.forDartType<String>();
+    final uint8ListType = db.typeSystem.forDartType<Uint8List>();
+    return DBFriend(
+      id: intType.mapFromDatabaseResponse(data['${effectivePrefix}id']),
+      name: stringType.mapFromDatabaseResponse(data['${effectivePrefix}name']),
+      image: uint8ListType
+          .mapFromDatabaseResponse(data['${effectivePrefix}image']),
+      phoneNumber: stringType
+          .mapFromDatabaseResponse(data['${effectivePrefix}phone_number']),
+      eMail:
+          stringType.mapFromDatabaseResponse(data['${effectivePrefix}e_mail']),
+    );
+  }
+  factory DBFriend.fromJson(Map<String, dynamic> json,
+      {ValueSerializer serializer}) {
+    serializer ??= moorRuntimeOptions.defaultSerializer;
+    return DBFriend(
+      id: serializer.fromJson<int>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      image: serializer.fromJson<Uint8List>(json['image']),
+      phoneNumber: serializer.fromJson<String>(json['phoneNumber']),
+      eMail: serializer.fromJson<String>(json['eMail']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer serializer}) {
+    serializer ??= moorRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'name': serializer.toJson<String>(name),
+      'image': serializer.toJson<Uint8List>(image),
+      'phoneNumber': serializer.toJson<String>(phoneNumber),
+      'eMail': serializer.toJson<String>(eMail),
+    };
+  }
+
+  @override
+  DBFriendsCompanion createCompanion(bool nullToAbsent) {
+    return DBFriendsCompanion(
+      id: id == null && nullToAbsent ? const Value.absent() : Value(id),
+      name: name == null && nullToAbsent ? const Value.absent() : Value(name),
+      image:
+          image == null && nullToAbsent ? const Value.absent() : Value(image),
+      phoneNumber: phoneNumber == null && nullToAbsent
+          ? const Value.absent()
+          : Value(phoneNumber),
+      eMail:
+          eMail == null && nullToAbsent ? const Value.absent() : Value(eMail),
+    );
+  }
+
+  DBFriend copyWith(
+          {int id,
+          String name,
+          Uint8List image,
+          String phoneNumber,
+          String eMail}) =>
+      DBFriend(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        image: image ?? this.image,
+        phoneNumber: phoneNumber ?? this.phoneNumber,
+        eMail: eMail ?? this.eMail,
+      );
+  @override
+  String toString() {
+    return (StringBuffer('DBFriend(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('image: $image, ')
+          ..write('phoneNumber: $phoneNumber, ')
+          ..write('eMail: $eMail')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => $mrjf($mrjc(
+      id.hashCode,
+      $mrjc(name.hashCode,
+          $mrjc(image.hashCode, $mrjc(phoneNumber.hashCode, eMail.hashCode)))));
+  @override
+  bool operator ==(dynamic other) =>
+      identical(this, other) ||
+      (other is DBFriend &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.image == this.image &&
+          other.phoneNumber == this.phoneNumber &&
+          other.eMail == this.eMail);
+}
+
+class DBFriendsCompanion extends UpdateCompanion<DBFriend> {
+  final Value<int> id;
+  final Value<String> name;
+  final Value<Uint8List> image;
+  final Value<String> phoneNumber;
+  final Value<String> eMail;
+  const DBFriendsCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.image = const Value.absent(),
+    this.phoneNumber = const Value.absent(),
+    this.eMail = const Value.absent(),
+  });
+  DBFriendsCompanion.insert({
+    @required int id,
+    this.name = const Value.absent(),
+    this.image = const Value.absent(),
+    this.phoneNumber = const Value.absent(),
+    this.eMail = const Value.absent(),
+  }) : id = Value(id);
+  DBFriendsCompanion copyWith(
+      {Value<int> id,
+      Value<String> name,
+      Value<Uint8List> image,
+      Value<String> phoneNumber,
+      Value<String> eMail}) {
+    return DBFriendsCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      image: image ?? this.image,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
+      eMail: eMail ?? this.eMail,
+    );
+  }
+}
+
+class $DBFriendsTable extends DBFriends
+    with TableInfo<$DBFriendsTable, DBFriend> {
+  final GeneratedDatabase _db;
+  final String _alias;
+  $DBFriendsTable(this._db, [this._alias]);
+  final VerificationMeta _idMeta = const VerificationMeta('id');
+  GeneratedIntColumn _id;
+  @override
+  GeneratedIntColumn get id => _id ??= _constructId();
+  GeneratedIntColumn _constructId() {
+    return GeneratedIntColumn(
+      'id',
+      $tableName,
+      false,
+    );
+  }
+
+  final VerificationMeta _nameMeta = const VerificationMeta('name');
+  GeneratedTextColumn _name;
+  @override
+  GeneratedTextColumn get name => _name ??= _constructName();
+  GeneratedTextColumn _constructName() {
+    return GeneratedTextColumn('name', $tableName, true,
+        minTextLength: 3, maxTextLength: 10);
+  }
+
+  final VerificationMeta _imageMeta = const VerificationMeta('image');
+  GeneratedBlobColumn _image;
+  @override
+  GeneratedBlobColumn get image => _image ??= _constructImage();
+  GeneratedBlobColumn _constructImage() {
+    return GeneratedBlobColumn(
+      'image',
+      $tableName,
+      true,
+    );
+  }
+
+  final VerificationMeta _phoneNumberMeta =
+      const VerificationMeta('phoneNumber');
+  GeneratedTextColumn _phoneNumber;
+  @override
+  GeneratedTextColumn get phoneNumber =>
+      _phoneNumber ??= _constructPhoneNumber();
+  GeneratedTextColumn _constructPhoneNumber() {
+    return GeneratedTextColumn('phone_number', $tableName, true,
+        minTextLength: 6, maxTextLength: 16);
+  }
+
+  final VerificationMeta _eMailMeta = const VerificationMeta('eMail');
+  GeneratedTextColumn _eMail;
+  @override
+  GeneratedTextColumn get eMail => _eMail ??= _constructEMail();
+  GeneratedTextColumn _constructEMail() {
+    return GeneratedTextColumn('e_mail', $tableName, true,
+        minTextLength: 6, maxTextLength: 16);
+  }
+
+  @override
+  List<GeneratedColumn> get $columns => [id, name, image, phoneNumber, eMail];
+  @override
+  $DBFriendsTable get asDslTable => this;
+  @override
+  String get $tableName => _alias ?? 'd_b_friends';
+  @override
+  final String actualTableName = 'd_b_friends';
+  @override
+  VerificationContext validateIntegrity(DBFriendsCompanion d,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    if (d.id.present) {
+      context.handle(_idMeta, id.isAcceptableValue(d.id.value, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (d.name.present) {
+      context.handle(
+          _nameMeta, name.isAcceptableValue(d.name.value, _nameMeta));
+    }
+    if (d.image.present) {
+      context.handle(
+          _imageMeta, image.isAcceptableValue(d.image.value, _imageMeta));
+    }
+    if (d.phoneNumber.present) {
+      context.handle(_phoneNumberMeta,
+          phoneNumber.isAcceptableValue(d.phoneNumber.value, _phoneNumberMeta));
+    }
+    if (d.eMail.present) {
+      context.handle(
+          _eMailMeta, eMail.isAcceptableValue(d.eMail.value, _eMailMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => <GeneratedColumn>{};
+  @override
+  DBFriend map(Map<String, dynamic> data, {String tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : null;
+    return DBFriend.fromData(data, _db, prefix: effectivePrefix);
+  }
+
+  @override
+  Map<String, Variable> entityToSql(DBFriendsCompanion d) {
+    final map = <String, Variable>{};
+    if (d.id.present) {
+      map['id'] = Variable<int, IntType>(d.id.value);
+    }
+    if (d.name.present) {
+      map['name'] = Variable<String, StringType>(d.name.value);
+    }
+    if (d.image.present) {
+      map['image'] = Variable<Uint8List, BlobType>(d.image.value);
+    }
+    if (d.phoneNumber.present) {
+      map['phone_number'] = Variable<String, StringType>(d.phoneNumber.value);
+    }
+    if (d.eMail.present) {
+      map['e_mail'] = Variable<String, StringType>(d.eMail.value);
+    }
+    return map;
+  }
+
+  @override
+  $DBFriendsTable createAlias(String alias) {
+    return $DBFriendsTable(_db, alias);
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(SqlTypeSystem.defaultInstance, e);
   $LocalSettingsTable _localSettings;
@@ -1459,14 +1764,19 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   $DBPeersTable get dBPeers => _dBPeers ??= $DBPeersTable(this);
   $DBMessagesTable _dBMessages;
   $DBMessagesTable get dBMessages => _dBMessages ??= $DBMessagesTable(this);
+  $DBFriendsTable _dBFriends;
+  $DBFriendsTable get dBFriends => _dBFriends ??= $DBFriendsTable(this);
   DBPeersDao _dBPeersDao;
   DBPeersDao get dBPeersDao => _dBPeersDao ??= DBPeersDao(this as AppDatabase);
   DBMessagesDao _dBMessagesDao;
   DBMessagesDao get dBMessagesDao =>
       _dBMessagesDao ??= DBMessagesDao(this as AppDatabase);
+  DBFriendsDao _dBFriendsDao;
+  DBFriendsDao get dBFriendsDao =>
+      _dBFriendsDao ??= DBFriendsDao(this as AppDatabase);
   @override
   Iterable<TableInfo> get allTables => allSchemaEntities.whereType<TableInfo>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities =>
-      [localSettings, dBChannels, dBPeers, dBMessages];
+      [localSettings, dBChannels, dBPeers, dBMessages, dBFriends];
 }

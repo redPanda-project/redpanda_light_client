@@ -599,7 +599,7 @@ class Peer {
 
   void onError(error) {
 //    print("error found: $error");
-    log.info("error found... ${ip} " + error.toString());
+    log.fine("error found... ${ip} " + error.toString());
   }
 
   void requestPublicKey() {
