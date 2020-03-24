@@ -6,7 +6,6 @@ import 'package:redpanda_light_client/src/main/store/DBFriends.dart';
 import 'package:redpanda_light_client/src/main/store/DBMessageWithFriend.dart';
 import 'package:redpanda_light_client/src/main/store/DBMessages.dart';
 
-
 part 'DBMessagesDao.g.dart';
 
 // the _TodosDaoMixin will be created by moor. It contains all the necessary
@@ -41,6 +40,19 @@ class DBMessagesDao extends DatabaseAccessor<AppDatabase> with _$DBMessagesDaoMi
     return list;
   }
 
+  // get all Messages for a given channel id. The stream will automatically
+  // emit new items whenever the underlying data changes.
+  Future<DBMessageWithFriend> getMessageById(int messageId) async {
+    final row = await ((select(dBMessages)..where((tbl) => tbl.messageId.equals(messageId)))
+          ..orderBy([(t) => OrderingTerm(expression: t.timestamp, mode: OrderingMode.desc)]))
+        .join([
+      leftOuterJoin(dBFriends, dBFriends.id.equalsExp(dBMessages.from)),
+    ]).getSingle();
+
+    var readTable = row.readTable(dBMessages);
+    return DBMessageWithFriend(readTable, row.readTable(dBFriends), ConnectionService.myUserId == readTable.from);
+  }
+
   Future<int> writeMessage(int channelId, String text) {
     DBMessagesCompanion entry = DBMessagesCompanion.insert(
         messageId: Utils.randInteger(),
@@ -57,9 +69,19 @@ class DBMessagesDao extends DatabaseAccessor<AppDatabase> with _$DBMessagesDaoMi
   }
 
   Future<int> updateMessage(int channelId, int messageId, int deliveredTo, String text, int from, int timestamp) async {
-    print("hagdhjasgdhjasgd update message: " + messageId.toString() + " " + text);
+//    print("hagdhjasgdhjasgd update message: " + messageId.toString() + " " + text);
 
-    var single = await (select(dBMessages)..where((tbl) => tbl.messageId.equals(messageId))).getSingle();
+    bool hadToDelete = false;
+    var single;
+    //if more than one message delete all msg and add below in the update routine
+    try {
+      single = await (select(dBMessages)..where((tbl) => tbl.messageId.equals(messageId))).getSingle();
+    } on StateError catch (e) {
+      delete(dBMessages)..where((tbl) => tbl.messageId.equals(messageId));
+      //let us set single to null such that the the message will be added
+      single = null;
+      hadToDelete = true;
+    }
 
     if (single != null) {
       bool weHaveToAdd = false;
@@ -77,12 +99,14 @@ class DBMessagesDao extends DatabaseAccessor<AppDatabase> with _$DBMessagesDaoMi
       dec.add(deliveredTo);
 
       if (weHaveToAdd) {
-        print("updated delivered: " + jsonEncode(dec));
+//        print("updated delivered: " + jsonEncode(dec));
 
-        return (update(dBMessages)..where((tbl) => tbl.messageId.equals(messageId)))
+        await (update(dBMessages)..where((tbl) => tbl.messageId.equals(messageId)))
             .write(new DBMessagesCompanion(deliveredTo: Value(jsonEncode(dec))));
+
+        return null;
       } else {
-        print("no new content from dht for msg: " + jsonEncode(dec) + " " + text);
+//        print("no new content from dht for msg: " + jsonEncode(dec) + " " + text);
       }
 
       return null;
@@ -98,7 +122,13 @@ class DBMessagesDao extends DatabaseAccessor<AppDatabase> with _$DBMessagesDaoMi
 
       print("insert new msg: " + channelId.toString() + " msgid: " + messageId.toString());
 
-      return into(dBMessages).insert(entry);
+      var a = into(dBMessages).insert(entry);
+
+      if (hadToDelete) {
+        a = null;
+      }
+
+      return a;
     }
   }
 }

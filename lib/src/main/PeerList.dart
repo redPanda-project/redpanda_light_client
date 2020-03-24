@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:collection';
 
 import 'package:logging/logging.dart';
@@ -63,9 +64,19 @@ class PeerList {
   static void sendIntegrated(ByteBuffer bytes) async {
     for (Peer p in _peerlist) {
       if (p.connected && p.socket != null) {
-        await p.sendEncrypt(bytes);
-        print("send to: " + p.getKademliaId().toString());
-        return;
+        bool send = false;
+        await runZoned<Future<void>>(() async {
+          await p.sendEncrypt(bytes);
+          print("send to: " + p.getKademliaId().toString());
+          send = true;
+        }, onError: (error, stackTrace) {
+          print("error sending message... " + error.toString() + " " + p.getKademliaId().toString());
+        });
+        if (send) {
+          return;
+        } else {
+          print("send failed use another peer...");
+        }
       }
     }
   }

@@ -210,7 +210,7 @@ class Peer {
             log.warning('wrong public key for node id found, disconnecting...');
             handshakeStatus = 2;
             SentryLogger.log("Error code: g4bdghstg3f4");
-            disconnect();
+            disconnect("wrong public key for node id found, disconnecting...");
           } else {
             /**
              * We obtained the correct public key and can add it to the Peer
@@ -227,7 +227,7 @@ class Peer {
           //lets read the random bytes from them
           if (buffer.remaining() < IVbytelenHalf) {
             log.warning("not enough bytes for encryption... " + buffer.remaining().toString());
-            disconnect();
+            disconnect("not enough bytes for encryption...");
             return;
           }
 
@@ -435,7 +435,9 @@ class Peer {
   void calculateSharedSecret() {
     log.finest('calculateSharedSecret');
 
-    ECPublicKey publicKey = _nodeId.getKeyPair().publicKey;
+    ECPublicKey publicKey = _nodeId
+        .getKeyPair()
+        .publicKey;
     Uint8List encoded = generateIntermediateSharedSecret(ConnectionService.nodeId.getKeyPair(), publicKey.Q);
 
     log.finest('intermediateSharedSecret: ' + Utils.hexEncode(encoded).toString());
@@ -493,13 +495,17 @@ class Peer {
     if (_nodeId == null || _nodeId.getKeyPair() == null) {
       return false;
     }
-    return _nodeId.getKeyPair().publicKey != null;
+    return _nodeId
+        .getKeyPair()
+        .publicKey != null;
   }
 
   void sendPublicKeyToPeer() {
     log.finest('sendPublicKeyToPeer...');
 
-    ECPublicKey publicKey = ConnectionService.nodeId.getKeyPair().publicKey;
+    ECPublicKey publicKey = ConnectionService.nodeId
+        .getKeyPair()
+        .publicKey;
     Uint8List encoded = publicKey.Q.getEncoded(false);
 
     ByteBuffer byteBuffer = new ByteBuffer(1 + 65);
@@ -593,8 +599,10 @@ class Peer {
     return _nodeId;
   }
 
-  void disconnect() {
+  void disconnect(String reason) {
     //todo maybe we need to do some more?
+
+    print("######################## disconnect: " + reason);
 
     if (socket != null) {
 //      socket.close();
@@ -703,6 +711,10 @@ class Peer {
         print("we could not map the KademliaId " + channelId.toString() + " to any channel in our db.");
       } else {
         DBChannel channel = await ConnectionService.appDatabase.getChannelById(channelId);
+        if (channel == null) {
+          print("obtained data for a channel we do not have....");
+          return 1 + 4 + 8 + NodeId.PUBLIC_KEYLEN + 4 + contentLength + signature.length;
+        }
         await kadContent.decryptWith(new Channel(channel));
         print("obtained KadContent: " +
             kadContent.getKademliaId().toString() +
@@ -716,18 +728,19 @@ class Peer {
         var channelDataString = Utils.decodeUTF8(kadContent.getContent());
         var decoded = jsonDecode(channelDataString);
 
-        print("obtained KadContent: ");
-        print(decoded);
+//        print("obtained KadContent: ");
+//        print(decoded);
 
         for (var msg in decoded['msgs']) {
           int messageId = msg['id'];
           String text = msg['content'];
           int from = msg['from'];
           int timestamp = msg['timestamp'];
-          await ConnectionService.appDatabase.dBMessagesDao
+          var i = await ConnectionService.appDatabase.dBMessagesDao
               .updateMessage(channelId, messageId, 0, text, from, timestamp);
-          //todo check if anything actually changed...
-          refreshMessagesWatching(channelId);
+          if (i != null) {
+            refreshMessagesWatching(channelId, messageId: messageId);
+          }
         }
 
 //          Map<String, dynamic> userdatas = decoded['userdata'];
@@ -753,7 +766,7 @@ class Peer {
     }
 
     print("could not parse cmd: " + decryptedCommand.toString());
-    disconnect();
+    disconnect("could not parse cmd: " + decryptedCommand.toString());
     throw new Exception("could not parse cmd: " + decryptedCommand.toString());
 //    return 0;
   }

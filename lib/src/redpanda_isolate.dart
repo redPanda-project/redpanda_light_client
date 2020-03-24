@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:collection';
+import 'dart:io';
 import 'dart:isolate';
 
 import 'package:logging/logging.dart';
@@ -6,6 +8,8 @@ import 'package:moor/moor.dart';
 import 'package:redpanda_light_client/export.dart';
 import 'package:redpanda_light_client/src/main/ConnectionService.dart';
 import 'package:redpanda_light_client/src/main/IsolateCommand.dart';
+import 'package:redpanda_light_client/src/main/Peer.dart';
+import 'package:redpanda_light_client/src/main/PeerList.dart';
 
 dynamic logLevel = Level.INFO; // defaults to Level.INFO
 
@@ -25,9 +29,12 @@ dynamic logLevel = Level.INFO; // defaults to Level.INFO
 final log = Logger('redpanda_isolate');
 ConnectionService connectionService;
 bool running = false;
+int lastPinged = Utils.getCurrentTimeMillis();
 
 List<SendPort> channelWatcher = [];
 Map<int, SendPort> messageWatcher = HashMap<int, SendPort>();
+SendPort onNewMessageLisener;
+SendPort onNewStatusLisener;
 
 //
 // The port of the new isolate
@@ -94,18 +101,40 @@ void callbackFunction(SendPort callerSendPort) {
       parseIsolateCommands(incomingMessage);
     }
   });
+
+  new Timer.periodic(Duration(seconds: 1), (t) {
+    if (Utils.getCurrentTimeMillis() - lastPinged > 10000) {
+      print("isolate didnt receive ping in time, shutdown isolate");
+      shutdown();
+    }
+  });
+}
+
+void shutdown() async {
+  await ConnectionService.appDatabase.close();
+  await connectionService.loopTimer.cancel();
+  for (Peer peer in PeerList.getList()) {
+    await peer.disconnect("shutdown");
+  }
+  Isolate.current.kill();
 }
 
 void parseIsolateCommands(CrossIsolatesMessage incomingMessage) async {
   IsolateCommand command = incomingMessage.message;
   dynamic data = incomingMessage.data;
 
-  print("isolate cmd: " + command.toString() + " data: " + data.toString());
+//  print("isolate cmd: " + command.toString() + " data: " + data.toString());
 
   //
   // Process the message
   //
-  if (command == IsolateCommand.START) {
+  if (command == IsolateCommand.PING) {
+    lastPinged = Utils.getCurrentTimeMillis();
+  } else if (command == IsolateCommand.SHUTDOWN) {
+    log.info("RedPandaLightClient shutting down...");
+//    running = false;
+    await shutdown();
+  } else if (command == IsolateCommand.START) {
     String dataFolderPath = data['dataFolderPath'];
     int myPort = data['myPort'];
 
@@ -221,6 +250,10 @@ void parseIsolateCommands(CrossIsolatesMessage incomingMessage) async {
     String text = data['text'];
     var allMsgs = await ConnectionService.appDatabase.dBMessagesDao.getAllDBMessages(channelId);
     incomingMessage.sender.send(allMsgs);
+  } else if (command == IsolateCommand.MESSAGES_LISTEN_NEW) {
+    onNewMessageLisener = incomingMessage.sender;
+  } else if (command == IsolateCommand.STATUS_LISTEN) {
+    onNewStatusLisener = incomingMessage.sender;
   }
 
   //
@@ -230,8 +263,16 @@ void parseIsolateCommands(CrossIsolatesMessage incomingMessage) async {
   }
 }
 
-refreshMessagesWatching(int channelId) async {
+/**
+ * If now messageId is provided we assume that this message was send from us and we do not have to generate a new
+ * notification.
+ */
+refreshMessagesWatching(int channelId, {int messageId = -1}) async {
   print('refreshing messages...');
+
+  if (messageId != -1 && onNewMessageLisener != null) {
+    onNewMessageLisener.send(await ConnectionService.appDatabase.dBMessagesDao.getMessageById(messageId));
+  }
 
   var mw = messageWatcher[channelId];
   if (mw == null) {
@@ -249,6 +290,21 @@ refreshChannelsWatching() async {
 
   for (SendPort sp in channelWatcher) {
     sp.send(allChannels);
+  }
+}
+
+refreshStatus() async {
+  print('refreshing status...');
+
+  if (onNewStatusLisener != null) {
+    int active = 0;
+    PeerList.getList().forEach((Peer p) {
+      if (p.connected) {
+        active++;
+      }
+    });
+
+    onNewStatusLisener.send("Connected: ${active}/${PeerList.getList().length}");
   }
 }
 

@@ -19,6 +19,7 @@ class RedPandaLightClient {
   static bool running = false;
   static final log = Logger('RedPandaLightClient');
   static Function onNewMessage;
+  static Function onNewStatus;
 
 //
 // Method that sends a message to the new isolate
@@ -39,7 +40,7 @@ class RedPandaLightClient {
     // any answer
     //
 
-    print(newIsolateSendPort);
+//    print(newIsolateSendPort);
     newIsolateSendPort.send(CrossIsolatesMessage<IsolateCommand>(sender: port.sendPort, message: command, data: data));
 
     //
@@ -65,6 +66,9 @@ class RedPandaLightClient {
     var data = {"dataFolderPath": dataFolderPath, "myPort": myPort};
 
     startOnNewMessageListener();
+    startOnNewStatusListener();
+
+    new Timer.periodic(Duration(seconds: 1), (t) => {sendCommand(IsolateCommand.PING)});
 
     return sendCommand(IsolateCommand.START, data);
   }
@@ -105,7 +109,8 @@ class RedPandaLightClient {
 
   static Stream<List<DBChannel>> watchDBChannelEntries() async* {
     ReceivePort port = ReceivePort();
-    newIsolateSendPort.send(CrossIsolatesMessage<IsolateCommand>(sender: port.sendPort, message: IsolateCommand.CHANNELS_WATCH));
+    newIsolateSendPort
+        .send(CrossIsolatesMessage<IsolateCommand>(sender: port.sendPort, message: IsolateCommand.CHANNELS_WATCH));
 
     await for (List<DBChannel> a in port) {
       yield a;
@@ -116,7 +121,8 @@ class RedPandaLightClient {
     print("watchDBMessageEntries");
     var data = {"channelId": channelId};
     ReceivePort port = ReceivePort();
-    newIsolateSendPort.send(CrossIsolatesMessage<IsolateCommand>(sender: port.sendPort, message: IsolateCommand.MESSAGES_WATCH, data: data));
+    newIsolateSendPort.send(CrossIsolatesMessage<IsolateCommand>(
+        sender: port.sendPort, message: IsolateCommand.MESSAGES_WATCH, data: data));
 
     print("awaiting messages...");
 
@@ -138,6 +144,7 @@ class RedPandaLightClient {
   }
 
   static Future<void> shutdown() async {
+    await sendCommand(IsolateCommand.SHUTDOWN);
 //    log.info("RedPandaLightClient shutting down...");
 //    running = false;
 //    await ConnectionService.appDatabase.close();
@@ -148,10 +155,34 @@ class RedPandaLightClient {
 //    }
   }
 
-  static void startOnNewMessageListener() {
+  static void startOnNewMessageListener() async {
+    print("startOnNewMessageListener");
+    ReceivePort port = ReceivePort();
+    newIsolateSendPort
+        .send(CrossIsolatesMessage<IsolateCommand>(sender: port.sendPort, message: IsolateCommand.MESSAGES_LISTEN_NEW));
 
+    print("awaiting messages...");
 
+    await for (DBMessageWithFriend newMsg in port) {
+      if (onNewMessage != null) {
+        onNewMessage(newMsg);
+      }
+    }
+  }
 
+  static void startOnNewStatusListener() async {
+    print("startOnNewStatusListener");
+    ReceivePort port = ReceivePort();
+    newIsolateSendPort
+        .send(CrossIsolatesMessage<IsolateCommand>(sender: port.sendPort, message: IsolateCommand.STATUS_LISTEN));
+
+    print("awaiting status...");
+
+    await for (String newMsg in port) {
+      if (onNewStatus != null) {
+        onNewStatus(newMsg);
+      }
+    }
   }
 
 //  static List<Channel> getChannels() {

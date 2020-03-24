@@ -1,4 +1,5 @@
 enum IsolateCommand {
+  PING,
   START,
   START_DEBUG,
   CHANNEL_CREATE,
@@ -11,4 +12,6 @@ enum IsolateCommand {
   MESSAGES_GET_RECENT,
   MESSAGES_SEND,
   MESSAGES_LISTEN_NEW,
+  STATUS_LISTEN,
+  SHUTDOWN,
 }

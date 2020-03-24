@@ -16,6 +16,7 @@ import 'package:redpanda_light_client/src/main/Settings.dart';
 import 'package:redpanda_light_client/src/main/Utils.dart';
 import 'package:redpanda_light_client/src/main/kademlia/KadContent.dart';
 import 'package:redpanda_light_client/src/main/store/moor_database.dart';
+import 'package:redpanda_light_client/src/redpanda_isolate.dart';
 import 'package:sentry/sentry.dart';
 
 import 'NodeId.dart';
@@ -82,8 +83,8 @@ class ConnectionService {
       }
 
       if (peer.connecting || peer.connected) {
-        if (new DateTime.now().millisecondsSinceEpoch - peer.lastActionOnConnection > 1000 * 15) {
-          peer.disconnect();
+        if (new DateTime.now().millisecondsSinceEpoch - peer.lastActionOnConnection > 1000 * 30) {
+          peer.disconnect("timeout");
         }
 
         if (peer.connected && peer.isEncryptionActive) {
@@ -96,7 +97,7 @@ class ConnectionService {
             await peer.sendEncrypt(byteBuffer);
           }, onError: (error, stackTrace) {
             print("failed to ping peer... captured for peer: " + peer.ip);
-            peer.disconnect();
+            peer.disconnect("failed to ping peer");
 //            print("failed to ping peer... captured for peer: " + peer.ip + " : " + error.toString());
 //            print(stackTrace);
 //            ConnectionService.sentry.captureException(exception: error, stackTrace: stackTrace);
@@ -110,7 +111,7 @@ class ConnectionService {
       runZoned<Future<void>>(() async {
         await connectTo(peer);
       }, onError: (error, stackTrace) {
-        peer.disconnect();
+        peer.disconnect("general error for peer...");
         print("captured for peer: " + peer.ip + " : " + error.toString());
         print(stackTrace);
 //        ConnectionService.sentry.captureException(exception: error, stackTrace: stackTrace);
@@ -123,6 +124,9 @@ class ConnectionService {
     for (Peer peer in toRemove) {
       await PeerList.remove(peer);
     }
+
+    refreshStatus();
+
   }
 
   /**
@@ -365,6 +369,7 @@ class ConnectionService {
         writeBuffer.writeByte(Command.KADEMLIA_GET);
         writeBuffer.writeInt(Utils.random.nextInt(6000)); //todo check for ack with this id?
         writeBuffer.writeList(currentKademliaId.bytes);
+
         await PeerList.sendIntegrated(writeBuffer);
 
         print("sleep");
@@ -380,9 +385,9 @@ class ConnectionService {
 
         int cnt = 0;
         for (DBMessageWithFriend m in watchDBMessageEntries) {
-          if (!m.fromMe) {
-            continue;
-          }
+//          if (!m.fromMe) {
+//            continue;
+//          }
 
           cnt++;
           if (cnt > 60) {
