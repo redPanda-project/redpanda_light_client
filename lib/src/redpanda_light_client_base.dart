@@ -29,6 +29,11 @@ class RedPandaLightClient {
 // operates with Strings (sent and received data)
 //
   static Future<dynamic> sendCommand(IsolateCommand command, [dynamic data]) async {
+    if (newIsolateSendPort == null) {
+      print("called command to RPC before starting the isolate...");
+      return;
+    }
+
     //
     // We create a temporary port to receive the answer
     //
