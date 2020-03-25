@@ -84,7 +84,6 @@ class KadContent {
 
     _encrypted = true;
     _content = ivAndContentBuffer.array();
-    print("content byte len: " + _content.length.toString());
   }
 
   /**

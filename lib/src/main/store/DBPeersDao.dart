@@ -18,15 +18,27 @@ class DBPeersDao extends DatabaseAccessor<AppDatabase> with _$DBPeersDaoMixin {
   /**
    * Returns the id of the new Peer in db.
    */
-  Future<int> insertNewPeer(String ip, int port, KademliaId kademliaId, Uint8List publicKey) async {
+  Future<int> insertNewPeer(String ip, int port, KademliaId kademliaId, {Uint8List publicKey}) async {
     DBPeersCompanion entry = DBPeersCompanion.insert(
         ip: ip,
         port: port,
         knownSince: Utils.getCurrentTimeMillis(),
         kademliaId: kademliaId.bytes,
-        publicKey: publicKey);
-    print("insert peer");
+        publicKey: Value(publicKey));
     return into(dBPeers).insert(entry);
+  }
+
+  Future<List<DBPeer>> getAllPeers() {
+    return select(dBPeers).get();
+  }
+
+  Future<int> updatePeer(int peerId, String ip, int port, int score) async {
+    DBPeersCompanion entry = DBPeersCompanion.insert(
+      ip: ip,
+      port: port,
+      score: Value(score),
+    );
+    return (update(dBPeers)..where((tbl) => tbl.id.equals(peerId))).write(entry);
   }
 
   Future<DBPeer> getPeerByKademliaId(KademliaId kademliaId) {

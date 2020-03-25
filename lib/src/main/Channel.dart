@@ -22,6 +22,30 @@ class Channel {
     _name = name;
   }
 
+  static insertSharedChannel(String data, String newName) {
+    var base58decode = Utils.base58decode(data);
+    var byteBuffer = ByteBuffer.fromList(base58decode);
+
+    int nodeIdLen = byteBuffer.length - 32 - 4;
+
+    var sharedSecret = byteBuffer.readBytes(32);
+    var privateSigningKey = byteBuffer.readBytes(nodeIdLen);
+    var checksum = byteBuffer.readBytes(4);
+
+    var hashbuffer = ByteBuffer(32 + nodeIdLen);
+    hashbuffer.writeList(sharedSecret);
+    hashbuffer.writeList(privateSigningKey);
+    var sha256 = Utils.sha256(hashbuffer.array());
+    var computedCheckSum = sha256.sublist(0, 4);
+
+    if (!Utils.listsAreEqual(computedCheckSum, checksum)) {
+      throw new Exception("This is not a valid shared channel! " + data);
+    }
+
+    ConnectionService.appDatabase.createChannelFromData(newName, sharedSecret, privateSigningKey);
+    print("sucessfully added new channel...");
+  }
+
   int getId() {
     return _dbChannel.id;
   }
@@ -136,11 +160,24 @@ class Channel {
   }
 
   Future<void> saveChannelData(AppDatabase appDatabase) async {
-    print(_channelData);
     await appDatabase.updateChannelData(_dbChannel.id, jsonEncode(_channelData));
   }
 
   void setUserData(int myUserId, Map<String, dynamic> myUserdata) {
     _channelData["userdata"][myUserId.toString()] = myUserdata;
+  }
+
+  String shareString() {
+    var hashbuffer = ByteBuffer(32 + _dbChannel.nodeId.length);
+    hashbuffer.writeList(_dbChannel.sharedSecret);
+    hashbuffer.writeList(_dbChannel.nodeId);
+    var sha256 = Utils.sha256(hashbuffer.array());
+
+    var byteBuffer = ByteBuffer(32 + _dbChannel.nodeId.length + 4);
+    byteBuffer.writeList(_dbChannel.sharedSecret);
+    byteBuffer.writeList(_dbChannel.nodeId);
+    byteBuffer.writeList(sha256.sublist(0, 4));
+
+    return Utils.base58encode(byteBuffer.array());
   }
 }

@@ -11,11 +11,11 @@ class DBPeers extends Table {
 
   IntColumn get port => integer()();
 
-  IntColumn get retries => integer().withDefault(const Constant(0))();
+  IntColumn get score => integer().withDefault(const Constant(0))();
 
   IntColumn get knownSince => integer()();
 
   BlobColumn get kademliaId => blob()();
 
-  BlobColumn get publicKey => blob()();
+  BlobColumn get publicKey => blob().nullable()();
 }

@@ -3,6 +3,7 @@ import 'dart:collection';
 
 import 'package:logging/logging.dart';
 import 'package:moor/moor.dart';
+import 'package:redpanda_light_client/export.dart';
 import 'package:redpanda_light_client/src/main/ByteBuffer.dart';
 import 'package:redpanda_light_client/src/main/KademliaId.dart';
 import 'package:redpanda_light_client/src/main/Peer.dart';
@@ -20,16 +21,19 @@ class PeerList {
       bool containsKey = _hashMap.containsKey(kademliaId);
 
       if (!containsKey) {
-        log.finest('new peer which was not in our list....');
+        log.finest('new peer which was not in our list, at least not in the Kademlia list...');
         _hashMap.putIfAbsent(kademliaId, () => peer);
         _hashMapIpPort.update(peer.getIpPortHash(), (oldPeer) => peer, ifAbsent: () => peer);
         _peerlist.add(peer);
+        ConnectionService.appDatabase.dBPeersDao
+            .insertNewPeer(peer.ip, peer.port, peer.getKademliaId(), publicKey: peer.getNodeId()?.exportPublic());
         return true;
       } else {
         return false;
       }
     } else {
       if (!_hashMapIpPort.containsKey(peer.getIpPortHash())) {
+        //new peer which was known only by ip and port not by KademliaId
         _hashMapIpPort.putIfAbsent(peer.getIpPortHash(), () => peer);
         _peerlist.add(peer);
         return true;
@@ -67,7 +71,7 @@ class PeerList {
         bool send = false;
         await runZoned<Future<void>>(() async {
           await p.sendEncrypt(bytes);
-          print("send to: " + p.getKademliaId().toString());
+          log.finer("send to: " + p.getKademliaId().toString());
           send = true;
         }, onError: (error, stackTrace) {
           print("error sending message... " + error.toString() + " " + p.getKademliaId().toString());
@@ -81,8 +85,11 @@ class PeerList {
     }
   }
 
-  static void updateKademliaId(Peer peer, KademliaId oldId, KademliaId newId) {
+  static Future<void> updateKademliaId(Peer peer, KademliaId oldId, KademliaId newId) async {
     _hashMap.remove(oldId);
     _hashMap.putIfAbsent(newId, () => peer);
+    await ConnectionService.appDatabase.dBPeersDao
+        .insertNewPeer(peer.ip, peer.port, peer.getKademliaId(), publicKey: peer.getNodeId()?.exportPublic());
+    return;
   }
 }

@@ -96,7 +96,7 @@ class ConnectionService {
           runZoned<Future<void>>(() async {
             await peer.sendEncrypt(byteBuffer);
           }, onError: (error, stackTrace) {
-            print("failed to ping peer... captured for peer: " + peer.ip);
+            log.fine("failed to ping peer... captured for peer: " + peer.ip);
             peer.disconnect("failed to ping peer");
 //            print("failed to ping peer... captured for peer: " + peer.ip + " : " + error.toString());
 //            print(stackTrace);
@@ -305,7 +305,7 @@ class ConnectionService {
 
     List<DBChannel> allChannels = await _appDatabase.getAllChannels();
 
-    print('channels: ' + allChannels.length.toString());
+//    print('channels: ' + allChannels.length.toString());
 
     int myUserId = localSettings.myUserId;
 
@@ -363,7 +363,7 @@ class ConnectionService {
             KadContent.createKademliaId(Utils.getCurrentTimeMillis(), channel.getNodeId().exportPublic());
         currentKademliaIdtoChannelId.putIfAbsent(currentKademliaId, () => channel.getId());
 
-        print("seaching for KadId: " + currentKademliaId.toString());
+        log.fine("seaching for KadId: " + currentKademliaId.toString());
 
         ByteBuffer writeBuffer = ByteBuffer(1 + 4 + KademliaId.ID_LENGTH_BYTES);
         writeBuffer.writeByte(Command.KADEMLIA_GET);
@@ -372,9 +372,9 @@ class ConnectionService {
 
         await PeerList.sendIntegrated(writeBuffer);
 
-        print("sleep");
-        await new Future.delayed(const Duration(seconds: 2), () => "1");
-        print("sleep end");
+//        print("sleep");
+        await new Future.delayed(const Duration(seconds: 6), () => "1");
+//        print("sleep end");
 
         cntUpdatedChannels++;
 
@@ -390,7 +390,7 @@ class ConnectionService {
 //          }
 
           cnt++;
-          if (cnt > 60) {
+          if (cnt > 300) {
             break;
           }
 //          print("msg : " + m.message.content);
@@ -417,7 +417,7 @@ class ConnectionService {
         await kadContent.signWith(channel.getNodeId());
 
         await PeerList.sendIntegrated(kadContent.toCommand());
-        print("send...");
+//        print("send...");
         log.finest("send to integrated.... " + kadContent.getKademliaId().toString());
       }
 

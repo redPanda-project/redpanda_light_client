@@ -1,17 +1,19 @@
 import 'dart:async';
 import 'dart:collection';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
 
 import 'package:logging/logging.dart';
 import 'package:moor/moor.dart';
 import 'package:redpanda_light_client/export.dart';
+import 'package:redpanda_light_client/src/main/Channel.dart';
 import 'package:redpanda_light_client/src/main/ConnectionService.dart';
 import 'package:redpanda_light_client/src/main/IsolateCommand.dart';
 import 'package:redpanda_light_client/src/main/Peer.dart';
 import 'package:redpanda_light_client/src/main/PeerList.dart';
 
-dynamic logLevel = Level.INFO; // defaults to Level.INFO
+dynamic logLevel = Level.ALL; // defaults to Level.INFO
 
 //final String START = "start";
 //final String START_DEBUG = "startdebug";
@@ -53,6 +55,141 @@ Isolate newIsolate;
 // and proceeds with the initial
 // hand-shaking
 //
+
+Stream<String> readLine() => stdin.transform(utf8.decoder).transform(const LineSplitter());
+
+void processLine(String line) async {
+  print(line);
+
+  if (line == "") {
+    print("Node: ${ConnectionService.kademliaId} myUserId: ${ConnectionService.myUserId}");
+    PeerList.getList().forEach((Peer p) {
+      print(
+          "${formatToMinLen("${p.ip}:${p.port}", 25)}  ${formatToMinLen("${p.getKademliaId()}", 27)}  ${formatToMinLen("${p.connected}", 6)}");
+    });
+    print("");
+  } else if (line == "c") {
+    print("create new channel with name: ");
+    var name = stdin.readLineSync();
+    print("name: ${name}");
+    if (name.length != 0) {
+      var id = await ConnectionService.appDatabase.createNewChannel(name);
+      print("created new channel: ${name} and id: ${id}");
+    }
+  } else if (line == "e") {
+    await shutdown();
+    exit(0);
+  }
+}
+
+Stream<String> read() async* {
+//  var readLineSync = await stdin.readLineSync();
+//  yield readLineSync;
+
+  await for (var codeUnits in stdin) {
+    var line = Utf8Codec().decode(codeUnits);
+    yield line.substring(0, line.length - 1);
+  }
+
+//while (true) {
+////  var encode = Utf8Codec().encode("\n");
+////  var codeUnits = await stdin.firstWhere((element) => element.contains(encode[0]));
+//
+//  List<int> ints = await stdin.first;
+//  print("ints: " + ints.toString());
+//
+////  var line = Utf8Codec().decode(codeUnits);
+//  yield "a";
+//}
+}
+
+Future<void> readLines() async {
+  var readStream = read().asBroadcastStream();
+
+  new Timer(Duration(seconds: 5), () => Logger.root.level = logLevel);
+  Logger.root.level = Level.OFF;
+  Timer logNormalTimer;
+
+  while (true) {
+//    var line = stdin.readLineSync();
+
+//    var encode = Utf8Codec().encode("\n");
+//    var codeUnits = await stdin.firstWhere((element) => element.contains(encode[0]));
+//    var line = Utf8Codec().decode(codeUnits);
+
+    var line = await readStream.first;
+
+//    print("line:" + line.toString());
+    if (logNormalTimer != null) {
+      logNormalTimer.cancel();
+    }
+    logNormalTimer = new Timer(Duration(seconds: 30), () => Logger.root.level = logLevel);
+    Logger.root.level = Level.OFF;
+
+    if (line == "") {
+      print("");
+      print("");
+      print("Node: ${ConnectionService.kademliaId} myUserId: ${ConnectionService.myUserId}");
+      PeerList.getList().forEach((Peer p) {
+        print(
+            "${formatToMinLen("${p.ip}:${p.port}", 25)}  ${formatToMinLen("${p.getKademliaId()}", 27)}  ${formatToMinLen("${p.connected}", 6)}");
+      });
+      print("");
+      var allChannels = await ConnectionService.appDatabase.getAllChannels();
+      allChannels.forEach((DBChannel c) {
+        var channel = new Channel(c);
+        print(
+            "Channel: ${formatToMinLen("${channel.getId()}", 4)}    ${formatToMinLen("${channel.name}", 10)}   ${formatToMinLen("${channel.shareString()}", 30)}");
+      });
+      print("");
+      print("");
+    } else if (line == "c") {
+      print("create new channel with name: ");
+      var name = await readStream.first;
+      print("name: ${name}");
+      if (name.length != 0) {
+        var id = await ConnectionService.appDatabase.createNewChannel(name);
+        print("created new channel: ${name} and id: ${id}");
+      }
+    } else if (line == "i") {
+      print("import new channel with name:");
+      var name = await readStream.first;
+      if (name.length != 0) {
+        print("name: ${name}, insert shared channel string: ");
+        var string = await readStream.first;
+        if (string.length != 0) {
+          Channel.insertSharedChannel(string, name);
+        }
+      }
+    } else if (line == "n") {
+      print("channel to write new messages, exit writing with a empty line:");
+      var channelIdString = await readStream.first;
+      if (channelIdString.length != 0) {
+        var channelId = int.parse(channelIdString);
+        while (true) {
+          var text = await readStream.first;
+          if (text.length != 0) {
+            ConnectionService.appDatabase.dBMessagesDao.writeMessage(channelId, text);
+          } else {
+            break;
+          }
+        }
+      }
+    } else if (line == "r") {
+      print("remove channel by id:");
+      var id = await readStream.first;
+      if (id.length != 0) {
+        var parse = int.parse(id);
+        ConnectionService.appDatabase.removeChannel(parse);
+        print("remove channel: " + parse.toString());
+      }
+    } else if (line == "e") {
+      await shutdown();
+      exit(0);
+    }
+  }
+}
+
 void setupAndStartIsolate() async {
   //
   // Local and temporary ReceivePort to retrieve
@@ -110,13 +247,14 @@ void callbackFunction(SendPort callerSendPort) {
   });
 }
 
-void shutdown() async {
+Future<void> shutdown() async {
   await ConnectionService.appDatabase.close();
   await connectionService.loopTimer.cancel();
   for (Peer peer in PeerList.getList()) {
     await peer.disconnect("shutdown");
   }
-  Isolate.current.kill();
+  await Isolate.current.kill();
+  return;
 }
 
 void parseIsolateCommands(CrossIsolatesMessage incomingMessage) async {
@@ -134,7 +272,16 @@ void parseIsolateCommands(CrossIsolatesMessage incomingMessage) async {
     log.info("RedPandaLightClient shutting down...");
 //    running = false;
     await shutdown();
+    incomingMessage.sender.send(null);
   } else if (command == IsolateCommand.START) {
+    //listen for console if running on Windows or Linux
+    if (Platform.isWindows || Platform.isLinux) {
+      /**
+       * start listing to console from Isolate such that we can use all objects on the isolate side
+       */
+//      readLine().listen(processLine);
+      readLines();
+    }
     String dataFolderPath = data['dataFolderPath'];
     int myPort = data['myPort'];
 
@@ -194,10 +341,12 @@ void parseIsolateCommands(CrossIsolatesMessage incomingMessage) async {
     incomingMessage.sender.send(i);
     refreshChannelsWatching();
   } else if (command == IsolateCommand.CHANNEL_FROM_DATA) {
+    String sharedData = data['data'];
     String name = data['name'];
-    Uint8List sharedSecret = data['sharedSecret'];
-    Uint8List privateSigningKey = data['privateSigningKey'];
-    var i = await ConnectionService.appDatabase.createChannelFromData(name, sharedSecret, privateSigningKey);
+//    Uint8List sharedSecret = data['sharedSecret'];
+//    Uint8List privateSigningKey = data['privateSigningKey'];
+//    var i = await ConnectionService.appDatabase.createChannelFromData(name, sharedSecret, privateSigningKey);
+    var i = await Channel.insertSharedChannel(sharedData, name);
     incomingMessage.sender.send(i);
     refreshChannelsWatching();
   } else if (command == IsolateCommand.CHANNEL_RENAME) {
@@ -294,7 +443,7 @@ refreshChannelsWatching() async {
 }
 
 refreshStatus() async {
-  print('refreshing status...');
+  log.finest('refreshing status...');
 
   if (onNewStatusLisener != null) {
     int active = 0;

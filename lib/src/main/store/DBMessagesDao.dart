@@ -77,8 +77,9 @@ class DBMessagesDao extends DatabaseAccessor<AppDatabase> with _$DBMessagesDaoMi
     try {
       single = await (select(dBMessages)..where((tbl) => tbl.messageId.equals(messageId))).getSingle();
     } on StateError catch (e) {
-      delete(dBMessages)..where((tbl) => tbl.messageId.equals(messageId));
+      (delete(dBMessages)..where((tbl) => tbl.messageId.equals(messageId))).go();
       //let us set single to null such that the the message will be added
+      print("had to delete msg...");
       single = null;
       hadToDelete = true;
     }

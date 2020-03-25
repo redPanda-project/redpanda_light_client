@@ -734,7 +734,7 @@ class DBPeer extends DataClass implements Insertable<DBPeer> {
   final int id;
   final String ip;
   final int port;
-  final int retries;
+  final int score;
   final int knownSince;
   final Uint8List kademliaId;
   final Uint8List publicKey;
@@ -742,10 +742,10 @@ class DBPeer extends DataClass implements Insertable<DBPeer> {
       {@required this.id,
       @required this.ip,
       @required this.port,
-      @required this.retries,
+      @required this.score,
       @required this.knownSince,
       @required this.kademliaId,
-      @required this.publicKey});
+      this.publicKey});
   factory DBPeer.fromData(Map<String, dynamic> data, GeneratedDatabase db,
       {String prefix}) {
     final effectivePrefix = prefix ?? '';
@@ -756,8 +756,7 @@ class DBPeer extends DataClass implements Insertable<DBPeer> {
       id: intType.mapFromDatabaseResponse(data['${effectivePrefix}id']),
       ip: stringType.mapFromDatabaseResponse(data['${effectivePrefix}ip']),
       port: intType.mapFromDatabaseResponse(data['${effectivePrefix}port']),
-      retries:
-          intType.mapFromDatabaseResponse(data['${effectivePrefix}retries']),
+      score: intType.mapFromDatabaseResponse(data['${effectivePrefix}score']),
       knownSince: intType
           .mapFromDatabaseResponse(data['${effectivePrefix}known_since']),
       kademliaId: uint8ListType
@@ -773,7 +772,7 @@ class DBPeer extends DataClass implements Insertable<DBPeer> {
       id: serializer.fromJson<int>(json['id']),
       ip: serializer.fromJson<String>(json['ip']),
       port: serializer.fromJson<int>(json['port']),
-      retries: serializer.fromJson<int>(json['retries']),
+      score: serializer.fromJson<int>(json['score']),
       knownSince: serializer.fromJson<int>(json['knownSince']),
       kademliaId: serializer.fromJson<Uint8List>(json['kademliaId']),
       publicKey: serializer.fromJson<Uint8List>(json['publicKey']),
@@ -786,7 +785,7 @@ class DBPeer extends DataClass implements Insertable<DBPeer> {
       'id': serializer.toJson<int>(id),
       'ip': serializer.toJson<String>(ip),
       'port': serializer.toJson<int>(port),
-      'retries': serializer.toJson<int>(retries),
+      'score': serializer.toJson<int>(score),
       'knownSince': serializer.toJson<int>(knownSince),
       'kademliaId': serializer.toJson<Uint8List>(kademliaId),
       'publicKey': serializer.toJson<Uint8List>(publicKey),
@@ -799,9 +798,8 @@ class DBPeer extends DataClass implements Insertable<DBPeer> {
       id: id == null && nullToAbsent ? const Value.absent() : Value(id),
       ip: ip == null && nullToAbsent ? const Value.absent() : Value(ip),
       port: port == null && nullToAbsent ? const Value.absent() : Value(port),
-      retries: retries == null && nullToAbsent
-          ? const Value.absent()
-          : Value(retries),
+      score:
+          score == null && nullToAbsent ? const Value.absent() : Value(score),
       knownSince: knownSince == null && nullToAbsent
           ? const Value.absent()
           : Value(knownSince),
@@ -818,7 +816,7 @@ class DBPeer extends DataClass implements Insertable<DBPeer> {
           {int id,
           String ip,
           int port,
-          int retries,
+          int score,
           int knownSince,
           Uint8List kademliaId,
           Uint8List publicKey}) =>
@@ -826,7 +824,7 @@ class DBPeer extends DataClass implements Insertable<DBPeer> {
         id: id ?? this.id,
         ip: ip ?? this.ip,
         port: port ?? this.port,
-        retries: retries ?? this.retries,
+        score: score ?? this.score,
         knownSince: knownSince ?? this.knownSince,
         kademliaId: kademliaId ?? this.kademliaId,
         publicKey: publicKey ?? this.publicKey,
@@ -837,7 +835,7 @@ class DBPeer extends DataClass implements Insertable<DBPeer> {
           ..write('id: $id, ')
           ..write('ip: $ip, ')
           ..write('port: $port, ')
-          ..write('retries: $retries, ')
+          ..write('score: $score, ')
           ..write('knownSince: $knownSince, ')
           ..write('kademliaId: $kademliaId, ')
           ..write('publicKey: $publicKey')
@@ -853,7 +851,7 @@ class DBPeer extends DataClass implements Insertable<DBPeer> {
           $mrjc(
               port.hashCode,
               $mrjc(
-                  retries.hashCode,
+                  score.hashCode,
                   $mrjc(knownSince.hashCode,
                       $mrjc(kademliaId.hashCode, publicKey.hashCode)))))));
   @override
@@ -863,7 +861,7 @@ class DBPeer extends DataClass implements Insertable<DBPeer> {
           other.id == this.id &&
           other.ip == this.ip &&
           other.port == this.port &&
-          other.retries == this.retries &&
+          other.score == this.score &&
           other.knownSince == this.knownSince &&
           other.kademliaId == this.kademliaId &&
           other.publicKey == this.publicKey);
@@ -873,7 +871,7 @@ class DBPeersCompanion extends UpdateCompanion<DBPeer> {
   final Value<int> id;
   final Value<String> ip;
   final Value<int> port;
-  final Value<int> retries;
+  final Value<int> score;
   final Value<int> knownSince;
   final Value<Uint8List> kademliaId;
   final Value<Uint8List> publicKey;
@@ -881,7 +879,7 @@ class DBPeersCompanion extends UpdateCompanion<DBPeer> {
     this.id = const Value.absent(),
     this.ip = const Value.absent(),
     this.port = const Value.absent(),
-    this.retries = const Value.absent(),
+    this.score = const Value.absent(),
     this.knownSince = const Value.absent(),
     this.kademliaId = const Value.absent(),
     this.publicKey = const Value.absent(),
@@ -890,20 +888,19 @@ class DBPeersCompanion extends UpdateCompanion<DBPeer> {
     this.id = const Value.absent(),
     @required String ip,
     @required int port,
-    this.retries = const Value.absent(),
+    this.score = const Value.absent(),
     @required int knownSince,
     @required Uint8List kademliaId,
-    @required Uint8List publicKey,
+    this.publicKey = const Value.absent(),
   })  : ip = Value(ip),
         port = Value(port),
         knownSince = Value(knownSince),
-        kademliaId = Value(kademliaId),
-        publicKey = Value(publicKey);
+        kademliaId = Value(kademliaId);
   DBPeersCompanion copyWith(
       {Value<int> id,
       Value<String> ip,
       Value<int> port,
-      Value<int> retries,
+      Value<int> score,
       Value<int> knownSince,
       Value<Uint8List> kademliaId,
       Value<Uint8List> publicKey}) {
@@ -911,7 +908,7 @@ class DBPeersCompanion extends UpdateCompanion<DBPeer> {
       id: id ?? this.id,
       ip: ip ?? this.ip,
       port: port ?? this.port,
-      retries: retries ?? this.retries,
+      score: score ?? this.score,
       knownSince: knownSince ?? this.knownSince,
       kademliaId: kademliaId ?? this.kademliaId,
       publicKey: publicKey ?? this.publicKey,
@@ -953,12 +950,12 @@ class $DBPeersTable extends DBPeers with TableInfo<$DBPeersTable, DBPeer> {
     );
   }
 
-  final VerificationMeta _retriesMeta = const VerificationMeta('retries');
-  GeneratedIntColumn _retries;
+  final VerificationMeta _scoreMeta = const VerificationMeta('score');
+  GeneratedIntColumn _score;
   @override
-  GeneratedIntColumn get retries => _retries ??= _constructRetries();
-  GeneratedIntColumn _constructRetries() {
-    return GeneratedIntColumn('retries', $tableName, false,
+  GeneratedIntColumn get score => _score ??= _constructScore();
+  GeneratedIntColumn _constructScore() {
+    return GeneratedIntColumn('score', $tableName, false,
         defaultValue: const Constant(0));
   }
 
@@ -994,13 +991,13 @@ class $DBPeersTable extends DBPeers with TableInfo<$DBPeersTable, DBPeer> {
     return GeneratedBlobColumn(
       'public_key',
       $tableName,
-      false,
+      true,
     );
   }
 
   @override
   List<GeneratedColumn> get $columns =>
-      [id, ip, port, retries, knownSince, kademliaId, publicKey];
+      [id, ip, port, score, knownSince, kademliaId, publicKey];
   @override
   $DBPeersTable get asDslTable => this;
   @override
@@ -1025,9 +1022,9 @@ class $DBPeersTable extends DBPeers with TableInfo<$DBPeersTable, DBPeer> {
     } else if (isInserting) {
       context.missing(_portMeta);
     }
-    if (d.retries.present) {
-      context.handle(_retriesMeta,
-          retries.isAcceptableValue(d.retries.value, _retriesMeta));
+    if (d.score.present) {
+      context.handle(
+          _scoreMeta, score.isAcceptableValue(d.score.value, _scoreMeta));
     }
     if (d.knownSince.present) {
       context.handle(_knownSinceMeta,
@@ -1044,8 +1041,6 @@ class $DBPeersTable extends DBPeers with TableInfo<$DBPeersTable, DBPeer> {
     if (d.publicKey.present) {
       context.handle(_publicKeyMeta,
           publicKey.isAcceptableValue(d.publicKey.value, _publicKeyMeta));
-    } else if (isInserting) {
-      context.missing(_publicKeyMeta);
     }
     return context;
   }
@@ -1070,8 +1065,8 @@ class $DBPeersTable extends DBPeers with TableInfo<$DBPeersTable, DBPeer> {
     if (d.port.present) {
       map['port'] = Variable<int, IntType>(d.port.value);
     }
-    if (d.retries.present) {
-      map['retries'] = Variable<int, IntType>(d.retries.value);
+    if (d.score.present) {
+      map['score'] = Variable<int, IntType>(d.score.value);
     }
     if (d.knownSince.present) {
       map['known_since'] = Variable<int, IntType>(d.knownSince.value);

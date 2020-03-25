@@ -67,13 +67,25 @@ class RedPandaLightClient {
   }
 
   static Future<void> init(String dataFolderPath, int myPort) async {
+    running = true;
     await setupAndStartIsolate();
+
+    var recPortOnExit = new ReceivePort();
+    recPortOnExit.listen((message) {
+      print("OnExitListener: " + message.toString());
+      running = false;
+    });
+    newIsolate.addOnExitListener(recPortOnExit.sendPort);
+
     var data = {"dataFolderPath": dataFolderPath, "myPort": myPort};
 
     startOnNewMessageListener();
     startOnNewStatusListener();
 
-    new Timer.periodic(Duration(seconds: 1), (t) => {sendCommand(IsolateCommand.PING)});
+    new Timer.periodic(Duration(seconds: 1), (t) {
+      sendCommand(IsolateCommand.PING);
+    });
+    print("starting ping");
 
     return sendCommand(IsolateCommand.START, data);
   }
@@ -92,12 +104,13 @@ class RedPandaLightClient {
     return sendCommand(IsolateCommand.CHANNEL_CREATE, data);
   }
 
-  static Future<void> channelFromData(String nick, Uint8List sharedSecret, Uint8List privateSigningKey) async {
-    var data = {"name": nick, "sharedSecret": sharedSecret, "privateSigningKey": privateSigningKey};
+  static Future<void> channelFromData(String name, String dataString) async {
+    var data = {"data": dataString, "name": name};
     return sendCommand(IsolateCommand.CHANNEL_FROM_DATA, data);
   }
 
   static Future<void> renameChannel(int channelId, String newName) async {
+    newName = newName.trim();
     var data = {"channelId": channelId, "newName": newName};
     return sendCommand(IsolateCommand.CHANNEL_RENAME, data);
   }

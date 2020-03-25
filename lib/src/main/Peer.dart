@@ -202,7 +202,14 @@ class Peer {
 
           log.finer('new nodeid from peer: ' + peerNodeId.toString());
 
-          if (_kademliaId != peerNodeId.getKademliaId()) {
+          /**
+           * If this peer does not have a KademliaId add it, this should only happen from reseeded peers.
+           */
+
+          if (_kademliaId == null) {
+            setNodeId(peerNodeId);
+            updateKademliaId(peerNodeId.getKademliaId());
+          } else if (_kademliaId != peerNodeId.getKademliaId()) {
             /**
              * We obtained a public key which does not match the KademliaId of this Peer
              * and should cancel that connection here.
@@ -435,9 +442,7 @@ class Peer {
   void calculateSharedSecret() {
     log.finest('calculateSharedSecret');
 
-    ECPublicKey publicKey = _nodeId
-        .getKeyPair()
-        .publicKey;
+    ECPublicKey publicKey = _nodeId.getKeyPair().publicKey;
     Uint8List encoded = generateIntermediateSharedSecret(ConnectionService.nodeId.getKeyPair(), publicKey.Q);
 
     log.finest('intermediateSharedSecret: ' + Utils.hexEncode(encoded).toString());
@@ -495,17 +500,13 @@ class Peer {
     if (_nodeId == null || _nodeId.getKeyPair() == null) {
       return false;
     }
-    return _nodeId
-        .getKeyPair()
-        .publicKey != null;
+    return _nodeId.getKeyPair().publicKey != null;
   }
 
   void sendPublicKeyToPeer() {
     log.finest('sendPublicKeyToPeer...');
 
-    ECPublicKey publicKey = ConnectionService.nodeId
-        .getKeyPair()
-        .publicKey;
+    ECPublicKey publicKey = ConnectionService.nodeId.getKeyPair().publicKey;
     Uint8List encoded = publicKey.Q.getEncoded(false);
 
     ByteBuffer byteBuffer = new ByteBuffer(1 + 65);
@@ -530,8 +531,6 @@ class Peer {
 
     Uint8List nonce = buffer.readBytes(20);
 //    print("server identity: " + HEX.encode(nonce).toUpperCase());
-
-    updateKademliaId(new KademliaId.fromBytes(nonce));
 
     log.finest('Found node with id: ' + _kademliaId.toString());
 
@@ -641,7 +640,7 @@ class Peer {
   Future<int> readCommand() async {
     int decryptedCommand = decryptBuffer.readUnsignedByte();
 
-    print("received encrypted command: " + decryptedCommand.toString());
+    log.finer("received encrypted command: " + decryptedCommand.toString());
 //      print('on data: ' + decryptBuffer.array().toString());
 
     if (decryptedCommand == Command.PING) {
@@ -712,11 +711,11 @@ class Peer {
       } else {
         DBChannel channel = await ConnectionService.appDatabase.getChannelById(channelId);
         if (channel == null) {
-          print("obtained data for a channel we do not have....");
+          log.fine("obtained data for a channel we do not have....");
           return 1 + 4 + 8 + NodeId.PUBLIC_KEYLEN + 4 + contentLength + signature.length;
         }
         await kadContent.decryptWith(new Channel(channel));
-        print("obtained KadContent: " +
+        log.finer("obtained KadContent: " +
             kadContent.getKademliaId().toString() +
             " " +
             formatDate(

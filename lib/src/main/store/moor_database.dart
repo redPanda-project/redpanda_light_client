@@ -53,7 +53,7 @@ class AppDatabase extends _$AppDatabase {
   // you should bump this number whenever you change or add a table definition.
   // Migrations are covered below.
   @override
-  int get schemaVersion => 32;
+  int get schemaVersion => 36;
 
   Future<LocalSetting> get getLocalSettings => select(localSettings).getSingle();
 
@@ -84,6 +84,12 @@ class AppDatabase extends _$AppDatabase {
    */
   Future<void> onUpgrade(Migrator migrator, int old, int n) async {
     for (final TableInfo<Table, DataClass> table in allTables) {
+
+      if (table.actualTableName.contains("channels")) {
+        print("table not dropped!: " + table.actualTableName);
+        continue;
+      }
+
       await migrator.deleteTable(table.actualTableName);
       print("dropping table " + table.actualTableName);
     }
