@@ -35,6 +35,9 @@ class Peer {
   String _ip;
   int _port;
   int restries = 0;
+  int _knownSince;
+  int _score;
+  int _dbPeerId;
 
   bool connecting = false;
   bool connected = false;
@@ -68,6 +71,20 @@ class Peer {
 
   Peer.withKademliaId(this._ip, this._port, this._kademliaId);
 
+  Peer.fromDBPeer(DBPeer dbp) {
+    _dbPeerId = dbp.id;
+    _ip = dbp.ip;
+    _port = dbp.port;
+    if (dbp.kademliaId != null) {
+      _kademliaId = KademliaId.fromBytes(dbp.kademliaId);
+    }
+    if (dbp.publicKey != null) {
+      _nodeId = NodeId.importPublic(dbp.publicKey);
+    }
+    _knownSince = dbp.knownSince;
+    _score = dbp.score;
+  }
+
   String get ip => _ip;
 
   int get port => _port;
@@ -78,6 +95,14 @@ class Peer {
 
   set port(int value) {
     _port = value;
+  }
+
+  void updateNodeId(NodeId nodeId) async {
+    if (_dbPeerId != null) {
+      await ConnectionService.appDatabase.dBPeersDao.updateNodeId(_dbPeerId, nodeId.exportPublic());
+    }
+    _nodeId = nodeId;
+    return;
   }
 
   KademliaId getKademliaId() {
@@ -207,7 +232,7 @@ class Peer {
            */
 
           if (_kademliaId == null) {
-            setNodeId(peerNodeId);
+            updateNodeId(peerNodeId);
             updateKademliaId(peerNodeId.getKademliaId());
           } else if (_kademliaId != peerNodeId.getKademliaId()) {
             /**
@@ -223,7 +248,8 @@ class Peer {
              * We obtained the correct public key and can add it to the Peer
              * and lets set that peerInHandshake status to waiting for encryption
              */
-            setNodeId(peerNodeId);
+            updateNodeId(peerNodeId);
+            updateKademliaId(peerNodeId.getKademliaId());
             handshakeStatus = -1;
           }
         } else if (command == Command.ACTIVATE_ENCRYPTION) {
@@ -590,9 +616,9 @@ class Peer {
     return secureRandom;
   }
 
-  void setNodeId(NodeId peerNodeId) {
-    _nodeId = peerNodeId;
-  }
+//  void setNodeId(NodeId peerNodeId) {
+//    _nodeId = peerNodeId;
+//  }
 
   NodeId getNodeId() {
     return _nodeId;
@@ -625,6 +651,10 @@ class Peer {
   void updateKademliaId(KademliaId kademliaId) {
     PeerList.updateKademliaId(this, _kademliaId, kademliaId);
     _kademliaId = kademliaId;
+  }
+
+  void setNodeId(NodeId nodeId) {
+    _nodeId = nodeId;
   }
 
   static Uint8List readSignature(ByteBuffer readBuffer) {

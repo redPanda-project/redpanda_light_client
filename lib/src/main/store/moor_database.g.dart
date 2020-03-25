@@ -740,11 +740,11 @@ class DBPeer extends DataClass implements Insertable<DBPeer> {
   final Uint8List publicKey;
   DBPeer(
       {@required this.id,
-      @required this.ip,
-      @required this.port,
+      this.ip,
+      this.port,
       @required this.score,
-      @required this.knownSince,
-      @required this.kademliaId,
+      this.knownSince,
+      this.kademliaId,
       this.publicKey});
   factory DBPeer.fromData(Map<String, dynamic> data, GeneratedDatabase db,
       {String prefix}) {
@@ -886,16 +886,13 @@ class DBPeersCompanion extends UpdateCompanion<DBPeer> {
   });
   DBPeersCompanion.insert({
     this.id = const Value.absent(),
-    @required String ip,
-    @required int port,
+    this.ip = const Value.absent(),
+    this.port = const Value.absent(),
     this.score = const Value.absent(),
-    @required int knownSince,
-    @required Uint8List kademliaId,
+    this.knownSince = const Value.absent(),
+    this.kademliaId = const Value.absent(),
     this.publicKey = const Value.absent(),
-  })  : ip = Value(ip),
-        port = Value(port),
-        knownSince = Value(knownSince),
-        kademliaId = Value(kademliaId);
+  });
   DBPeersCompanion copyWith(
       {Value<int> id,
       Value<String> ip,
@@ -934,7 +931,7 @@ class $DBPeersTable extends DBPeers with TableInfo<$DBPeersTable, DBPeer> {
   @override
   GeneratedTextColumn get ip => _ip ??= _constructIp();
   GeneratedTextColumn _constructIp() {
-    return GeneratedTextColumn('ip', $tableName, false,
+    return GeneratedTextColumn('ip', $tableName, true,
         minTextLength: 3, maxTextLength: 32);
   }
 
@@ -946,7 +943,7 @@ class $DBPeersTable extends DBPeers with TableInfo<$DBPeersTable, DBPeer> {
     return GeneratedIntColumn(
       'port',
       $tableName,
-      false,
+      true,
     );
   }
 
@@ -967,7 +964,7 @@ class $DBPeersTable extends DBPeers with TableInfo<$DBPeersTable, DBPeer> {
     return GeneratedIntColumn(
       'known_since',
       $tableName,
-      false,
+      true,
     );
   }
 
@@ -979,7 +976,7 @@ class $DBPeersTable extends DBPeers with TableInfo<$DBPeersTable, DBPeer> {
     return GeneratedBlobColumn(
       'kademlia_id',
       $tableName,
-      false,
+      true,
     );
   }
 
@@ -1013,14 +1010,10 @@ class $DBPeersTable extends DBPeers with TableInfo<$DBPeersTable, DBPeer> {
     }
     if (d.ip.present) {
       context.handle(_ipMeta, ip.isAcceptableValue(d.ip.value, _ipMeta));
-    } else if (isInserting) {
-      context.missing(_ipMeta);
     }
     if (d.port.present) {
       context.handle(
           _portMeta, port.isAcceptableValue(d.port.value, _portMeta));
-    } else if (isInserting) {
-      context.missing(_portMeta);
     }
     if (d.score.present) {
       context.handle(
@@ -1029,14 +1022,10 @@ class $DBPeersTable extends DBPeers with TableInfo<$DBPeersTable, DBPeer> {
     if (d.knownSince.present) {
       context.handle(_knownSinceMeta,
           knownSince.isAcceptableValue(d.knownSince.value, _knownSinceMeta));
-    } else if (isInserting) {
-      context.missing(_knownSinceMeta);
     }
     if (d.kademliaId.present) {
       context.handle(_kademliaIdMeta,
           kademliaId.isAcceptableValue(d.kademliaId.value, _kademliaIdMeta));
-    } else if (isInserting) {
-      context.missing(_kademliaIdMeta);
     }
     if (d.publicKey.present) {
       context.handle(_publicKeyMeta,

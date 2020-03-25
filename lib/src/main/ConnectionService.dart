@@ -126,7 +126,6 @@ class ConnectionService {
     }
 
     refreshStatus();
-
   }
 
   /**
@@ -145,7 +144,7 @@ class ConnectionService {
 
     if (list.isEmpty) {
       log.finest('test insert first channel');
-      await _appDatabase.createNewChannel("Title1");
+      await _appDatabase.createNewChannel("First test channel");
     }
 
     log.fine('My NodeId: ' + kademliaId.toString());
@@ -154,12 +153,21 @@ class ConnectionService {
       return;
     }
 
+    for (DBPeer dbp in await appDatabase.dBPeersDao.getAllPeers()) {
+      PeerList.add(Peer.fromDBPeer(dbp));
+      print("added peer from db: " + dbp.ip);
+    }
+
     /**
      * We run loop immediately and every 5 seconds, this method will check for
      * timed out peers and establish connections.
      */
     await loop();
-    const timeRepeatConectionMaintain = Duration(seconds: 5);
+    new Timer(Duration(seconds: 1), () => {loop()});
+    new Timer(Duration(seconds: 2), () => {loop()});
+    new Timer(Duration(seconds: 3), () => {loop()});
+
+    const timeRepeatConectionMaintain = Duration(seconds: 10);
     loopTimer = new Timer.periodic(timeRepeatConectionMaintain, (Timer t) => {loop()});
 
     const initFireChannelMaintain = Duration(seconds: 6);
@@ -390,7 +398,7 @@ class ConnectionService {
 //          }
 
           cnt++;
-          if (cnt > 300) {
+          if (cnt > 50) {
             break;
           }
 //          print("msg : " + m.message.content);
