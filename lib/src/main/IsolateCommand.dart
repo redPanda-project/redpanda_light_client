@@ -13,5 +13,6 @@ enum IsolateCommand {
   MESSAGES_SEND,
   MESSAGES_LISTEN_NEW,
   STATUS_LISTEN,
+  SET_NAME,
   SHUTDOWN,
 }

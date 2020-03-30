@@ -16,6 +16,12 @@ void main() async {
   const oneSec = const Duration(days: 365 * 10);
   new Timer(oneSec, () => RedPandaLightClient.shutdown());
 
+  var watchDBChannelEntries = RedPandaLightClient.watchDBChannelEntries();
+
+  await for (var c in watchDBChannelEntries) {
+    print(c);
+  }
+
 }
 
 //todo documentation of used licenses

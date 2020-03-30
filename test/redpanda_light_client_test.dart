@@ -14,6 +14,13 @@ void main() {
     test('Test watch messages', () async {
       //todo test breaks the test_coverage, maybe fix this test again?
 
+      var u = Utils.getCurrentTimeMillis();
+      for (int i = 0; i < 1000; i++) {
+        new NodeId.withNewKeyPair();
+        print('k');
+      }
+      print(Utils.getCurrentTimeMillis() - u);
+
 //      await RedPandaLightClient.writeMessage(-1, "text");
 
 //      print("asd");
