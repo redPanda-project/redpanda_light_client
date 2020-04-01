@@ -79,6 +79,9 @@ class ConnectionService {
 
       if (peer.restries > 10) {
         toRemove.add(peer);
+        if (peer.getKademliaId() != null) {
+          await ConnectionService.appDatabase.dBPeersDao.removePeerByKademliaId(peer.getKademliaId());
+        }
         continue;
       }
 
@@ -118,7 +121,7 @@ class ConnectionService {
       });
 
       //only connect to one node each time
-      break;
+//      break;
     }
 
     for (Peer peer in toRemove) {
@@ -155,7 +158,16 @@ class ConnectionService {
 
     for (DBPeer dbp in await appDatabase.dBPeersDao.getAllPeers()) {
       PeerList.add(Peer.fromDBPeer(dbp));
-      print("added peer from db: " + dbp.ip);
+      if (dbp.publicKey != null) {
+        print("added peer from db: " +
+            dbp.ip +
+            " " +
+            NodeId.importPublic(dbp.publicKey).toString() +
+            " " +
+            KademliaId.fromBytes(dbp.kademliaId).toString());
+      } else {
+        print("added peer from db: " + dbp.ip + " null" + " " + KademliaId.fromBytes(dbp.kademliaId).toString());
+      }
     }
 
     /**
@@ -343,6 +355,11 @@ class ConnectionService {
         channelData['userdata'] = {};
       }
 
+
+
+
+
+
       bool updated = false;
 
       Map<String, dynamic> myUserdata = await generateMyUserData(localSettings, channel.getId());
@@ -351,7 +368,7 @@ class ConnectionService {
 //        print('no userdata found from us...');
 
         channel.setUserData(myUserId, myUserdata);
-        await channel.saveChannelData(_appDatabase);
+//        await channel.saveChannelData(_appDatabase);
         updated = true;
       } else {
 //        print('found userdata');
@@ -359,7 +376,7 @@ class ConnectionService {
         if (Utils.getCurrentTimeMillis() - generated > 1000 * 5) {
 //          print('found userdata is too old...');
           channel.setUserData(myUserId, myUserdata);
-          await channel.saveChannelData(_appDatabase);
+//          await channel.saveChannelData(_appDatabase);
           updated = true;
         }
       }
@@ -386,7 +403,7 @@ class ConnectionService {
 
         cntUpdatedChannels++;
 
-        var data = channel.getChannelData();
+        Map<String, dynamic> data = channel.getChannelData();
         var watchDBMessageEntries = await ConnectionService.appDatabase.dBMessagesDao.getAllDBMessages(channel.getId());
 
         var list = [];
@@ -411,6 +428,24 @@ class ConnectionService {
           list.add(datamsg);
         }
         data['msgs'] = list;
+
+
+
+        //lets clean up old userdata
+        var userdatas = data['userdata'];
+        var toRemove = [];
+        for (var ud in userdatas.entries) {
+          int timestamp = ud.value['generated'];
+          if (Utils.getCurrentTimeMillis() - timestamp > 1000 * 60 * 60 * 24 * 2) {
+            print("removing key $ud.key from userdatas...");
+            toRemove.add(ud.key);
+          }
+        }
+
+        for (var remove in toRemove) {
+          userdatas.remove(remove);
+        }
+        //clean finished
 
 //        print("data to write");
 //        print(data);

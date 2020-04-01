@@ -6,7 +6,7 @@ import 'package:moor/moor.dart';
 class DBFriends extends Table {
   IntColumn get id => integer()();
 
-  TextColumn get name => text().nullable().withLength(min: 3, max: 10)();
+  TextColumn get name => text().nullable().withLength(min: 1, max: 32)();
 
   BlobColumn get image => blob().nullable()();
 

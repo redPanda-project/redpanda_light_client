@@ -54,9 +54,21 @@ class KadContent {
 
   Uint8List getSignature() {
     if (_signature == null) {
-//      throw new RuntimeException("this content was not signed, signature is null!");
-      return null;
+      throw new Exception("this content was not signed, signature is null!");
+//      return null;
     }
+
+    //lets try to parse the signature....
+
+    var byteBuffer = ByteBuffer.fromList(_signature);
+
+    byteBuffer.readByte();
+    int lenOfSignature = byteBuffer.readByte() + 2;
+
+    if (_signature.length != lenOfSignature) {
+      throw new Exception("signature wrong format... expected lenOfSignature: $lenOfSignature");
+    }
+
     return _signature;
   }
 
@@ -134,8 +146,7 @@ class KadContent {
     }
 
     //todo kadId has to be computed from the public key and time stamp, remove from send
-
-    ByteBuffer writeBuffer = ByteBuffer(1 + 4 + 8 + pubkey.length + 4 + _content.length + getSignature().length);
+    ByteBuffer writeBuffer = ByteBuffer(1 + 4 + 8 + NodeId.PUBLIC_KEYLEN + 4 + _content.length + getSignature().length);
     writeBuffer.writeByte(Command.KADEMLIA_STORE);
     writeBuffer.writeInt(Utils.random.nextInt(6000)); //todo check for ack with this id?
 //    writeBuffer.writeList(getKademliaId().bytes);

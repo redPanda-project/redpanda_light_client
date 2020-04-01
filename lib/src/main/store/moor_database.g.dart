@@ -1646,7 +1646,7 @@ class $DBFriendsTable extends DBFriends
   GeneratedTextColumn get name => _name ??= _constructName();
   GeneratedTextColumn _constructName() {
     return GeneratedTextColumn('name', $tableName, true,
-        minTextLength: 3, maxTextLength: 10);
+        minTextLength: 1, maxTextLength: 32);
   }
 
   final VerificationMeta _imageMeta = const VerificationMeta('image');

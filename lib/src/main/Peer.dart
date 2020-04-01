@@ -323,6 +323,8 @@ class Peer {
 
       int decryptedCommand = firstEncByte.readByte();
 
+      log.finer("received first encrypted command: " + decryptedCommand.toString());
+
       if (decryptedCommand == Command.PING) {
         log.finer("received first ping...");
 
@@ -560,6 +562,12 @@ class Peer {
 
     log.finest('Found node with id: ' + _kademliaId.toString());
 
+    if (_kademliaId != null && KademliaId.fromBytes(nonce) != _kademliaId) {
+      log.info("connected to wrong kadId....");
+      disconnect("connected to wrong kadId");
+      return false;
+    }
+
     if (_nodeId == null || _nodeId.getKeyPair() == null) {
       //we have to request the public key of the node
       requestPublicKey();
@@ -757,6 +765,11 @@ class Peer {
         var channelDataString = Utils.decodeUTF8(kadContent.getContent());
         var decoded = jsonDecode(channelDataString);
 
+        // lets save the the channel data in the db
+        var chan = new Channel(channel);
+        chan.setChannelData(decoded);
+        await chan.saveChannelData(ConnectionService.appDatabase);
+
 //        print("obtained KadContent: ");
 //        print(decoded);
 
@@ -772,12 +785,14 @@ class Peer {
           }
         }
 
-//          Map<String, dynamic> userdatas = decoded['userdata'];
-//          for (MapEntry<String, dynamic> ud in userdatas.entries) {
-//            int deliveredTo = int.parse(ud.key);
-//
-//
-//          }
+        Map<String, dynamic> userdatas = decoded['userdata'];
+        for (MapEntry<String, dynamic> ud in userdatas.entries) {
+          int userid = int.parse(ud.key);
+          String nick = ud.value['nick'];
+          int timestamp = ud.value['generated'];
+          print("found nick for $userid in dht entry: $nick");
+          await ConnectionService.appDatabase.dBFriendsDao.updateFriend(userid, nick);
+        }
 
 //          print("object")
       }

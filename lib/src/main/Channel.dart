@@ -22,6 +22,11 @@ class Channel {
     _name = name;
   }
 
+
+  setChannelData(Map<String, dynamic> value) {
+    _channelData = value;
+  }
+
   static insertSharedChannel(String data, String newName) {
     var base58decode = Utils.base58decode(data);
     var byteBuffer = ByteBuffer.fromList(base58decode);

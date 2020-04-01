@@ -14,7 +14,7 @@ import 'package:redpanda_light_client/src/main/Peer.dart';
 import 'package:redpanda_light_client/src/main/PeerList.dart';
 import 'package:redpanda_light_client/src/main/store/moor_database.dart';
 
-dynamic logLevel = Level.INFO; // defaults to Level.INFO
+dynamic logLevel = Level.ALL; // defaults to Level.INFO
 
 //final String START = "start";
 //final String START_DEBUG = "startdebug";
@@ -66,7 +66,7 @@ void processLine(String line) async {
     print("Node: ${ConnectionService.kademliaId} myUserId: ${ConnectionService.myUserId}");
     PeerList.getList().forEach((Peer p) {
       print(
-          "${formatToMinLen("${p.ip}:${p.port}", 25)}  ${formatToMinLen("${p.getKademliaId()}", 27)}  ${formatToMinLen("${p.connected}", 6)}");
+          "${formatToMinLen("${p.ip}:${p.port}", 25)}  ${formatToMinLen("${p.getKademliaId()}", 30)}  ${formatToMinLen("${p.connected}", 6)} ${formatToMinLen("${p.restries}", 3)}");
     });
     print("");
   } else if (line == "c") {
@@ -133,7 +133,7 @@ Future<void> readLines() async {
       print("Node: ${ConnectionService.kademliaId} myUserId: ${ConnectionService.myUserId}");
       PeerList.getList().forEach((Peer p) {
         print(
-            "${formatToMinLen("${p.ip}:${p.port}", 25)}  ${formatToMinLen("${p.getKademliaId()}", 27)}  ${formatToMinLen("${p.connected}", 6)}");
+            "${formatToMinLen("${p.ip}:${p.port}", 25)}  ${formatToMinLen("${p.getKademliaId()}", 30)}  ${formatToMinLen("${p.connected}", 6)} ${formatToMinLen("${p.restries}", 3)}");
       });
       print("");
       var allChannels = await ConnectionService.appDatabase.getAllChannels();

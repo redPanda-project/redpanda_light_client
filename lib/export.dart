@@ -10,3 +10,5 @@ export 'src/main/Channel.dart';
 export 'src/main/IsolateCommand.dart';
 
 export 'src/redpanda_isolate.dart' hide log show CrossIsolatesMessage, parseIsolateCommands;
+
+export 'src/main/ByteBuffer.dart';
