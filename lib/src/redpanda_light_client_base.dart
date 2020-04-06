@@ -236,9 +236,12 @@ class RedPandaLightClient {
 
     print("awaiting messages...");
 
-    await for (DBMessageWithFriend newMsg in port) {
+    await for (var msgWithChannelName in port) {
+      var channelName = msgWithChannelName['name'];
+      DBMessageWithFriend msg = msgWithChannelName['data'];
+
       if (onNewMessage != null) {
-        onNewMessage(newMsg);
+        onNewMessage(msg, channelName);
       }
     }
   }

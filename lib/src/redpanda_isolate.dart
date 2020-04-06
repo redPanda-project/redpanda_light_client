@@ -5,7 +5,6 @@ import 'dart:io';
 import 'dart:isolate';
 
 import 'package:logging/logging.dart';
-import 'package:moor/moor.dart';
 import 'package:redpanda_light_client/export.dart';
 import 'package:redpanda_light_client/src/main/Channel.dart';
 import 'package:redpanda_light_client/src/main/ConnectionService.dart';
@@ -14,7 +13,7 @@ import 'package:redpanda_light_client/src/main/Peer.dart';
 import 'package:redpanda_light_client/src/main/PeerList.dart';
 import 'package:redpanda_light_client/src/main/store/moor_database.dart';
 
-dynamic logLevel = Level.ALL; // defaults to Level.INFO
+dynamic logLevel = Level.INFO; // defaults to Level.INFO
 
 //final String START = "start";
 //final String START_DEBUG = "startdebug";
@@ -377,6 +376,8 @@ void parseIsolateCommands(SendPort answerSendPort, String command, dynamic data)
     var i = await ConnectionService.appDatabase.getChannelById(channelId);
     answerSendPort.send(i);
   } else if (command == IsolateCommand.CHANNELS_WATCH.toString()) {
+    //currently only one listener ist supported....
+    channelWatcher.clear();
     channelWatcher.add(answerSendPort);
 
     refreshChannelsWatching();
@@ -421,6 +422,10 @@ void parseIsolateCommands(SendPort answerSendPort, String command, dynamic data)
   else if (command == IsolateCommand.SET_NAME.toString()) {
     String name = data['name'];
     var i = await ConnectionService.appDatabase.setNickname(name);
+    /**
+     * lets update the name in our local database file
+     */
+    ConnectionService.localSetting = ConnectionService.localSetting.copyWith(defaultName: name);
     answerSendPort.send(i);
   } else if (command == "unknown") {
     String newMessage = "asdg " + command;
@@ -587,11 +592,16 @@ void parseIsolateCommands(SendPort answerSendPort, String command, dynamic data)
  * If now messageId is provided we assume that this message was send from us and we do not have to generate a new
  * notification.
  */
-refreshMessagesWatching(int channelId, {int messageId = -1}) async {
+refreshMessagesWatching(int channelId, {int messageId = -1, String channelName}) async {
   print('refreshing messages...');
 
   if (messageId != -1 && onNewMessageLisener != null) {
-    onNewMessageLisener.send(await ConnectionService.appDatabase.dBMessagesDao.getMessageById(messageId));
+    onNewMessageLisener.send(//
+        {
+      'name': channelName, //
+      'data': await ConnectionService.appDatabase.dBMessagesDao.getMessageById(messageId)
+    } //
+        );
   }
 
   var mw = messageWatcher[channelId];
@@ -617,6 +627,13 @@ refreshStatus() async {
   log.finest('refreshing status...');
 
   if (onNewStatusLisener != null) {
+    var defaultName = ConnectionService.localSetting.defaultName;
+
+    if (defaultName == null || defaultName.isEmpty) {
+      onNewStatusLisener.send("Please set your name in the menu.");
+      return;
+    }
+
     int active = 0;
     PeerList.getList().forEach((Peer p) {
       if (p.connected) {

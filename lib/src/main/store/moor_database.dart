@@ -84,7 +84,6 @@ class AppDatabase extends _$AppDatabase {
    */
   Future<void> onUpgrade(Migrator migrator, int old, int n) async {
     for (final TableInfo<Table, DataClass> table in allTables) {
-
       if (table.actualTableName.contains("channels")) {
         print("table not dropped!: " + table.actualTableName);
         continue;
@@ -130,6 +129,18 @@ class AppDatabase extends _$AppDatabase {
 
   Future<int> renameChannel(int id, String newname) async {
     return (update(dBChannels)..where((tbl) => tbl.id.equals(id))).write(DBChannelsCompanion(name: Value(newname)));
+  }
+
+  Future<int> updateLastMessageByMe(int channelId, String message) async {
+    return (update(dBChannels)..where((tbl) => tbl.id.equals(channelId)))
+        .write(DBChannelsCompanion(lastMessage_user: Value(""), lastMessage_text: Value(message)));
+  }
+
+  Future<int> updateLastMessage(int channelId, int userId, String message) async {
+    var dbFriend = await dBFriendsDao.getFriend(userId);
+
+    return (update(dBChannels)..where((tbl) => tbl.id.equals(channelId)))
+        .write(DBChannelsCompanion(lastMessage_user: Value(dbFriend?.name ?? '?'), lastMessage_text: Value(message)));
   }
 
   Future<int> updateChannelData(int id, String channelDataString) async {

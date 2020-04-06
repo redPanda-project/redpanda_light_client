@@ -26,6 +26,10 @@ class ConnectionService {
   static final SentryClient sentry =
       new SentryClient(dsn: "https://5ab6bb5e18a84fc1934b438139cc13d1@sentry.io/3871436");
 
+  /**
+   * The local settings will be obtained from db in the start method.
+   * It will be periodically update by the maintain method.
+   */
   static LocalSetting localSetting;
 
   static String pathToDatabase;
@@ -321,13 +325,13 @@ class ConnectionService {
   }
 
   static Future<void> maintain() async {
-    LocalSetting localSettings = await _appDatabase.getLocalSettings;
+    localSetting = await _appDatabase.getLocalSettings;
 
     List<DBChannel> allChannels = await _appDatabase.getAllChannels();
 
 //    print('channels: ' + allChannels.length.toString());
 
-    int myUserId = localSettings.myUserId;
+    int myUserId = localSetting.myUserId;
 
     int cntUpdatedChannels = 0;
 
@@ -362,7 +366,7 @@ class ConnectionService {
 
       bool updated = false;
 
-      Map<String, dynamic> myUserdata = await generateMyUserData(localSettings, channel.getId());
+      Map<String, dynamic> myUserdata = await generateMyUserData(localSetting, channel.getId());
 
       if (userData == null) {
 //        print('no userdata found from us...');
@@ -415,7 +419,7 @@ class ConnectionService {
 //          }
 
           cnt++;
-          if (cnt > 50) {
+          if (cnt > 20) {
             break;
           }
 //          print("msg : " + m.message.content);

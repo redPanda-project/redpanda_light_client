@@ -64,7 +64,8 @@ class DBMessagesDao extends DatabaseAccessor<AppDatabase> with _$DBMessagesDaoMi
         type: 0);
 
     print("insert new msg: " + channelId.toString());
-
+    db.updateLastMessageByMe(channelId, text);
+    print('updated last message...');
     return into(dBMessages).insert(entry);
   }
 

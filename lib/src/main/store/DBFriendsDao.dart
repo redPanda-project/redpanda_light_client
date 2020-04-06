@@ -28,7 +28,7 @@ class DBFriendsDao extends DatabaseAccessor<AppDatabase> with _$DBFriendsDaoMixi
     var friend = await getFriend(id);
 
     if (friend != null && friend.name == name) {
-      print("name did not change");
+//      print("name did not change");
       return false;
     }
 

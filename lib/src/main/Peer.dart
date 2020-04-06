@@ -773,15 +773,18 @@ class Peer {
 //        print("obtained KadContent: ");
 //        print(decoded);
 
+        String text;
+        int from;
         for (var msg in decoded['msgs']) {
           int messageId = msg['id'];
-          String text = msg['content'];
-          int from = msg['from'];
+          text = msg['content'];
+          from = msg['from'];
           int timestamp = msg['timestamp'];
           var i = await ConnectionService.appDatabase.dBMessagesDao
               .updateMessage(channelId, messageId, 0, text, from, timestamp);
           if (i != null) {
-            refreshMessagesWatching(channelId, messageId: messageId);
+            refreshMessagesWatching(channelId, messageId: messageId, channelName: channel.name);
+            await ConnectionService.appDatabase.updateLastMessage(channelId, from, text);
           }
         }
 
@@ -790,7 +793,7 @@ class Peer {
           int userid = int.parse(ud.key);
           String nick = ud.value['nick'];
           int timestamp = ud.value['generated'];
-          print("found nick for $userid in dht entry: $nick");
+          log.finest("found nick for $userid in dht entry: $nick");
           await ConnectionService.appDatabase.dBFriendsDao.updateFriend(userid, nick);
         }
 
