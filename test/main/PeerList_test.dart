@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:moor/moor.dart';
@@ -13,6 +14,16 @@ AppDatabase appDatabase;
 
 void main() {
   group('Test PeerList', () {
+    setUp(() async {
+      if (ConnectionService.appDatabase == null) {
+        ConnectionService.pathToDatabase = 'dataTestPeerList';
+        await new Directory(ConnectionService.pathToDatabase).create(recursive: true);
+        appDatabase = new AppDatabase();
+        ConnectionService.appDatabase = appDatabase;
+      } else {
+        appDatabase = ConnectionService.appDatabase;
+      }
+    });
     test('Test insert without id', () {
       var peer = new Peer("123333", 1234);
 

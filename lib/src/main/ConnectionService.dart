@@ -325,7 +325,11 @@ class ConnectionService {
   static Future<void> maintain() async {
     localSetting = await _appDatabase.getLocalSettings;
 
+    var stopwatch = Stopwatch()..start();
+
     List<DBChannel> allChannels = await _appDatabase.getAllChannels();
+
+    List<int> channelsUpdated = [];
 
 //    print('channels: ' + allChannels.length.toString());
 
@@ -334,6 +338,7 @@ class ConnectionService {
     int cntUpdatedChannels = 0;
 
     for (DBChannel dbChannel in allChannels) {
+      // only update x channels per maintain run
       if (cntUpdatedChannels >= 20) {
         break;
       }
@@ -378,9 +383,11 @@ class ConnectionService {
         }
       }
 
+      // lets request latest channel data from a peer...
       if (updated) {
+        cntUpdatedChannels++;
+        channelsUpdated.add(channel.getId());
         //lets seach the DHT network for fresh channel data
-
         KademliaId currentKademliaId =
             KadContent.createKademliaId(Utils.getCurrentTimeMillis(), channel.getNodeId().exportPublic());
         currentKademliaIdtoChannelId.putIfAbsent(currentKademliaId, () => channel.getId());
@@ -393,18 +400,25 @@ class ConnectionService {
         writeBuffer.writeList(currentKademliaId.bytes);
 
         await PeerList.sendIntegrated(writeBuffer);
+      }
+    }
 
-//        print("sleep");
-        await new Future.delayed(const Duration(seconds: 6), () => "1");
-//        print("sleep end");
+    print('requested $cntUpdatedChannels channel updates, waiting for responds, this took us ${stopwatch.elapsed} ms');
+    await new Future.delayed(const Duration(seconds: 6), () => "1");
+    print('waited, now lets insert our lates data into the dht network...');
+    stopwatch = Stopwatch()..start();
 
-        cntUpdatedChannels++;
+    // lets optain the latest channel data from db
+    allChannels = await _appDatabase.getAllChannels();
+    for (DBChannel dbChannel in allChannels) {
+      if (channelsUpdated.contains(dbChannel.id)) {
+        Channel channel = new Channel(dbChannel);
 
         Map<String, dynamic> data = channel.getChannelData();
         var watchDBMessageEntries = await ConnectionService.appDatabase.dBMessagesDao.getAllDBMessages(channel.getId());
 
+        // the following list contains the latest x messages in our database
         var list = [];
-
         int cnt = 0;
         for (DBMessageWithFriend m in watchDBMessageEntries) {
 //          if (!m.fromMe) {
@@ -415,7 +429,6 @@ class ConnectionService {
           if (cnt > 20) {
             break;
           }
-//          print("msg : " + m.message.content);
           var datamsg = {
             "id": m.message.messageId,
             "from": m.message.from,
@@ -428,22 +441,20 @@ class ConnectionService {
 
         //lets clean up old userdata
         var userdatas = data['userdata'];
-        var toRemove = [];
-        for (var ud in userdatas.entries) {
-          int timestamp = ud.value['generated'];
-          if (Utils.getCurrentTimeMillis() - timestamp > 1000 * 60 * 60 * 24 * 2) {
-            print("removing key $ud.key from userdatas...");
-            toRemove.add(ud.key);
+        if (userdatas != null) {
+          var toRemove = [];
+          for (var ud in userdatas.entries) {
+            int timestamp = ud.value['generated'];
+            if (Utils.getCurrentTimeMillis() - timestamp > 1000 * 60 * 60 * 24 * 2) {
+              print("removing key $ud.key from userdatas...");
+              toRemove.add(ud.key);
+            }
           }
+          for (var remove in toRemove) {
+            userdatas.remove(remove);
+          }
+          //clean finished
         }
-
-        for (var remove in toRemove) {
-          userdatas.remove(remove);
-        }
-        //clean finished
-
-//        print("data to write");
-//        print(data);
 
         String channelDataString = jsonEncode(data);
         var channelDataStringBytes = Utils.encodeUTF8(channelDataString);
@@ -455,12 +466,10 @@ class ConnectionService {
         await kadContent.signWith(channel.getNodeId());
 
         await PeerList.sendIntegrated(kadContent.toCommand());
-//        print("send...");
         log.finest("send to integrated.... " + kadContent.getKademliaId().toString());
       }
-
-//      log.finest("");
     }
+    print('done inserting data, this took us ${stopwatch.elapsed} ms');
   }
 
   static Future<Map<String, dynamic>> generateMyUserData(LocalSetting localSettings, int channelId) async {

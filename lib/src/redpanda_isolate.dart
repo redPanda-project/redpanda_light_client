@@ -175,6 +175,10 @@ Future<void> readLines() async {
           }
         }
       }
+    } else if (line == "nick") {
+      print('set nick');
+      var nick = await readStream.first;
+      ConnectionService.appDatabase.setNickname(nick);
     } else if (line == "r") {
       print("remove channel by id:");
       var id = await readStream.first;

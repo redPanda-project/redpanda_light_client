@@ -727,6 +727,10 @@ class Peer {
 
       return 1 + 4 + toReadBytes;
     } else if (decryptedCommand == Command.KADEMLIA_GET_ANSWER) {
+      if (decryptBuffer.remaining() < 4 + 8 + 65 + 4) {
+        return 0;
+      }
+
       int ackID = decryptBuffer.readInt();
 //        KademliaId kademliaId = new KademliaId.fromBytes(decryptBuffer.readBytes(KademliaId.ID_LENGTH));
       int timestamp = decryptBuffer.readLong();
@@ -789,12 +793,14 @@ class Peer {
         }
 
         Map<String, dynamic> userdatas = decoded['userdata'];
-        for (MapEntry<String, dynamic> ud in userdatas.entries) {
-          int userid = int.parse(ud.key);
-          String nick = ud.value['nick'];
-          int timestamp = ud.value['generated'];
-          log.finest("found nick for $userid in dht entry: $nick");
-          await ConnectionService.appDatabase.dBFriendsDao.updateFriend(userid, nick);
+        if (userdatas != null) {
+          for (MapEntry<String, dynamic> ud in userdatas.entries) {
+            int userid = int.parse(ud.key);
+            String nick = ud.value['nick'];
+            int timestamp = ud.value['generated'];
+            log.finest("found nick for $userid in dht entry: $nick");
+            await ConnectionService.appDatabase.dBFriendsDao.updateFriend(userid, nick);
+          }
         }
 
 //          print("object")
