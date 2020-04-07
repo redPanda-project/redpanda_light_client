@@ -14,13 +14,15 @@ class LocalSetting extends DataClass implements Insertable<LocalSetting> {
   final Uint8List privateKey;
   final Uint8List kademliaId;
   final String defaultName;
+  final int versionTimestamp;
   LocalSetting(
       {@required this.id,
       @required this.myUserId,
       this.fcmToken,
       @required this.privateKey,
       @required this.kademliaId,
-      @required this.defaultName});
+      this.defaultName,
+      this.versionTimestamp});
   factory LocalSetting.fromData(Map<String, dynamic> data, GeneratedDatabase db,
       {String prefix}) {
     final effectivePrefix = prefix ?? '';
@@ -39,6 +41,8 @@ class LocalSetting extends DataClass implements Insertable<LocalSetting> {
           .mapFromDatabaseResponse(data['${effectivePrefix}kademlia_id']),
       defaultName: stringType
           .mapFromDatabaseResponse(data['${effectivePrefix}default_name']),
+      versionTimestamp: intType
+          .mapFromDatabaseResponse(data['${effectivePrefix}version_timestamp']),
     );
   }
   factory LocalSetting.fromJson(Map<String, dynamic> json,
@@ -51,6 +55,7 @@ class LocalSetting extends DataClass implements Insertable<LocalSetting> {
       privateKey: serializer.fromJson<Uint8List>(json['privateKey']),
       kademliaId: serializer.fromJson<Uint8List>(json['kademliaId']),
       defaultName: serializer.fromJson<String>(json['defaultName']),
+      versionTimestamp: serializer.fromJson<int>(json['versionTimestamp']),
     );
   }
   @override
@@ -63,6 +68,7 @@ class LocalSetting extends DataClass implements Insertable<LocalSetting> {
       'privateKey': serializer.toJson<Uint8List>(privateKey),
       'kademliaId': serializer.toJson<Uint8List>(kademliaId),
       'defaultName': serializer.toJson<String>(defaultName),
+      'versionTimestamp': serializer.toJson<int>(versionTimestamp),
     };
   }
 
@@ -85,6 +91,9 @@ class LocalSetting extends DataClass implements Insertable<LocalSetting> {
       defaultName: defaultName == null && nullToAbsent
           ? const Value.absent()
           : Value(defaultName),
+      versionTimestamp: versionTimestamp == null && nullToAbsent
+          ? const Value.absent()
+          : Value(versionTimestamp),
     );
   }
 
@@ -94,7 +103,8 @@ class LocalSetting extends DataClass implements Insertable<LocalSetting> {
           String fcmToken,
           Uint8List privateKey,
           Uint8List kademliaId,
-          String defaultName}) =>
+          String defaultName,
+          int versionTimestamp}) =>
       LocalSetting(
         id: id ?? this.id,
         myUserId: myUserId ?? this.myUserId,
@@ -102,6 +112,7 @@ class LocalSetting extends DataClass implements Insertable<LocalSetting> {
         privateKey: privateKey ?? this.privateKey,
         kademliaId: kademliaId ?? this.kademliaId,
         defaultName: defaultName ?? this.defaultName,
+        versionTimestamp: versionTimestamp ?? this.versionTimestamp,
       );
   @override
   String toString() {
@@ -111,7 +122,8 @@ class LocalSetting extends DataClass implements Insertable<LocalSetting> {
           ..write('fcmToken: $fcmToken, ')
           ..write('privateKey: $privateKey, ')
           ..write('kademliaId: $kademliaId, ')
-          ..write('defaultName: $defaultName')
+          ..write('defaultName: $defaultName, ')
+          ..write('versionTimestamp: $versionTimestamp')
           ..write(')'))
         .toString();
   }
@@ -123,8 +135,12 @@ class LocalSetting extends DataClass implements Insertable<LocalSetting> {
           myUserId.hashCode,
           $mrjc(
               fcmToken.hashCode,
-              $mrjc(privateKey.hashCode,
-                  $mrjc(kademliaId.hashCode, defaultName.hashCode))))));
+              $mrjc(
+                  privateKey.hashCode,
+                  $mrjc(
+                      kademliaId.hashCode,
+                      $mrjc(defaultName.hashCode,
+                          versionTimestamp.hashCode)))))));
   @override
   bool operator ==(dynamic other) =>
       identical(this, other) ||
@@ -134,7 +150,8 @@ class LocalSetting extends DataClass implements Insertable<LocalSetting> {
           other.fcmToken == this.fcmToken &&
           other.privateKey == this.privateKey &&
           other.kademliaId == this.kademliaId &&
-          other.defaultName == this.defaultName);
+          other.defaultName == this.defaultName &&
+          other.versionTimestamp == this.versionTimestamp);
 }
 
 class LocalSettingsCompanion extends UpdateCompanion<LocalSetting> {
@@ -144,6 +161,7 @@ class LocalSettingsCompanion extends UpdateCompanion<LocalSetting> {
   final Value<Uint8List> privateKey;
   final Value<Uint8List> kademliaId;
   final Value<String> defaultName;
+  final Value<int> versionTimestamp;
   const LocalSettingsCompanion({
     this.id = const Value.absent(),
     this.myUserId = const Value.absent(),
@@ -151,6 +169,7 @@ class LocalSettingsCompanion extends UpdateCompanion<LocalSetting> {
     this.privateKey = const Value.absent(),
     this.kademliaId = const Value.absent(),
     this.defaultName = const Value.absent(),
+    this.versionTimestamp = const Value.absent(),
   });
   LocalSettingsCompanion.insert({
     this.id = const Value.absent(),
@@ -158,18 +177,19 @@ class LocalSettingsCompanion extends UpdateCompanion<LocalSetting> {
     this.fcmToken = const Value.absent(),
     @required Uint8List privateKey,
     @required Uint8List kademliaId,
-    @required String defaultName,
+    this.defaultName = const Value.absent(),
+    this.versionTimestamp = const Value.absent(),
   })  : myUserId = Value(myUserId),
         privateKey = Value(privateKey),
-        kademliaId = Value(kademliaId),
-        defaultName = Value(defaultName);
+        kademliaId = Value(kademliaId);
   LocalSettingsCompanion copyWith(
       {Value<int> id,
       Value<int> myUserId,
       Value<String> fcmToken,
       Value<Uint8List> privateKey,
       Value<Uint8List> kademliaId,
-      Value<String> defaultName}) {
+      Value<String> defaultName,
+      Value<int> versionTimestamp}) {
     return LocalSettingsCompanion(
       id: id ?? this.id,
       myUserId: myUserId ?? this.myUserId,
@@ -177,6 +197,7 @@ class LocalSettingsCompanion extends UpdateCompanion<LocalSetting> {
       privateKey: privateKey ?? this.privateKey,
       kademliaId: kademliaId ?? this.kademliaId,
       defaultName: defaultName ?? this.defaultName,
+      versionTimestamp: versionTimestamp ?? this.versionTimestamp,
     );
   }
 }
@@ -253,13 +274,34 @@ class $LocalSettingsTable extends LocalSettings
     return GeneratedTextColumn(
       'default_name',
       $tableName,
-      false,
+      true,
+    );
+  }
+
+  final VerificationMeta _versionTimestampMeta =
+      const VerificationMeta('versionTimestamp');
+  GeneratedIntColumn _versionTimestamp;
+  @override
+  GeneratedIntColumn get versionTimestamp =>
+      _versionTimestamp ??= _constructVersionTimestamp();
+  GeneratedIntColumn _constructVersionTimestamp() {
+    return GeneratedIntColumn(
+      'version_timestamp',
+      $tableName,
+      true,
     );
   }
 
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, myUserId, fcmToken, privateKey, kademliaId, defaultName];
+  List<GeneratedColumn> get $columns => [
+        id,
+        myUserId,
+        fcmToken,
+        privateKey,
+        kademliaId,
+        defaultName,
+        versionTimestamp
+      ];
   @override
   $LocalSettingsTable get asDslTable => this;
   @override
@@ -298,8 +340,12 @@ class $LocalSettingsTable extends LocalSettings
     if (d.defaultName.present) {
       context.handle(_defaultNameMeta,
           defaultName.isAcceptableValue(d.defaultName.value, _defaultNameMeta));
-    } else if (isInserting) {
-      context.missing(_defaultNameMeta);
+    }
+    if (d.versionTimestamp.present) {
+      context.handle(
+          _versionTimestampMeta,
+          versionTimestamp.isAcceptableValue(
+              d.versionTimestamp.value, _versionTimestampMeta));
     }
     return context;
   }
@@ -332,6 +378,10 @@ class $LocalSettingsTable extends LocalSettings
     }
     if (d.defaultName.present) {
       map['default_name'] = Variable<String, StringType>(d.defaultName.value);
+    }
+    if (d.versionTimestamp.present) {
+      map['version_timestamp'] =
+          Variable<int, IntType>(d.versionTimestamp.value);
     }
     return map;
   }

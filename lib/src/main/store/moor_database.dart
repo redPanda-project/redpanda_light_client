@@ -38,7 +38,9 @@ class LocalSettings extends Table {
 
   BlobColumn get kademliaId => blob()();
 
-  TextColumn get defaultName => text()();
+  TextColumn get defaultName => text().nullable()();
+
+  IntColumn get versionTimestamp => integer().nullable()();
 }
 
 // this annotation tells moor to prepare a database class that uses both of the
@@ -53,7 +55,7 @@ class AppDatabase extends _$AppDatabase {
   // you should bump this number whenever you change or add a table definition.
   // Migrations are covered below.
   @override
-  int get schemaVersion => 40;
+  int get schemaVersion => 43;
 
   Future<LocalSetting> get getLocalSettings => select(localSettings).getSingle();
 
@@ -69,6 +71,10 @@ class AppDatabase extends _$AppDatabase {
 
   Future<int> setNickname(String nick) async {
     return update(localSettings).write(LocalSettingsCompanion(defaultName: Value(nick)));
+  }
+
+  Future<int> setVersionTimestamp(int timestamp) async {
+    return update(localSettings).write(LocalSettingsCompanion(versionTimestamp: Value(timestamp)));
   }
 
   @override

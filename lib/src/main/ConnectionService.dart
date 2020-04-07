@@ -204,12 +204,10 @@ class ConnectionService {
       myUserId = Utils.randInteger();
 
       LocalSettingsCompanion localSettingsCompanion = LocalSettingsCompanion.insert(
-          privateKey: nodeId.exportWithPrivate(),
-          kademliaId: kademliaId.bytes,
-          myUserId: myUserId,
-          defaultName: "Unknown");
+          privateKey: nodeId.exportWithPrivate(), kademliaId: kademliaId.bytes, myUserId: myUserId);
 
       await _appDatabase.save(localSettingsCompanion);
+      localSetting = await _appDatabase.getLocalSettings;
       print('new localsettings saved!');
     } else {
       nodeId = NodeId.importWithPrivate(localSetting.privateKey);
@@ -359,11 +357,6 @@ class ConnectionService {
         channelData['userdata'] = {};
       }
 
-
-
-
-
-
       bool updated = false;
 
       Map<String, dynamic> myUserdata = await generateMyUserData(localSetting, channel.getId());
@@ -432,8 +425,6 @@ class ConnectionService {
           list.add(datamsg);
         }
         data['msgs'] = list;
-
-
 
         //lets clean up old userdata
         var userdatas = data['userdata'];

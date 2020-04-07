@@ -623,11 +623,13 @@ refreshChannelsWatching() async {
   }
 }
 
-refreshStatus() async {
+Future<void> refreshStatus() async {
   log.finest('refreshing status...');
 
   if (onNewStatusLisener != null) {
     var defaultName = ConnectionService.localSetting.defaultName;
+
+//    print('defaultName: ' + defaultName.toString() + ' ' + defaultName?.isEmpty.toString());
 
     if (defaultName == null || defaultName.isEmpty) {
       onNewStatusLisener.send("Please set your name in the menu.");
