@@ -209,6 +209,17 @@ void setupAndStartIsolate() async {
     receivePort.sendPort,
   );
 
+  ReceivePort errorPort = ReceivePort();
+
+  newIsolate.addErrorListener(errorPort.sendPort);
+  errorPort.listen((listMessage) {
+    String errorDescription = listMessage[0];
+    String stackDescription = listMessage[1];
+    ConnectionService.sentry.captureException(exception: errorDescription, stackTrace: stackDescription);
+    print(errorDescription);
+    print(stackDescription);
+  });
+
   //
   // Retrieve the port to be used for further
   // communication

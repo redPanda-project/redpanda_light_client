@@ -4,6 +4,7 @@ import 'package:date_format/date_format.dart';
 import 'package:redpanda_light_client/src/main/ByteBuffer.dart';
 import 'package:redpanda_light_client/src/main/Channel.dart';
 import 'package:redpanda_light_client/src/main/Command.dart';
+import 'package:redpanda_light_client/src/main/ConnectionService.dart';
 import 'package:redpanda_light_client/src/main/KademliaId.dart';
 import 'package:redpanda_light_client/src/main/NodeId.dart';
 import 'package:redpanda_light_client/src/main/Utils.dart';
@@ -145,20 +146,24 @@ class KadContent {
       throw new Exception('KadContent has to be signed before writing to a peer!');
     }
 
-    //todo kadId has to be computed from the public key and time stamp, remove from send
-    ByteBuffer writeBuffer = ByteBuffer(1 + 4 + 8 + NodeId.PUBLIC_KEYLEN + 4 + _content.length + getSignature().length);
+    ByteBuffer writeBuffer =
+        ByteBuffer(1 + 4 + 4 + 8 + NodeId.PUBLIC_KEYLEN + 4 + _content.length + 4 + getSignature().length);
     writeBuffer.writeByte(Command.KADEMLIA_STORE);
+    writeBuffer.writeInt(4 + 8 + NodeId.PUBLIC_KEYLEN + 4 + _content.length + 4 + getSignature().length);
     writeBuffer.writeInt(Utils.random.nextInt(6000)); //todo check for ack with this id?
 //    writeBuffer.writeList(getKademliaId().bytes);
     writeBuffer.writeLong(timestamp);
     writeBuffer.writeList(pubkey);
     writeBuffer.writeInt(_content.length);
     writeBuffer.writeList(_content);
+    writeBuffer.writeInt(getSignature().length);
     writeBuffer.writeList(getSignature());
 
     //todo can be removed later
     if (writeBuffer.position() != writeBuffer.length) {
-      throw new Exception("ByteBuffer for KadContent cmd was wrong!");
+      var ex = new Exception("ByteBuffer for KadContent cmd was wrong!");
+      ConnectionService.sentry.captureException(exception: ex);
+      throw ex;
     }
 
     return writeBuffer;

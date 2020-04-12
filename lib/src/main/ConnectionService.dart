@@ -247,7 +247,7 @@ class ConnectionService {
 
       ByteBuffer byteBuffer = new ByteBuffer(4 + 1 + 1 + KademliaId.ID_LENGTH_BYTES + 4);
       byteBuffer.writeList(Utils.MAGIC);
-      byteBuffer.writeByte(8); //protocoll version code
+      byteBuffer.writeByte(22); //protocoll version code
       byteBuffer.writeByte(129); //lightClient
       byteBuffer.writeList(kademliaId.bytes);
 //      print(byteBuffer.buffer.asUint8List());
@@ -264,6 +264,8 @@ class ConnectionService {
 
       //      socket.destroy();
     });
+
+    return;
   }
 
 //  void dataHandler(data) {
