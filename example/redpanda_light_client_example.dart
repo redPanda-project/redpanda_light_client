@@ -11,12 +11,15 @@ void main() async {
    */
   await new Directory(dataFolderPath).create(recursive: true);
 
-  await RedPandaLightClient.init(dataFolderPath, 5500);
+  var watchDBChannelEntries = RedPandaLightClient.init(dataFolderPath, 5500);
+
+
+  print('asd');
 
   const oneSec = const Duration(days: 365 * 10);
   new Timer(oneSec, () => RedPandaLightClient.shutdown());
 
-  var watchDBChannelEntries = RedPandaLightClient.watchDBChannelEntries();
+//  var watchDBChannelEntries = RedPandaLightClient.watchDBChannelEntries();
 
   RedPandaLightClient.onNewMessage = onNewMessage;
 

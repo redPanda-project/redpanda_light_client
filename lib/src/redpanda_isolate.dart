@@ -283,7 +283,7 @@ Future<void> shutdown() async {
 }
 
 void parseIsolateCommands(SendPort answerSendPort, String command, dynamic data) async {
-  print("isolate cmd: " + command + " data: " + data.toString() + " after boot: ${stopWatch.elapsed} ms");
+  print("isolate cmd: " + command + " data: " + data.toString() + " after boot: ${stopWatch.elapsed}");
 
   //
   // Process the message
@@ -334,8 +334,13 @@ void parseIsolateCommands(SendPort answerSendPort, String command, dynamic data)
 //    running = true;
 
     connectionService = ConnectionService(dataFolderPath, myPort);
-    await connectionService.start();
-    answerSendPort.send(null);
+    var allChannels = await connectionService.start();
+
+    answerSendPort.send(allChannels);
+    print('send first channel list after boot: ${stopWatch.elapsed}');
+
+    channelWatcher.clear();
+    channelWatcher.add(answerSendPort);
   } else if (command == IsolateCommand.START_DEBUG.toString()) {
     String dataFolderPath = data['dataFolderPath'];
     int myPort = data['myPort'];

@@ -29,7 +29,7 @@ class RedPandaLightClient {
 //
   static Future<dynamic> sendCommand(IsolateCommand command, [dynamic data]) async {
     if (newIsolateSendPort == null) {
-      print("called command to RPC before starting the isolate...");
+      print("called command to RPC before starting the isolate: $data");
       return;
     }
 
@@ -56,7 +56,7 @@ class RedPandaLightClient {
 
   static Future<ReceivePort> sendCommandReturnPort(IsolateCommand command, [dynamic data]) async {
     if (newIsolateSendPort == null) {
-      print("called command to RPC before starting the isolate...");
+      print("called command to RPC before starting the isolate: $command");
       return null;
     }
 
@@ -97,11 +97,13 @@ class RedPandaLightClient {
    * Initializes the RedPandaLightClient with a SendPort already obtained from an running isolate.
    * The methods in this class will then send all commands to that isolate associated to the provided SendPort.
    */
-  static Future<void> initWithSendPort(String dataFolderPath, int myPort, SendPort sendPort) async {
+  static Stream<List<DBChannel>> initWithSendPort(String dataFolderPath, int myPort, SendPort sendPort) async* {
     /**
      * We use the provided sendport and do not start an own isolate.
      */
     newIsolateSendPort = sendPort;
+
+    print("newIsolateSendPort set...");
 
     var data = {"dataFolderPath": dataFolderPath, "myPort": myPort};
 
@@ -113,15 +115,21 @@ class RedPandaLightClient {
 //    });
 //    print("starting ping");
 
-    return sendCommand(IsolateCommand.START, data);
+//    return sendCommand(IsolateCommand.START, data);
+    ReceivePort port = await sendCommandReturnPort(IsolateCommand.START, data);
+    await for (List<DBChannel> c in port) {
+      yield c;
+    }
   }
 
-  static Future<void> init(String dataFolderPath, int myPort) async {
+  static Stream<List<DBChannel>> init(String dataFolderPath, int myPort) async* {
+    print('running: $running');
     if (running) {
       print("warning, RPC already running.........");
       return;
     }
     running = true;
+    print('setupAndStartIsolate');
     await setupAndStartIsolate();
 
     var recPortOnExit = new ReceivePort();
@@ -141,7 +149,11 @@ class RedPandaLightClient {
 //    });
 //    print("starting ping");
 
-    return sendCommand(IsolateCommand.START, data);
+//    return sendCommand(IsolateCommand.START, data);
+    ReceivePort port = await sendCommandReturnPort(IsolateCommand.START, data);
+    await for (List<DBChannel> c in port) {
+      yield c;
+    }
   }
 
   static Future<void> initForDebug(String dataFolderPath, int myPort) async {

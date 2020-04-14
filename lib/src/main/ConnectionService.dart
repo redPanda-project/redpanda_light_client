@@ -138,24 +138,23 @@ class ConnectionService {
   /**
    * Method to start the ConnectionService.
    */
-  Future<void> start({bool debugOnly = false}) async {
+  Future<List<DBChannel>> start({bool debugOnly = false}) async {
     /**
      * Setup database and LocalSettings...
      */
 
-    var stopwatch2 = Stopwatch()..start();
     _appDatabase = new AppDatabase();
-    print('database starting took: ${stopwatch2.elapsed}');
 
-    await setupLocalSettings();
+    var list = await _appDatabase.getAllChannels();
 
-    setupBackground(debugOnly);
-    return;
+    setupBackground(debugOnly, list);
+    return list;
   }
 
-  Future setupBackground(bool debugOnly) async {
-    var list = await _appDatabase.getAllChannels();
-    await new Future.delayed(const Duration(milliseconds: 1000), () => "1");
+  Future setupBackground(bool debugOnly, var list) async {
+    await new Future.delayed(const Duration(milliseconds: 10), () => "1");
+
+    await setupLocalSettings();
 
     if (list.isEmpty) {
       log.finest('test insert first channel');
