@@ -788,7 +788,7 @@ class Peer {
               .updateMessage(channelId, messageId, 0, text, from, timestamp);
           if (i != null) {
             refreshMessagesWatching(channelId, messageId: messageId, channelName: channel.name);
-            await ConnectionService.appDatabase.updateLastMessage(channelId, from, text);
+            await ConnectionService.appDatabase.updateLastMessage(channelId, from, text, timestamp);
           }
         }
 

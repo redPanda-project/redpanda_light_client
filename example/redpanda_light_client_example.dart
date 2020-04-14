@@ -18,10 +18,20 @@ void main() async {
 
   var watchDBChannelEntries = RedPandaLightClient.watchDBChannelEntries();
 
+  RedPandaLightClient.onNewMessage = onNewMessage;
+
   await for (var c in watchDBChannelEntries) {
+    for (DBChannel dbc in c) {
+//      var watchDBMessageEntries = RedPandaLightClient.watchDBMessageEntries(dbc.id);
+//      watchDBMessageEntries.listen((event) { })
+      print('waiting for messages for channel ${dbc.id}');
+    }
     print(c);
   }
+}
 
+onNewMessage(DBMessageWithFriend msg, String channelName) {
+  print('#########\n\nNew Message for Channel $channelName\n\n${msg.friend?.name}: ${msg.message.content}\n\n#########');
 }
 
 //todo documentation of used licenses

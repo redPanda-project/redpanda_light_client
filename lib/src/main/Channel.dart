@@ -22,7 +22,6 @@ class Channel {
     _name = name;
   }
 
-
   setChannelData(Map<String, dynamic> value) {
     _channelData = value;
   }
@@ -169,6 +168,11 @@ class Channel {
   }
 
   void setUserData(int myUserId, Map<String, dynamic> myUserdata) {
+    if (_channelData == null) {
+      _channelData = {};
+      _channelData['userdata'] = {};
+    }
+
     _channelData["userdata"][myUserId.toString()] = myUserdata;
   }
 

@@ -55,7 +55,7 @@ class AppDatabase extends _$AppDatabase {
   // you should bump this number whenever you change or add a table definition.
   // Migrations are covered below.
   @override
-  int get schemaVersion => 43;
+  int get schemaVersion => 44;
 
   Future<LocalSetting> get getLocalSettings => select(localSettings).getSingle();
 
@@ -88,9 +88,14 @@ class AppDatabase extends _$AppDatabase {
   /**
    * Migration will drop all tables and create database from scratch.
    */
-  Future<void> onUpgrade(Migrator migrator, int old, int n) async {
+  Future<void> onUpgrade(Migrator migrator, int from, int n) async {
+    if (from == 43) {
+      // we added the lastMessage_timestamp property in the change from version 43
+      await migrator.addColumn(dBChannels, dBChannels.lastMessage_timestamp);
+    }
+
     for (final TableInfo<Table, DataClass> table in allTables) {
-      if (table.actualTableName.contains("channels")) {
+      if (table.actualTableName.contains("channels") || table.actualTableName.contains("settings")) {
         print("table not dropped!: " + table.actualTableName);
         continue;
       }
@@ -138,15 +143,19 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<int> updateLastMessageByMe(int channelId, String message) async {
-    return (update(dBChannels)..where((tbl) => tbl.id.equals(channelId)))
-        .write(DBChannelsCompanion(lastMessage_user: Value(""), lastMessage_text: Value(message)));
+    return (update(dBChannels)..where((tbl) => tbl.id.equals(channelId))).write(DBChannelsCompanion(
+        lastMessage_user: Value(""),
+        lastMessage_text: Value(message),
+        lastMessage_timestamp: Value(Utils.getCurrentTimeMillis())));
   }
 
-  Future<int> updateLastMessage(int channelId, int userId, String message) async {
+  Future<int> updateLastMessage(int channelId, int userId, String message, int timestamp) async {
     var dbFriend = await dBFriendsDao.getFriend(userId);
 
-    return (update(dBChannels)..where((tbl) => tbl.id.equals(channelId)))
-        .write(DBChannelsCompanion(lastMessage_user: Value(dbFriend?.name ?? '?'), lastMessage_text: Value(message)));
+    return (update(dBChannels)..where((tbl) => tbl.id.equals(channelId))).write(DBChannelsCompanion(
+        lastMessage_user: Value(dbFriend?.name ?? '?'),
+        lastMessage_text: Value(message),
+        lastMessage_timestamp: Value(timestamp)));
   }
 
   Future<int> updateChannelData(int id, String channelDataString) async {
@@ -160,7 +169,10 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<List<DBChannel>> getAllChannels() {
-    return select(dBChannels).get();
+//    return select(dBChannels).get();
+    return (select(dBChannels)
+          ..orderBy([(t) => OrderingTerm(expression: t.lastMessage_timestamp, mode: OrderingMode.desc)]))
+        .get();
   }
 
 //  /**

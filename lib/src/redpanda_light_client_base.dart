@@ -179,6 +179,11 @@ class RedPandaLightClient {
     return sendCommand(IsolateCommand.CHANNEL_GET_BY_ID, data);
   }
 
+  static Future<dynamic> insertFCMToken(String token) async {
+    var data = {"token": token};
+    return sendCommand(IsolateCommand.INSERT_FCM_TOKEN, data);
+  }
+
   static Future<dynamic> setName(String name) async {
     var data = {"name": name};
     return sendCommand(IsolateCommand.SET_NAME, data);
@@ -188,7 +193,6 @@ class RedPandaLightClient {
 //    ReceivePort port = ReceivePort();
 //    newIsolateSendPort
 //        .send(CrossIsolatesMessage<IsolateCommand>(sender: port.sendPort, message: IsolateCommand.CHANNELS_WATCH));
-
     ReceivePort port = await sendCommandReturnPort(IsolateCommand.CHANNELS_WATCH);
     await for (List<DBChannel> c in port) {
       yield c;

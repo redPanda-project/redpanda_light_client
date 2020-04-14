@@ -14,5 +14,6 @@ enum IsolateCommand {
   MESSAGES_LISTEN_NEW,
   STATUS_LISTEN,
   SET_NAME,
+  INSERT_FCM_TOKEN,
   SHUTDOWN,
 }

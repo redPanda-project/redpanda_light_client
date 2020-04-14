@@ -143,11 +143,19 @@ class ConnectionService {
      * Setup database and LocalSettings...
      */
 
+    var stopwatch2 = Stopwatch()..start();
     _appDatabase = new AppDatabase();
+    print('database starting took: ${stopwatch2.elapsed}');
 
     await setupLocalSettings();
 
+    setupBackground(debugOnly);
+    return;
+  }
+
+  Future setupBackground(bool debugOnly) async {
     var list = await _appDatabase.getAllChannels();
+    await new Future.delayed(const Duration(milliseconds: 1000), () => "1");
 
     if (list.isEmpty) {
       log.finest('test insert first channel');
@@ -192,6 +200,7 @@ class ConnectionService {
     var seconds = 15 + Utils.random.nextInt(20);
     var timeRepeatChannelMaintain = Duration(seconds: seconds);
     new Timer.periodic(timeRepeatChannelMaintain, (Timer t) => maintain());
+    return;
   }
 
   static Future<void> setupLocalSettings() async {
@@ -415,6 +424,9 @@ class ConnectionService {
     for (DBChannel dbChannel in allChannels) {
       if (channelsUpdated.contains(dbChannel.id)) {
         Channel channel = new Channel(dbChannel);
+
+        Map<String, dynamic> myUserdata = await generateMyUserData(localSetting, channel.getId());
+        channel.setUserData(myUserId, myUserdata);
 
         Map<String, dynamic> data = channel.getChannelData();
         var watchDBMessageEntries = await ConnectionService.appDatabase.dBMessagesDao.getAllDBMessages(channel.getId());

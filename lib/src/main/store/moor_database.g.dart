@@ -400,6 +400,7 @@ class DBChannel extends DataClass implements Insertable<DBChannel> {
   final String channelData;
   final String lastMessage_text;
   final String lastMessage_user;
+  final int lastMessage_timestamp;
   DBChannel(
       {@required this.id,
       @required this.name,
@@ -407,7 +408,8 @@ class DBChannel extends DataClass implements Insertable<DBChannel> {
       @required this.nodeId,
       this.channelData,
       this.lastMessage_text,
-      this.lastMessage_user});
+      this.lastMessage_user,
+      this.lastMessage_timestamp});
   factory DBChannel.fromData(Map<String, dynamic> data, GeneratedDatabase db,
       {String prefix}) {
     final effectivePrefix = prefix ?? '';
@@ -427,6 +429,8 @@ class DBChannel extends DataClass implements Insertable<DBChannel> {
           .mapFromDatabaseResponse(data['${effectivePrefix}last_message_text']),
       lastMessage_user: stringType
           .mapFromDatabaseResponse(data['${effectivePrefix}last_message_user']),
+      lastMessage_timestamp: intType.mapFromDatabaseResponse(
+          data['${effectivePrefix}last_message_timestamp']),
     );
   }
   factory DBChannel.fromJson(Map<String, dynamic> json,
@@ -440,6 +444,8 @@ class DBChannel extends DataClass implements Insertable<DBChannel> {
       channelData: serializer.fromJson<String>(json['channelData']),
       lastMessage_text: serializer.fromJson<String>(json['lastMessage_text']),
       lastMessage_user: serializer.fromJson<String>(json['lastMessage_user']),
+      lastMessage_timestamp:
+          serializer.fromJson<int>(json['lastMessage_timestamp']),
     );
   }
   @override
@@ -453,6 +459,7 @@ class DBChannel extends DataClass implements Insertable<DBChannel> {
       'channelData': serializer.toJson<String>(channelData),
       'lastMessage_text': serializer.toJson<String>(lastMessage_text),
       'lastMessage_user': serializer.toJson<String>(lastMessage_user),
+      'lastMessage_timestamp': serializer.toJson<int>(lastMessage_timestamp),
     };
   }
 
@@ -475,6 +482,9 @@ class DBChannel extends DataClass implements Insertable<DBChannel> {
       lastMessage_user: lastMessage_user == null && nullToAbsent
           ? const Value.absent()
           : Value(lastMessage_user),
+      lastMessage_timestamp: lastMessage_timestamp == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastMessage_timestamp),
     );
   }
 
@@ -485,7 +495,8 @@ class DBChannel extends DataClass implements Insertable<DBChannel> {
           Uint8List nodeId,
           String channelData,
           String lastMessage_text,
-          String lastMessage_user}) =>
+          String lastMessage_user,
+          int lastMessage_timestamp}) =>
       DBChannel(
         id: id ?? this.id,
         name: name ?? this.name,
@@ -494,6 +505,8 @@ class DBChannel extends DataClass implements Insertable<DBChannel> {
         channelData: channelData ?? this.channelData,
         lastMessage_text: lastMessage_text ?? this.lastMessage_text,
         lastMessage_user: lastMessage_user ?? this.lastMessage_user,
+        lastMessage_timestamp:
+            lastMessage_timestamp ?? this.lastMessage_timestamp,
       );
   @override
   String toString() {
@@ -504,7 +517,8 @@ class DBChannel extends DataClass implements Insertable<DBChannel> {
           ..write('nodeId: $nodeId, ')
           ..write('channelData: $channelData, ')
           ..write('lastMessage_text: $lastMessage_text, ')
-          ..write('lastMessage_user: $lastMessage_user')
+          ..write('lastMessage_user: $lastMessage_user, ')
+          ..write('lastMessage_timestamp: $lastMessage_timestamp')
           ..write(')'))
         .toString();
   }
@@ -520,8 +534,10 @@ class DBChannel extends DataClass implements Insertable<DBChannel> {
                   nodeId.hashCode,
                   $mrjc(
                       channelData.hashCode,
-                      $mrjc(lastMessage_text.hashCode,
-                          lastMessage_user.hashCode)))))));
+                      $mrjc(
+                          lastMessage_text.hashCode,
+                          $mrjc(lastMessage_user.hashCode,
+                              lastMessage_timestamp.hashCode))))))));
   @override
   bool operator ==(dynamic other) =>
       identical(this, other) ||
@@ -532,7 +548,8 @@ class DBChannel extends DataClass implements Insertable<DBChannel> {
           other.nodeId == this.nodeId &&
           other.channelData == this.channelData &&
           other.lastMessage_text == this.lastMessage_text &&
-          other.lastMessage_user == this.lastMessage_user);
+          other.lastMessage_user == this.lastMessage_user &&
+          other.lastMessage_timestamp == this.lastMessage_timestamp);
 }
 
 class DBChannelsCompanion extends UpdateCompanion<DBChannel> {
@@ -543,6 +560,7 @@ class DBChannelsCompanion extends UpdateCompanion<DBChannel> {
   final Value<String> channelData;
   final Value<String> lastMessage_text;
   final Value<String> lastMessage_user;
+  final Value<int> lastMessage_timestamp;
   const DBChannelsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -551,6 +569,7 @@ class DBChannelsCompanion extends UpdateCompanion<DBChannel> {
     this.channelData = const Value.absent(),
     this.lastMessage_text = const Value.absent(),
     this.lastMessage_user = const Value.absent(),
+    this.lastMessage_timestamp = const Value.absent(),
   });
   DBChannelsCompanion.insert({
     this.id = const Value.absent(),
@@ -560,6 +579,7 @@ class DBChannelsCompanion extends UpdateCompanion<DBChannel> {
     this.channelData = const Value.absent(),
     this.lastMessage_text = const Value.absent(),
     this.lastMessage_user = const Value.absent(),
+    this.lastMessage_timestamp = const Value.absent(),
   })  : name = Value(name),
         sharedSecret = Value(sharedSecret),
         nodeId = Value(nodeId);
@@ -570,7 +590,8 @@ class DBChannelsCompanion extends UpdateCompanion<DBChannel> {
       Value<Uint8List> nodeId,
       Value<String> channelData,
       Value<String> lastMessage_text,
-      Value<String> lastMessage_user}) {
+      Value<String> lastMessage_user,
+      Value<int> lastMessage_timestamp}) {
     return DBChannelsCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
@@ -579,6 +600,8 @@ class DBChannelsCompanion extends UpdateCompanion<DBChannel> {
       channelData: channelData ?? this.channelData,
       lastMessage_text: lastMessage_text ?? this.lastMessage_text,
       lastMessage_user: lastMessage_user ?? this.lastMessage_user,
+      lastMessage_timestamp:
+          lastMessage_timestamp ?? this.lastMessage_timestamp,
     );
   }
 }
@@ -674,6 +697,20 @@ class $DBChannelsTable extends DBChannels
     );
   }
 
+  final VerificationMeta _lastMessage_timestampMeta =
+      const VerificationMeta('lastMessage_timestamp');
+  GeneratedIntColumn _lastMessage_timestamp;
+  @override
+  GeneratedIntColumn get lastMessage_timestamp =>
+      _lastMessage_timestamp ??= _constructLastMessageTimestamp();
+  GeneratedIntColumn _constructLastMessageTimestamp() {
+    return GeneratedIntColumn(
+      'last_message_timestamp',
+      $tableName,
+      true,
+    );
+  }
+
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -682,7 +719,8 @@ class $DBChannelsTable extends DBChannels
         nodeId,
         channelData,
         lastMessage_text,
-        lastMessage_user
+        lastMessage_user,
+        lastMessage_timestamp
       ];
   @override
   $DBChannelsTable get asDslTable => this;
@@ -733,6 +771,12 @@ class $DBChannelsTable extends DBChannels
           lastMessage_user.isAcceptableValue(
               d.lastMessage_user.value, _lastMessage_userMeta));
     }
+    if (d.lastMessage_timestamp.present) {
+      context.handle(
+          _lastMessage_timestampMeta,
+          lastMessage_timestamp.isAcceptableValue(
+              d.lastMessage_timestamp.value, _lastMessage_timestampMeta));
+    }
     return context;
   }
 
@@ -770,6 +814,10 @@ class $DBChannelsTable extends DBChannels
     if (d.lastMessage_user.present) {
       map['last_message_user'] =
           Variable<String, StringType>(d.lastMessage_user.value);
+    }
+    if (d.lastMessage_timestamp.present) {
+      map['last_message_timestamp'] =
+          Variable<int, IntType>(d.lastMessage_timestamp.value);
     }
     return map;
   }

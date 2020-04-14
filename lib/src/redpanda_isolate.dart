@@ -15,6 +15,8 @@ import 'package:redpanda_light_client/src/main/store/moor_database.dart';
 
 dynamic logLevel = Level.INFO; // defaults to Level.INFO
 
+Stopwatch stopWatch = Stopwatch()..start();
+
 //final String START = "start";
 //final String START_DEBUG = "startdebug";
 //final String CHANNEL_CREATE = "createchannel";
@@ -281,7 +283,7 @@ Future<void> shutdown() async {
 }
 
 void parseIsolateCommands(SendPort answerSendPort, String command, dynamic data) async {
-  print("isolate cmd: " + command + " data: " + data.toString());
+  print("isolate cmd: " + command + " data: " + data.toString() + " after boot: ${stopWatch.elapsed} ms");
 
   //
   // Process the message
@@ -296,6 +298,7 @@ void parseIsolateCommands(SendPort answerSendPort, String command, dynamic data)
   } else if (command == IsolateCommand.START.toString()) {
     if (running) {
       log.info("RedPandaLightClient already running skipping new init...");
+      answerSendPort.send(null);
       return;
     }
     running = true;
@@ -396,12 +399,6 @@ void parseIsolateCommands(SendPort answerSendPort, String command, dynamic data)
     channelWatcher.add(answerSendPort);
 
     refreshChannelsWatching();
-
-//    var i = ConnectionService.appDatabase.watchDBChannelEntries();
-//    await for (List<DBChannel> c in i) {
-//      print("asddwdwd: " + c.length.toString());
-//      answerSendPort.send(c);
-//    }
   }
   // all stuff related to messages
   else if (command == IsolateCommand.MESSAGES_WATCH.toString()) {
@@ -442,7 +439,13 @@ void parseIsolateCommands(SendPort answerSendPort, String command, dynamic data)
      */
     ConnectionService.localSetting = ConnectionService.localSetting.copyWith(defaultName: name);
     answerSendPort.send(i);
-  } else if (command == "unknown") {
+  } else if (command == IsolateCommand.INSERT_FCM_TOKEN.toString()) {
+    String token = data['token'];
+    var i = await ConnectionService.appDatabase.insertFCMToken(token);
+    answerSendPort.send(i);
+  }
+  //
+  else if (command == "unknown") {
     String newMessage = "asdg " + command;
     answerSendPort.send(newMessage);
   }
