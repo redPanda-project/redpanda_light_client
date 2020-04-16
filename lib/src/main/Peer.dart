@@ -635,7 +635,7 @@ class Peer {
   void disconnect(String reason) {
     //todo maybe we need to do some more?
 
-    print("######################## disconnect: " + reason);
+    print("######################## disconnect: $reason ip: $ip ");
 
     if (socket != null) {
 //      socket.close();
