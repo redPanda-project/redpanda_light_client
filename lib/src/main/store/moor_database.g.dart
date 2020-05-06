@@ -1852,6 +1852,7 @@ class $DBFriendsTable extends DBFriends
 
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(SqlTypeSystem.defaultInstance, e);
+  _$AppDatabase.connect(DatabaseConnection c) : super.connect(c);
   $LocalSettingsTable _localSettings;
   $LocalSettingsTable get localSettings =>
       _localSettings ??= $LocalSettingsTable(this);
