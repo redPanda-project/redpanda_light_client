@@ -5,6 +5,9 @@ pipeline {
             args '-e PUB_CACHE=./.pub-cache'
         }
     }
+    triggers {
+        cron('@midnight')
+    }
     stages {
         stage ('dependencies') {
             steps {
