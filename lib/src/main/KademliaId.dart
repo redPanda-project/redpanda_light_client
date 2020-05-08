@@ -15,16 +15,16 @@ class KademliaId {
   }
 
   KademliaId.fromFirstBytes(Uint8List bytes) {
-    this._bytes = ByteBuffer.fromBuffer(bytes.buffer, 0, ID_LENGTH_BYTES)
-        .readBytes(ID_LENGTH_BYTES);
+    this._bytes = ByteBuffer.fromBuffer(bytes.buffer, 0, ID_LENGTH_BYTES).readBytes(ID_LENGTH_BYTES);
   }
 
   KademliaId() {
     this._bytes = Utils.randBytes(ID_LENGTH_BYTES);
-    print('new kadid: ' + toString());
   }
 
-  Uint8List get bytes => _bytes;
+  Uint8List get bytes {
+    return _bytes;
+  }
 
   /**
    * Obtains a base58 representation of the bytes.
@@ -40,10 +40,12 @@ class KademliaId {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is KademliaId &&
-          runtimeType == other.runtimeType &&
-          Utils.listsAreEqual(_bytes, other._bytes);
+      other is KademliaId && runtimeType == other.runtimeType && Utils.listsAreEqual(_bytes, other._bytes);
 
   @override
-  int get hashCode => _bytes.hashCode;
+  int get hashCode {
+    var byteBuffer = ByteBuffer.fromList(_bytes);
+    byteBuffer.offset = ID_LENGTH_BYTES - 4;
+    return byteBuffer.readInt();
+  }
 }

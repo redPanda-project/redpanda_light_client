@@ -22,16 +22,46 @@ class Channel {
     _name = name;
   }
 
+  setChannelData(Map<String, dynamic> value) {
+    _channelData = value;
+  }
+
+  static insertSharedChannel(String data, String newName) {
+    var base58decode = Utils.base58decode(data);
+    var byteBuffer = ByteBuffer.fromList(base58decode);
+
+    int nodeIdLen = byteBuffer.length - 32 - 4;
+
+    var sharedSecret = byteBuffer.readBytes(32);
+    var privateSigningKey = byteBuffer.readBytes(nodeIdLen);
+    var checksum = byteBuffer.readBytes(4);
+
+    var hashbuffer = ByteBuffer(32 + nodeIdLen);
+    hashbuffer.writeList(sharedSecret);
+    hashbuffer.writeList(privateSigningKey);
+    var sha256 = Utils.sha256(hashbuffer.array());
+    var computedCheckSum = sha256.sublist(0, 4);
+
+    if (!Utils.listsAreEqual(computedCheckSum, checksum)) {
+      throw new Exception("This is not a valid shared channel! " + data);
+    }
+
+    ConnectionService.appDatabase.createChannelFromData(newName, sharedSecret, privateSigningKey);
+    print("sucessfully added new channel...");
+  }
+
   int getId() {
     return _dbChannel.id;
   }
 
   NodeId getNodeId() {
-    if (_nodeId == null) {
-      _nodeId = NodeId.importWithPrivate(_dbChannel.nodeId);
-    }
+    _nodeId ??= NodeId.importWithPrivate(_dbChannel.nodeId);
 
     return _nodeId;
+  }
+
+  setNodeId(NodeId value) {
+    _nodeId = value;
   }
 
   /**
@@ -46,7 +76,9 @@ class Channel {
 
     int bytesWithFullBlock = 16 - bytes.length % 16;
 
-    print(bytes.length + bytesWithFullBlock);
+    int fullLen = bytes.length + bytesWithFullBlock;
+
+//    print("full length: " + (bytes.length + bytesWithFullBlock).toString());
 
     var paddedBuffer = ByteBuffer(bytes.length + bytesWithFullBlock);
     paddedBuffer.writeList(bytes);
@@ -54,10 +86,23 @@ class Channel {
     var padding = new Padding("PKCS7");
     padding.init();
 
+//    print("offset: " + bytes.length.toString());
     padding.addPadding(paddedBuffer.array(), bytes.length);
 
-    Uint8List encBytes = cbcBlockCipher.process(paddedBuffer.array());
-    print("enc byte: " + Utils.hexEncode(encBytes));
+//    print("dec byte with pad: " + Utils.hexEncode(paddedBuffer.array()));
+
+    var encBytes = new Uint8List(fullLen);
+    int currentStart = 0;
+
+    int len = 0;
+    while (currentStart + 16 <= fullLen) {
+      len += cbcBlockCipher.processBlock(paddedBuffer.array(), currentStart, encBytes, currentStart);
+      currentStart += 16;
+    }
+
+//    print("len: " + len.toString());
+
+//    print("enc byte: " + Utils.hexEncode(encBytes));
 
     return encBytes;
   }
@@ -72,27 +117,39 @@ class Channel {
     var dec = CBCBlockCipher(AESFastEngine());
     dec.init(false, parametersWithIV);
 
-    Uint8List decBytes = dec.process(bytes);
+    var decryptedBytes = new Uint8List(bytes.length);
+    int currentStart = 0;
+//    print("to dec bytes: " + bytes.length.toString());
+
+    while (currentStart + 16 <= bytes.length) {
+      dec.processBlock(bytes, currentStart, decryptedBytes, currentStart);
+      currentStart += 16;
+    }
 
     var padding2 = new Padding("PKCS7");
     padding2.init();
 
-    int padCount = padding2.padCount(decBytes);
+//    print("dec byte: " + Utils.hexEncode(decryptedBytes));
+    int padCount = padding2.padCount(decryptedBytes);
 
-    print('pad cnt: ' + padCount.toString());
+//    print('pad cnt: ' + padCount.toString());
 
     //remove padding
-    decBytes = decBytes.sublist(0, decBytes.lengthInBytes - padCount);
+    decryptedBytes = decryptedBytes.sublist(0, decryptedBytes.lengthInBytes - padCount);
 
-    print(Utils.hexEncode(decBytes));
-    print(decBytes.length);
+//    print(Utils.hexEncode(decryptedBytes));
+//    print(decryptedBytes.length);
 
-    return decBytes;
+    return decryptedBytes;
   }
 
   String get name => _name;
 
   DBChannel get dbChannel => _dbChannel;
+
+  set dbChannel(DBChannel value) {
+    _dbChannel = value;
+  }
 
   Map<String, dynamic> getChannelData() {
     if (_channelData == null) {
@@ -106,11 +163,30 @@ class Channel {
     return _channelData;
   }
 
-  Future<void> saveChannelData() async {
-    await ConnectionService.appDatabase.updateChannelData(_dbChannel.id, jsonEncode(_channelData));
+  Future<void> saveChannelData(AppDatabase appDatabase) async {
+    await appDatabase.updateChannelData(_dbChannel.id, jsonEncode(_channelData));
   }
 
-  void setUserData(String myUserId, Map<String, dynamic> myUserdata) {
-    _channelData["userdata"][myUserId] = myUserdata;
+  void setUserData(int myUserId, Map<String, dynamic> myUserdata) {
+    if (_channelData == null) {
+      _channelData = {};
+      _channelData['userdata'] = {};
+    }
+
+    _channelData["userdata"][myUserId.toString()] = myUserdata;
+  }
+
+  String shareString() {
+    var hashbuffer = ByteBuffer(32 + _dbChannel.nodeId.length);
+    hashbuffer.writeList(_dbChannel.sharedSecret);
+    hashbuffer.writeList(_dbChannel.nodeId);
+    var sha256 = Utils.sha256(hashbuffer.array());
+
+    var byteBuffer = ByteBuffer(32 + _dbChannel.nodeId.length + 4);
+    byteBuffer.writeList(_dbChannel.sharedSecret);
+    byteBuffer.writeList(_dbChannel.nodeId);
+    byteBuffer.writeList(sha256.sublist(0, 4));
+
+    return Utils.base58encode(byteBuffer.array());
   }
 }

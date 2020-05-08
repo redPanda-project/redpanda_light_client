@@ -13,7 +13,6 @@ class Utils {
   static const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
   static Base58Codec base58codec = new Base58Codec(_bitcoinAlphabet);
   static final MAGIC = Utf8Codec().encode("k3gV");
-  static List<Function> states = new List();
   static SHA256Digest sha256Digest = new SHA256Digest();
 
   static Uint8List randBytes(int n) {
@@ -38,6 +37,14 @@ class Utils {
 
   static Uint8List hexDecode(String string) {
     return hex.decode(string);
+  }
+
+  static Uint8List encodeUTF8(String s) {
+    return Utf8Codec().encode(s);
+  }
+
+  static String decodeUTF8(Uint8List s) {
+    return Utf8Codec().decode(s);
   }
 
   /**
@@ -81,5 +88,12 @@ class Utils {
       result += chars[random.nextInt(chars.length)];
     }
     return result;
+  }
+
+  /**
+   * Generates a random 4 byte integer compatible to java.
+   */
+  static int randInteger() {
+    return Utils.random.nextInt(2147483647 * 2) - 2147483647;
   }
 }

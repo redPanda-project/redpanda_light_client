@@ -11,10 +11,30 @@ void main() async {
    */
   await new Directory(dataFolderPath).create(recursive: true);
 
-  await RedPandaLightClient.init(dataFolderPath, 5500);
+  var watchDBChannelEntries = RedPandaLightClient.init(dataFolderPath, 5500);
 
-  const oneSec = const Duration(seconds: 5);
+
+  print('asd');
+
+  const oneSec = const Duration(days: 365 * 10);
   new Timer(oneSec, () => RedPandaLightClient.shutdown());
+
+//  var watchDBChannelEntries = RedPandaLightClient.watchDBChannelEntries();
+
+  RedPandaLightClient.onNewMessage = onNewMessage;
+
+  await for (var c in watchDBChannelEntries) {
+    for (DBChannel dbc in c) {
+//      var watchDBMessageEntries = RedPandaLightClient.watchDBMessageEntries(dbc.id);
+//      watchDBMessageEntries.listen((event) { })
+      print('waiting for messages for channel ${dbc.id}');
+    }
+    print(c);
+  }
+}
+
+onNewMessage(DBMessageWithFriend msg, String channelName) {
+  print('#########\n\nNew Message for Channel $channelName\n\n${msg.friend?.name}: ${msg.message.content}\n\n#########');
 }
 
 //todo documentation of used licenses

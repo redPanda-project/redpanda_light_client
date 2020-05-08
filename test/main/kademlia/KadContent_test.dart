@@ -1,8 +1,5 @@
-import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:moor/moor.dart';
-import 'package:pointycastle/export.dart';
 import 'package:redpanda_light_client/export.dart';
 import 'package:redpanda_light_client/src/main/ByteBuffer.dart';
 import 'package:redpanda_light_client/src/main/Channel.dart';
@@ -29,9 +26,19 @@ void main() {
 
       expect(kadContent.getKademliaId() != kadContentOld.getKademliaId(), true);
 
-      kadContent.signWith(nodeId);
+      var channel = new Channel.newWithName("name");
+
+      channel.dbChannel = new DBChannel(id: null, name: null, sharedSecret: Utils.randBytes(32), nodeId: null);
+
+      await kadContent.encryptWith(channel);
+
+      await kadContent.signWith(nodeId);
 
       expect(kadContent.verify(), true);
+
+      await kadContent.decryptWith(channel);
+
+      expect(Utils.listsAreEqual(byteBuffer.array(), kadContent.getContent()), true);
     });
   });
 }

@@ -18,15 +18,43 @@ class DBPeersDao extends DatabaseAccessor<AppDatabase> with _$DBPeersDaoMixin {
   /**
    * Returns the id of the new Peer in db.
    */
-  Future<int> insertNewPeer(String ip, int port, KademliaId kademliaId, Uint8List publicKey) async {
+  Future<int> insertNewPeer(String ip, int port, KademliaId kademliaId, {Uint8List publicKey}) async {
+    var list = await (select(dBPeers)..where((tbl) => tbl.kademliaId.equals(kademliaId.bytes))).get();
+    if (list.isNotEmpty) {
+      print("peer already in db...");
+      return null;
+    }
+    print("add peer to db...");
     DBPeersCompanion entry = DBPeersCompanion.insert(
-        ip: ip,
-        port: port,
-        knownSince: Utils.getCurrentTimeMillis(),
-        kademliaId: kademliaId.bytes,
-        publicKey: publicKey);
-    print("insert peer");
+        ip: Value(ip),
+        port: Value(port),
+        knownSince: Value(Utils.getCurrentTimeMillis()),
+        kademliaId: Value(kademliaId.bytes),
+        publicKey: Value(publicKey));
     return into(dBPeers).insert(entry);
+  }
+
+  Future<List<DBPeer>> getAllPeers() {
+    return select(dBPeers).get();
+  }
+
+  Future<int> updatePeer(int peerId, String ip, int port, int score) async {
+    DBPeersCompanion entry = DBPeersCompanion.insert(
+      ip: Value(ip),
+      port: Value(port),
+      score: Value(score),
+    );
+    return (update(dBPeers)..where((tbl) => tbl.id.equals(peerId))).write(entry);
+  }
+
+  Future<int> updateNodeId(int peerId, Uint8List nodeId) async {
+    DBPeersCompanion entry = DBPeersCompanion.insert(
+      id: Value(peerId),
+      publicKey: Value(nodeId),
+    );
+    print("int peerId: " + peerId.toString());
+    return (update(dBPeers)..where((tbl) => tbl.id.equals(peerId))).write(entry);
+//    return update(dBPeers).replace(entry);
   }
 
   Future<DBPeer> getPeerByKademliaId(KademliaId kademliaId) {

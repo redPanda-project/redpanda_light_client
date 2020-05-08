@@ -1,14 +1,17 @@
 import 'dart:io';
 
+import 'package:logging/logging.dart';
 import 'package:moor/moor.dart';
 import 'package:moor_ffi/moor_ffi.dart';
 import 'package:path/path.dart' as p;
-import 'package:redpanda_light_client/src/main/Channel.dart';
 import 'package:redpanda_light_client/src/main/ConnectionService.dart';
-import 'package:redpanda_light_client/src/main/KademliaId.dart';
 import 'package:redpanda_light_client/src/main/NodeId.dart';
 import 'package:redpanda_light_client/src/main/Utils.dart';
 import 'package:redpanda_light_client/src/main/store/DBChannels.dart';
+import 'package:redpanda_light_client/src/main/store/DBFriends.dart';
+import 'package:redpanda_light_client/src/main/store/DBFriendsDao.dart';
+import 'package:redpanda_light_client/src/main/store/DBMessages.dart';
+import 'package:redpanda_light_client/src/main/store/DBMessagesDao.dart';
 import 'package:redpanda_light_client/src/main/store/DBPeers.dart';
 import 'package:redpanda_light_client/src/main/store/DBPeersDao.dart';
 
@@ -19,24 +22,32 @@ import 'package:redpanda_light_client/src/main/store/DBPeersDao.dart';
  */
 part 'moor_database.g.dart';
 
+final log = Logger('moor_database');
+
 // this will generate a table called LocalSettings for us. The rows of that table will
 // be represented by a class called LocalSetting.
 // Note the tables are plural (with s) and the class which will hold the data without s
 class LocalSettings extends Table {
   IntColumn get id => integer().autoIncrement()();
 
-  TextColumn get myUserId => text()();
+  IntColumn get myUserId => integer()();
+
+  TextColumn get fcmToken => text().nullable()();
 
   BlobColumn get privateKey => blob()();
 
   BlobColumn get kademliaId => blob()();
 
-  TextColumn get defaultName => text()();
+  TextColumn get defaultName => text().nullable()();
+
+  IntColumn get versionTimestamp => integer().nullable()();
 }
 
 // this annotation tells moor to prepare a database class that uses both of the
 // tables we just defined. We'll see how to use that database class in a moment.
-@UseMoor(tables: [LocalSettings, DBChannels, DBPeers], daos: [DBPeersDao])
+@UseMoor(
+    tables: [LocalSettings, DBChannels, DBPeers, DBMessages, DBFriends],
+    daos: [DBPeersDao, DBMessagesDao, DBFriendsDao])
 class AppDatabase extends _$AppDatabase {
   // we tell the database where to store the data with this constructor
   AppDatabase() : super(_openConnection());
@@ -44,7 +55,7 @@ class AppDatabase extends _$AppDatabase {
   // you should bump this number whenever you change or add a table definition.
   // Migrations are covered below.
   @override
-  int get schemaVersion => 19;
+  int get schemaVersion => 45;
 
   Future<LocalSetting> get getLocalSettings => select(localSettings).getSingle();
 
@@ -52,6 +63,18 @@ class AppDatabase extends _$AppDatabase {
   Future<int> save(Insertable<LocalSetting> entry) async {
     await delete(localSettings).go();
     return into(localSettings).insert(entry);
+  }
+
+  Future<int> insertFCMToken(String fcmToken) async {
+    return update(localSettings).write(LocalSettingsCompanion(fcmToken: Value(fcmToken)));
+  }
+
+  Future<int> setNickname(String nick) async {
+    return update(localSettings).write(LocalSettingsCompanion(defaultName: Value(nick)));
+  }
+
+  Future<int> setVersionTimestamp(int timestamp) async {
+    return update(localSettings).write(LocalSettingsCompanion(versionTimestamp: Value(timestamp)));
   }
 
   @override
@@ -65,13 +88,25 @@ class AppDatabase extends _$AppDatabase {
   /**
    * Migration will drop all tables and create database from scratch.
    */
-  Future<void> onUpgrade(Migrator migrator, int old, int n) async {
-    for (final TableInfo<Table, DataClass> table in this.allTables) {
+  Future<void> onUpgrade(Migrator migrator, int from, int n) async {
+
+
+    for (final TableInfo<Table, DataClass> table in allTables) {
+      if (table.actualTableName.contains("channels") || (table.actualTableName.contains("settings") && from > 44)) {
+        print("table not dropped!: " + table.actualTableName);
+        continue;
+      }
+
       await migrator.deleteTable(table.actualTableName);
       print("dropping table " + table.actualTableName);
     }
 
     await migrator.createAll();
+
+    if (from == 43) {
+      // we added the lastMessage_timestamp property in the change from version 43
+      await migrator.addColumn(dBChannels, dBChannels.lastMessage_timestamp);
+    }
   }
 
   // watches all Channel entries. The stream will automatically
@@ -89,7 +124,15 @@ class AppDatabase extends _$AppDatabase {
 
     DBChannelsCompanion entry =
         DBChannelsCompanion.insert(name: name, sharedSecret: Utils.randBytes(32), nodeId: nodeId.exportWithPrivate());
-    print("insert channel");
+    log.finest("insert channel");
+    return into(dBChannels).insert(entry);
+  }
+
+  Future<int> createChannelFromData(String name, Uint8List sharedSecret, Uint8List privateSigningKey) async {
+    var nodeId = new NodeId.importWithPrivate(privateSigningKey);
+    DBChannelsCompanion entry =
+        DBChannelsCompanion.insert(name: name, sharedSecret: sharedSecret, nodeId: nodeId.exportWithPrivate());
+    log.finest("insert channel");
     return into(dBChannels).insert(entry);
   }
 
@@ -101,8 +144,24 @@ class AppDatabase extends _$AppDatabase {
     return (update(dBChannels)..where((tbl) => tbl.id.equals(id))).write(DBChannelsCompanion(name: Value(newname)));
   }
 
+  Future<int> updateLastMessageByMe(int channelId, String message) async {
+    return (update(dBChannels)..where((tbl) => tbl.id.equals(channelId))).write(DBChannelsCompanion(
+        lastMessage_user: Value(""),
+        lastMessage_text: Value(message),
+        lastMessage_timestamp: Value(Utils.getCurrentTimeMillis())));
+  }
+
+  Future<int> updateLastMessage(int channelId, int userId, String message, int timestamp) async {
+    var dbFriend = await dBFriendsDao.getFriend(userId);
+
+    return (update(dBChannels)..where((tbl) => tbl.id.equals(channelId))).write(DBChannelsCompanion(
+        lastMessage_user: Value(dbFriend?.name ?? '?'),
+        lastMessage_text: Value(message),
+        lastMessage_timestamp: Value(timestamp)));
+  }
+
   Future<int> updateChannelData(int id, String channelDataString) async {
-    print('update channel data ${channelDataString}');
+    log.finer('update channel data ${channelDataString}');
     return (update(dBChannels)..where((tbl) => tbl.id.equals(id)))
         .write(DBChannelsCompanion(channelData: Value(channelDataString)));
   }
@@ -112,7 +171,10 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<List<DBChannel>> getAllChannels() {
-    return select(dBChannels).get();
+//    return select(dBChannels).get();
+    return (select(dBChannels)
+          ..orderBy([(t) => OrderingTerm(expression: t.lastMessage_timestamp, mode: OrderingMode.desc)]))
+        .get();
   }
 
 //  /**

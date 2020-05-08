@@ -27,7 +27,6 @@ class NodeId {
    */
   Uint8List exportWithPrivate() {
     ECPrivateKey priv = _keyPair.privateKey;
-    ECPublicKey pub = _keyPair.publicKey;
 
     var asn1Object = ASN1Sequence();
     asn1Object.add(ASN1Integer(priv.d));
