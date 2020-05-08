@@ -55,7 +55,7 @@ class AppDatabase extends _$AppDatabase {
   // you should bump this number whenever you change or add a table definition.
   // Migrations are covered below.
   @override
-  int get schemaVersion => 44;
+  int get schemaVersion => 45;
 
   Future<LocalSetting> get getLocalSettings => select(localSettings).getSingle();
 
@@ -89,13 +89,10 @@ class AppDatabase extends _$AppDatabase {
    * Migration will drop all tables and create database from scratch.
    */
   Future<void> onUpgrade(Migrator migrator, int from, int n) async {
-    if (from == 43) {
-      // we added the lastMessage_timestamp property in the change from version 43
-      await migrator.addColumn(dBChannels, dBChannels.lastMessage_timestamp);
-    }
+
 
     for (final TableInfo<Table, DataClass> table in allTables) {
-      if (table.actualTableName.contains("channels") || table.actualTableName.contains("settings")) {
+      if (table.actualTableName.contains("channels") || (table.actualTableName.contains("settings") && from > 44)) {
         print("table not dropped!: " + table.actualTableName);
         continue;
       }
@@ -105,6 +102,11 @@ class AppDatabase extends _$AppDatabase {
     }
 
     await migrator.createAll();
+
+    if (from == 43) {
+      // we added the lastMessage_timestamp property in the change from version 43
+      await migrator.addColumn(dBChannels, dBChannels.lastMessage_timestamp);
+    }
   }
 
   // watches all Channel entries. The stream will automatically
