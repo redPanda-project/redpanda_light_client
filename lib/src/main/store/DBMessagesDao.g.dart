@@ -7,6 +7,6 @@ part of 'DBMessagesDao.dart';
 // **************************************************************************
 
 mixin _$DBMessagesDaoMixin on DatabaseAccessor<AppDatabase> {
-  $DBMessagesTable get dBMessages => db.dBMessages;
-  $DBFriendsTable get dBFriends => db.dBFriends;
+  $DBMessagesTable get dBMessages => attachedDatabase.dBMessages;
+  $DBFriendsTable get dBFriends => attachedDatabase.dBFriends;
 }

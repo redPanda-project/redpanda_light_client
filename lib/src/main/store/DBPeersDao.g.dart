@@ -7,5 +7,5 @@ part of 'DBPeersDao.dart';
 // **************************************************************************
 
 mixin _$DBPeersDaoMixin on DatabaseAccessor<AppDatabase> {
-  $DBPeersTable get dBPeers => db.dBPeers;
+  $DBPeersTable get dBPeers => attachedDatabase.dBPeers;
 }

@@ -162,7 +162,7 @@ class KadContent {
     //todo can be removed later
     if (writeBuffer.position() != writeBuffer.length) {
       var ex = new Exception("ByteBuffer for KadContent cmd was wrong!");
-      ConnectionService.sentry.captureException(exception: ex);
+      ConnectionService.sentry.captureException(ex);
       throw ex;
     }
 
