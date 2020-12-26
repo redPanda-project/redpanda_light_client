@@ -1,7 +1,7 @@
 pipeline {
     agent {
         docker {
-            image 'py4x3g/dart_lcov_to_cobertura'
+            image 'py4x3g/dart_lcov_to_cobertura:v0.0.5'
             args '-e PUB_CACHE=./.pub-cache'
         }
     }
