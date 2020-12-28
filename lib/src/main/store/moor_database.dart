@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:logging/logging.dart';
 import 'package:moor/moor.dart';
-import 'package:moor_ffi/moor_ffi.dart';
 import 'package:path/path.dart' as p;
 import 'package:redpanda_light_client/src/main/ConnectionService.dart';
 import 'package:redpanda_light_client/src/main/NodeId.dart';
@@ -14,6 +13,8 @@ import 'package:redpanda_light_client/src/main/store/DBMessages.dart';
 import 'package:redpanda_light_client/src/main/store/DBMessagesDao.dart';
 import 'package:redpanda_light_client/src/main/store/DBPeers.dart';
 import 'package:redpanda_light_client/src/main/store/DBPeersDao.dart';
+
+import 'package:moor/ffi.dart';
 
 /**
  * Here we define the tables in the sqlite database. The code can be generated with
