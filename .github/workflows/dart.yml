@@ -15,7 +15,7 @@ jobs:
     # available. See https://hub.docker.com/r/google/dart/ for the available
     # images.
     container:
-      image:  google/dart:latest
+      image:  py4x3g/dart_lcov_to_cobertura:v0.0.5
 
     steps:
       - uses: actions/checkout@v2
