@@ -56,10 +56,10 @@ class AppDatabase extends _$AppDatabase {
   // you should bump this number whenever you change or add a table definition.
   // Migrations are covered below.
   @override
-  int get schemaVersion => 45;
+  int get schemaVersion => 47;
 
   Future<LocalSetting> get getLocalSettings =>
-      select(localSettings).getSingle();
+      select(localSettings).getSingleOrNull();
 
   // returns the generated id
   Future<int> save(Insertable<LocalSetting> entry) async {
@@ -94,7 +94,7 @@ class AppDatabase extends _$AppDatabase {
    * Migration will drop all tables and create database from scratch.
    */
   Future<void> onUpgrade(Migrator migrator, int from, int n) async {
-    if (from < 46) {
+    if (from < 48) {
       await dropAll(migrator, from, n);
     } else {
       await dropAllExceptChannelsAndSettings(migrator, from, n);

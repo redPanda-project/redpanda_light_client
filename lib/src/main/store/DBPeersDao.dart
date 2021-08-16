@@ -58,7 +58,7 @@ class DBPeersDao extends DatabaseAccessor<AppDatabase> with _$DBPeersDaoMixin {
   }
 
   Future<DBPeer> getPeerByKademliaId(KademliaId kademliaId) {
-    return (select(dBPeers)..where((tbl) => tbl.kademliaId.equals(kademliaId.bytes))).getSingle();
+    return (select(dBPeers)..where((tbl) => tbl.kademliaId.equals(kademliaId.bytes))).getSingleOrNull();
   }
 
   Future<int> removePeerByKademliaId(KademliaId kademliaId) {
