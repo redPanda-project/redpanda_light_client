@@ -14,7 +14,7 @@ class FBPeerList {
     return reader.read(rootRef, 0);
   }
 
-  static const fb.Reader<FBPeerList> reader = _FBPeerListReader();
+  static const fb.Reader<FBPeerList> reader = const _FBPeerListReader();
 
   final fb.BufferContext _bc;
   final int _bcOffset;
@@ -31,8 +31,8 @@ class _FBPeerListReader extends fb.TableReader<FBPeerList> {
   const _FBPeerListReader();
 
   @override
-  FBPeerList createObject(fb.BufferContext bc, int offset) => 
-    new FBPeerList._(bc, offset);
+  FBPeerList createObject(fb.BufferContext bc, int offset) =>
+      new FBPeerList._(bc, offset);
 }
 
 class FBPeerListBuilder {
@@ -67,7 +67,7 @@ class FBPeerListObjectBuilder extends fb.ObjectBuilder {
   /// Finish building, and store into the [fbBuilder].
   @override
   int finish(
-    fb.Builder fbBuilder) {
+      fb.Builder fbBuilder) {
     assert(fbBuilder != null);
     final int peersOffset = _peers?.isNotEmpty == true
         ? fbBuilder.writeList(_peers.map((b) => b.getOrCreateOffset(fbBuilder)).toList())
@@ -95,12 +95,12 @@ class FBPeer {
     return reader.read(rootRef, 0);
   }
 
-  static const fb.Reader<FBPeer> reader = _FBPeerReader();
+  static const fb.Reader<FBPeer> reader = const _FBPeerReader();
 
   final fb.BufferContext _bc;
   final int _bcOffset;
 
-  List<int> get nodeId => const fb.ListReader<int>(fb.Int8Reader()).vTableGet(_bc, _bcOffset, 4, null);
+  List<int> get nodeId => const fb.ListReader<int>(const fb.Int8Reader()).vTableGet(_bc, _bcOffset, 4, null);
   String get ip => const fb.StringReader().vTableGet(_bc, _bcOffset, 6, null);
   int get port => const fb.Int32Reader().vTableGet(_bc, _bcOffset, 8, 0);
 
@@ -114,8 +114,8 @@ class _FBPeerReader extends fb.TableReader<FBPeer> {
   const _FBPeerReader();
 
   @override
-  FBPeer createObject(fb.BufferContext bc, int offset) => 
-    new FBPeer._(bc, offset);
+  FBPeer createObject(fb.BufferContext bc, int offset) =>
+      new FBPeer._(bc, offset);
 }
 
 class FBPeerBuilder {
@@ -164,7 +164,7 @@ class FBPeerObjectBuilder extends fb.ObjectBuilder {
   /// Finish building, and store into the [fbBuilder].
   @override
   int finish(
-    fb.Builder fbBuilder) {
+      fb.Builder fbBuilder) {
     assert(fbBuilder != null);
     final int nodeIdOffset = _nodeId?.isNotEmpty == true
         ? fbBuilder.writeListInt8(_nodeId)
