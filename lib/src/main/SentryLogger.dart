@@ -3,6 +3,6 @@ import 'package:sentry/sentry.dart';
 
 class SentryLogger {
   static void log(String message) {
-    ConnectionService.sentry.captureEvent(new SentryEvent(environment: "dart", message: new Message(message)));
+    ConnectionService.sentry.captureMessage(message);
   }
 }
