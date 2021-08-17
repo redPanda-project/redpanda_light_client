@@ -292,90 +292,51 @@ class $LocalSettingsTable extends LocalSettings
   final String _alias;
   $LocalSettingsTable(this._db, [this._alias]);
   final VerificationMeta _idMeta = const VerificationMeta('id');
-  GeneratedIntColumn _id;
+  GeneratedColumn<int> _id;
   @override
-  GeneratedIntColumn get id => _id ??= _constructId();
-  GeneratedIntColumn _constructId() {
-    return GeneratedIntColumn('id', $tableName, false,
-        hasAutoIncrement: true, declaredAsPrimaryKey: true);
-  }
-
+  GeneratedColumn<int> get id =>
+      _id ??= GeneratedColumn<int>('id', aliasedName, false,
+          typeName: 'INTEGER',
+          requiredDuringInsert: false,
+          defaultConstraints: 'PRIMARY KEY AUTOINCREMENT');
   final VerificationMeta _myUserIdMeta = const VerificationMeta('myUserId');
-  GeneratedIntColumn _myUserId;
+  GeneratedColumn<int> _myUserId;
   @override
-  GeneratedIntColumn get myUserId => _myUserId ??= _constructMyUserId();
-  GeneratedIntColumn _constructMyUserId() {
-    return GeneratedIntColumn(
-      'my_user_id',
-      $tableName,
-      false,
-    );
-  }
-
+  GeneratedColumn<int> get myUserId =>
+      _myUserId ??= GeneratedColumn<int>('my_user_id', aliasedName, false,
+          typeName: 'INTEGER', requiredDuringInsert: true);
   final VerificationMeta _fcmTokenMeta = const VerificationMeta('fcmToken');
-  GeneratedTextColumn _fcmToken;
+  GeneratedColumn<String> _fcmToken;
   @override
-  GeneratedTextColumn get fcmToken => _fcmToken ??= _constructFcmToken();
-  GeneratedTextColumn _constructFcmToken() {
-    return GeneratedTextColumn(
-      'fcm_token',
-      $tableName,
-      true,
-    );
-  }
-
+  GeneratedColumn<String> get fcmToken =>
+      _fcmToken ??= GeneratedColumn<String>('fcm_token', aliasedName, true,
+          typeName: 'TEXT', requiredDuringInsert: false);
   final VerificationMeta _privateKeyMeta = const VerificationMeta('privateKey');
-  GeneratedBlobColumn _privateKey;
+  GeneratedColumn<Uint8List> _privateKey;
   @override
-  GeneratedBlobColumn get privateKey => _privateKey ??= _constructPrivateKey();
-  GeneratedBlobColumn _constructPrivateKey() {
-    return GeneratedBlobColumn(
-      'private_key',
-      $tableName,
-      false,
-    );
-  }
-
+  GeneratedColumn<Uint8List> get privateKey => _privateKey ??=
+      GeneratedColumn<Uint8List>('private_key', aliasedName, false,
+          typeName: 'BLOB', requiredDuringInsert: true);
   final VerificationMeta _kademliaIdMeta = const VerificationMeta('kademliaId');
-  GeneratedBlobColumn _kademliaId;
+  GeneratedColumn<Uint8List> _kademliaId;
   @override
-  GeneratedBlobColumn get kademliaId => _kademliaId ??= _constructKademliaId();
-  GeneratedBlobColumn _constructKademliaId() {
-    return GeneratedBlobColumn(
-      'kademlia_id',
-      $tableName,
-      false,
-    );
-  }
-
+  GeneratedColumn<Uint8List> get kademliaId => _kademliaId ??=
+      GeneratedColumn<Uint8List>('kademlia_id', aliasedName, false,
+          typeName: 'BLOB', requiredDuringInsert: true);
   final VerificationMeta _defaultNameMeta =
       const VerificationMeta('defaultName');
-  GeneratedTextColumn _defaultName;
+  GeneratedColumn<String> _defaultName;
   @override
-  GeneratedTextColumn get defaultName =>
-      _defaultName ??= _constructDefaultName();
-  GeneratedTextColumn _constructDefaultName() {
-    return GeneratedTextColumn(
-      'default_name',
-      $tableName,
-      true,
-    );
-  }
-
+  GeneratedColumn<String> get defaultName => _defaultName ??=
+      GeneratedColumn<String>('default_name', aliasedName, true,
+          typeName: 'TEXT', requiredDuringInsert: false);
   final VerificationMeta _versionTimestampMeta =
       const VerificationMeta('versionTimestamp');
-  GeneratedIntColumn _versionTimestamp;
+  GeneratedColumn<int> _versionTimestamp;
   @override
-  GeneratedIntColumn get versionTimestamp =>
-      _versionTimestamp ??= _constructVersionTimestamp();
-  GeneratedIntColumn _constructVersionTimestamp() {
-    return GeneratedIntColumn(
-      'version_timestamp',
-      $tableName,
-      true,
-    );
-  }
-
+  GeneratedColumn<int> get versionTimestamp => _versionTimestamp ??=
+      GeneratedColumn<int>('version_timestamp', aliasedName, true,
+          typeName: 'INTEGER', requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -387,11 +348,9 @@ class $LocalSettingsTable extends LocalSettings
         versionTimestamp
       ];
   @override
-  $LocalSettingsTable get asDslTable => this;
+  String get aliasedName => _alias ?? 'local_settings';
   @override
-  String get $tableName => _alias ?? 'local_settings';
-  @override
-  final String actualTableName = 'local_settings';
+  String get actualTableName => 'local_settings';
   @override
   VerificationContext validateIntegrity(Insertable<LocalSetting> instance,
       {bool isInserting = false}) {
@@ -771,105 +730,67 @@ class $DBChannelsTable extends DBChannels
   final String _alias;
   $DBChannelsTable(this._db, [this._alias]);
   final VerificationMeta _idMeta = const VerificationMeta('id');
-  GeneratedIntColumn _id;
+  GeneratedColumn<int> _id;
   @override
-  GeneratedIntColumn get id => _id ??= _constructId();
-  GeneratedIntColumn _constructId() {
-    return GeneratedIntColumn('id', $tableName, false,
-        hasAutoIncrement: true, declaredAsPrimaryKey: true);
-  }
-
+  GeneratedColumn<int> get id =>
+      _id ??= GeneratedColumn<int>('id', aliasedName, false,
+          typeName: 'INTEGER',
+          requiredDuringInsert: false,
+          defaultConstraints: 'PRIMARY KEY AUTOINCREMENT');
   final VerificationMeta _nameMeta = const VerificationMeta('name');
-  GeneratedTextColumn _name;
+  GeneratedColumn<String> _name;
   @override
-  GeneratedTextColumn get name => _name ??= _constructName();
-  GeneratedTextColumn _constructName() {
-    return GeneratedTextColumn('name', $tableName, false,
-        minTextLength: 3, maxTextLength: 32);
-  }
-
+  GeneratedColumn<String> get name => _name ??= GeneratedColumn<String>(
+      'name', aliasedName, false,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 3, maxTextLength: 32),
+      typeName: 'TEXT',
+      requiredDuringInsert: true);
   final VerificationMeta _sharedSecretMeta =
       const VerificationMeta('sharedSecret');
-  GeneratedBlobColumn _sharedSecret;
+  GeneratedColumn<Uint8List> _sharedSecret;
   @override
-  GeneratedBlobColumn get sharedSecret =>
-      _sharedSecret ??= _constructSharedSecret();
-  GeneratedBlobColumn _constructSharedSecret() {
-    return GeneratedBlobColumn(
-      'shared_secret',
-      $tableName,
-      false,
-    );
-  }
-
+  GeneratedColumn<Uint8List> get sharedSecret => _sharedSecret ??=
+      GeneratedColumn<Uint8List>('shared_secret', aliasedName, false,
+          typeName: 'BLOB', requiredDuringInsert: true);
   final VerificationMeta _nodeIdMeta = const VerificationMeta('nodeId');
-  GeneratedBlobColumn _nodeId;
+  GeneratedColumn<Uint8List> _nodeId;
   @override
-  GeneratedBlobColumn get nodeId => _nodeId ??= _constructNodeId();
-  GeneratedBlobColumn _constructNodeId() {
-    return GeneratedBlobColumn(
-      'node_id',
-      $tableName,
-      false,
-    );
-  }
-
+  GeneratedColumn<Uint8List> get nodeId =>
+      _nodeId ??= GeneratedColumn<Uint8List>('node_id', aliasedName, false,
+          typeName: 'BLOB', requiredDuringInsert: true);
   final VerificationMeta _channelDataMeta =
       const VerificationMeta('channelData');
-  GeneratedTextColumn _channelData;
+  GeneratedColumn<String> _channelData;
   @override
-  GeneratedTextColumn get channelData =>
-      _channelData ??= _constructChannelData();
-  GeneratedTextColumn _constructChannelData() {
-    return GeneratedTextColumn(
-      'channel_data',
-      $tableName,
-      true,
-    );
-  }
-
+  GeneratedColumn<String> get channelData => _channelData ??=
+      GeneratedColumn<String>('channel_data', aliasedName, true,
+          typeName: 'TEXT', requiredDuringInsert: false);
   final VerificationMeta _lastMessage_textMeta =
       const VerificationMeta('lastMessage_text');
-  GeneratedTextColumn _lastMessage_text;
+  GeneratedColumn<String> _lastMessage_text;
   @override
-  GeneratedTextColumn get lastMessage_text =>
-      _lastMessage_text ??= _constructLastMessageText();
-  GeneratedTextColumn _constructLastMessageText() {
-    return GeneratedTextColumn(
-      'last_message_text',
-      $tableName,
-      true,
-    );
-  }
-
+  GeneratedColumn<String> get lastMessage_text => _lastMessage_text ??=
+      GeneratedColumn<String>('last_message_text', aliasedName, true,
+          additionalChecks: GeneratedColumn.checkTextLength(),
+          typeName: 'TEXT',
+          requiredDuringInsert: false);
   final VerificationMeta _lastMessage_userMeta =
       const VerificationMeta('lastMessage_user');
-  GeneratedTextColumn _lastMessage_user;
+  GeneratedColumn<String> _lastMessage_user;
   @override
-  GeneratedTextColumn get lastMessage_user =>
-      _lastMessage_user ??= _constructLastMessageUser();
-  GeneratedTextColumn _constructLastMessageUser() {
-    return GeneratedTextColumn(
-      'last_message_user',
-      $tableName,
-      true,
-    );
-  }
-
+  GeneratedColumn<String> get lastMessage_user => _lastMessage_user ??=
+      GeneratedColumn<String>('last_message_user', aliasedName, true,
+          additionalChecks: GeneratedColumn.checkTextLength(),
+          typeName: 'TEXT',
+          requiredDuringInsert: false);
   final VerificationMeta _lastMessage_timestampMeta =
       const VerificationMeta('lastMessage_timestamp');
-  GeneratedIntColumn _lastMessage_timestamp;
+  GeneratedColumn<int> _lastMessage_timestamp;
   @override
-  GeneratedIntColumn get lastMessage_timestamp =>
-      _lastMessage_timestamp ??= _constructLastMessageTimestamp();
-  GeneratedIntColumn _constructLastMessageTimestamp() {
-    return GeneratedIntColumn(
-      'last_message_timestamp',
-      $tableName,
-      true,
-    );
-  }
-
+  GeneratedColumn<int> get lastMessage_timestamp => _lastMessage_timestamp ??=
+      GeneratedColumn<int>('last_message_timestamp', aliasedName, true,
+          typeName: 'INTEGER', requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -882,11 +803,9 @@ class $DBChannelsTable extends DBChannels
         lastMessage_timestamp
       ];
   @override
-  $DBChannelsTable get asDslTable => this;
+  String get aliasedName => _alias ?? 'd_b_channels';
   @override
-  String get $tableName => _alias ?? 'd_b_channels';
-  @override
-  final String actualTableName = 'd_b_channels';
+  String get actualTableName => 'd_b_channels';
   @override
   VerificationContext validateIntegrity(Insertable<DBChannel> instance,
       {bool isInserting = false}) {
@@ -1231,89 +1150,61 @@ class $DBPeersTable extends DBPeers with TableInfo<$DBPeersTable, DBPeer> {
   final String _alias;
   $DBPeersTable(this._db, [this._alias]);
   final VerificationMeta _idMeta = const VerificationMeta('id');
-  GeneratedIntColumn _id;
+  GeneratedColumn<int> _id;
   @override
-  GeneratedIntColumn get id => _id ??= _constructId();
-  GeneratedIntColumn _constructId() {
-    return GeneratedIntColumn('id', $tableName, false,
-        hasAutoIncrement: true, declaredAsPrimaryKey: true);
-  }
-
+  GeneratedColumn<int> get id =>
+      _id ??= GeneratedColumn<int>('id', aliasedName, false,
+          typeName: 'INTEGER',
+          requiredDuringInsert: false,
+          defaultConstraints: 'PRIMARY KEY AUTOINCREMENT');
   final VerificationMeta _ipMeta = const VerificationMeta('ip');
-  GeneratedTextColumn _ip;
+  GeneratedColumn<String> _ip;
   @override
-  GeneratedTextColumn get ip => _ip ??= _constructIp();
-  GeneratedTextColumn _constructIp() {
-    return GeneratedTextColumn('ip', $tableName, true,
-        minTextLength: 3, maxTextLength: 32);
-  }
-
+  GeneratedColumn<String> get ip => _ip ??= GeneratedColumn<String>(
+      'ip', aliasedName, true,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 3, maxTextLength: 32),
+      typeName: 'TEXT',
+      requiredDuringInsert: false);
   final VerificationMeta _portMeta = const VerificationMeta('port');
-  GeneratedIntColumn _port;
+  GeneratedColumn<int> _port;
   @override
-  GeneratedIntColumn get port => _port ??= _constructPort();
-  GeneratedIntColumn _constructPort() {
-    return GeneratedIntColumn(
-      'port',
-      $tableName,
-      true,
-    );
-  }
-
+  GeneratedColumn<int> get port =>
+      _port ??= GeneratedColumn<int>('port', aliasedName, true,
+          typeName: 'INTEGER', requiredDuringInsert: false);
   final VerificationMeta _scoreMeta = const VerificationMeta('score');
-  GeneratedIntColumn _score;
+  GeneratedColumn<int> _score;
   @override
-  GeneratedIntColumn get score => _score ??= _constructScore();
-  GeneratedIntColumn _constructScore() {
-    return GeneratedIntColumn('score', $tableName, false,
-        defaultValue: const Constant(0));
-  }
-
+  GeneratedColumn<int> get score =>
+      _score ??= GeneratedColumn<int>('score', aliasedName, false,
+          typeName: 'INTEGER',
+          requiredDuringInsert: false,
+          defaultValue: const Constant(0));
   final VerificationMeta _knownSinceMeta = const VerificationMeta('knownSince');
-  GeneratedIntColumn _knownSince;
+  GeneratedColumn<int> _knownSince;
   @override
-  GeneratedIntColumn get knownSince => _knownSince ??= _constructKnownSince();
-  GeneratedIntColumn _constructKnownSince() {
-    return GeneratedIntColumn(
-      'known_since',
-      $tableName,
-      true,
-    );
-  }
-
+  GeneratedColumn<int> get knownSince =>
+      _knownSince ??= GeneratedColumn<int>('known_since', aliasedName, true,
+          typeName: 'INTEGER', requiredDuringInsert: false);
   final VerificationMeta _kademliaIdMeta = const VerificationMeta('kademliaId');
-  GeneratedBlobColumn _kademliaId;
+  GeneratedColumn<Uint8List> _kademliaId;
   @override
-  GeneratedBlobColumn get kademliaId => _kademliaId ??= _constructKademliaId();
-  GeneratedBlobColumn _constructKademliaId() {
-    return GeneratedBlobColumn(
-      'kademlia_id',
-      $tableName,
-      true,
-    );
-  }
-
+  GeneratedColumn<Uint8List> get kademliaId => _kademliaId ??=
+      GeneratedColumn<Uint8List>('kademlia_id', aliasedName, true,
+          typeName: 'BLOB', requiredDuringInsert: false);
   final VerificationMeta _publicKeyMeta = const VerificationMeta('publicKey');
-  GeneratedBlobColumn _publicKey;
+  GeneratedColumn<Uint8List> _publicKey;
   @override
-  GeneratedBlobColumn get publicKey => _publicKey ??= _constructPublicKey();
-  GeneratedBlobColumn _constructPublicKey() {
-    return GeneratedBlobColumn(
-      'public_key',
-      $tableName,
-      true,
-    );
-  }
-
+  GeneratedColumn<Uint8List> get publicKey =>
+      _publicKey ??= GeneratedColumn<Uint8List>('public_key', aliasedName, true,
+          typeName: 'BLOB', requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns =>
       [id, ip, port, score, knownSince, kademliaId, publicKey];
   @override
-  $DBPeersTable get asDslTable => this;
+  String get aliasedName => _alias ?? 'd_b_peers';
   @override
-  String get $tableName => _alias ?? 'd_b_peers';
-  @override
-  final String actualTableName = 'd_b_peers';
+  String get actualTableName => 'd_b_peers';
   @override
   VerificationContext validateIntegrity(Insertable<DBPeer> instance,
       {bool isInserting = false}) {
@@ -1681,106 +1572,67 @@ class $DBMessagesTable extends DBMessages
   final String _alias;
   $DBMessagesTable(this._db, [this._alias]);
   final VerificationMeta _messageIdMeta = const VerificationMeta('messageId');
-  GeneratedIntColumn _messageId;
+  GeneratedColumn<int> _messageId;
   @override
-  GeneratedIntColumn get messageId => _messageId ??= _constructMessageId();
-  GeneratedIntColumn _constructMessageId() {
-    return GeneratedIntColumn(
-      'message_id',
-      $tableName,
-      false,
-    );
-  }
-
+  GeneratedColumn<int> get messageId =>
+      _messageId ??= GeneratedColumn<int>('message_id', aliasedName, false,
+          typeName: 'INTEGER', requiredDuringInsert: true);
   final VerificationMeta _channelIdMeta = const VerificationMeta('channelId');
-  GeneratedIntColumn _channelId;
+  GeneratedColumn<int> _channelId;
   @override
-  GeneratedIntColumn get channelId => _channelId ??= _constructChannelId();
-  GeneratedIntColumn _constructChannelId() {
-    return GeneratedIntColumn(
-      'channel_id',
-      $tableName,
-      false,
-    );
-  }
-
+  GeneratedColumn<int> get channelId =>
+      _channelId ??= GeneratedColumn<int>('channel_id', aliasedName, false,
+          typeName: 'INTEGER', requiredDuringInsert: true);
   final VerificationMeta _timestampMeta = const VerificationMeta('timestamp');
-  GeneratedIntColumn _timestamp;
+  GeneratedColumn<int> _timestamp;
   @override
-  GeneratedIntColumn get timestamp => _timestamp ??= _constructTimestamp();
-  GeneratedIntColumn _constructTimestamp() {
-    return GeneratedIntColumn(
-      'timestamp',
-      $tableName,
-      false,
-    );
-  }
-
+  GeneratedColumn<int> get timestamp =>
+      _timestamp ??= GeneratedColumn<int>('timestamp', aliasedName, false,
+          typeName: 'INTEGER', requiredDuringInsert: true);
   final VerificationMeta _typeMeta = const VerificationMeta('type');
-  GeneratedIntColumn _type;
+  GeneratedColumn<int> _type;
   @override
-  GeneratedIntColumn get type => _type ??= _constructType();
-  GeneratedIntColumn _constructType() {
-    return GeneratedIntColumn(
-      'type',
-      $tableName,
-      false,
-    );
-  }
-
+  GeneratedColumn<int> get type =>
+      _type ??= GeneratedColumn<int>('type', aliasedName, false,
+          typeName: 'INTEGER', requiredDuringInsert: true);
   final VerificationMeta _contentMeta = const VerificationMeta('content');
-  GeneratedTextColumn _content;
+  GeneratedColumn<String> _content;
   @override
-  GeneratedTextColumn get content => _content ??= _constructContent();
-  GeneratedTextColumn _constructContent() {
-    return GeneratedTextColumn('content', $tableName, true,
-        minTextLength: 1, maxTextLength: 1024);
-  }
-
+  GeneratedColumn<String> get content =>
+      _content ??= GeneratedColumn<String>('content', aliasedName, true,
+          additionalChecks: GeneratedColumn.checkTextLength(
+              minTextLength: 1, maxTextLength: 1024),
+          typeName: 'TEXT',
+          requiredDuringInsert: false);
   final VerificationMeta _fromMeta = const VerificationMeta('from');
-  GeneratedIntColumn _from;
+  GeneratedColumn<int> _from;
   @override
-  GeneratedIntColumn get from => _from ??= _constructFrom();
-  GeneratedIntColumn _constructFrom() {
-    return GeneratedIntColumn(
-      'from',
-      $tableName,
-      false,
-    );
-  }
-
+  GeneratedColumn<int> get from =>
+      _from ??= GeneratedColumn<int>('from', aliasedName, false,
+          typeName: 'INTEGER', requiredDuringInsert: true);
   final VerificationMeta _deliveredToMeta =
       const VerificationMeta('deliveredTo');
-  GeneratedTextColumn _deliveredTo;
+  GeneratedColumn<String> _deliveredTo;
   @override
-  GeneratedTextColumn get deliveredTo =>
-      _deliveredTo ??= _constructDeliveredTo();
-  GeneratedTextColumn _constructDeliveredTo() {
-    return GeneratedTextColumn(
-      'delivered_to',
-      $tableName,
-      true,
-    );
-  }
-
+  GeneratedColumn<String> get deliveredTo => _deliveredTo ??=
+      GeneratedColumn<String>('delivered_to', aliasedName, true,
+          typeName: 'TEXT', requiredDuringInsert: false);
   final VerificationMeta _readMeta = const VerificationMeta('read');
-  GeneratedBoolColumn _read;
+  GeneratedColumn<bool> _read;
   @override
-  GeneratedBoolColumn get read => _read ??= _constructRead();
-  GeneratedBoolColumn _constructRead() {
-    return GeneratedBoolColumn('read', $tableName, false,
-        defaultValue: const Constant(false));
-  }
-
+  GeneratedColumn<bool> get read =>
+      _read ??= GeneratedColumn<bool>('read', aliasedName, false,
+          typeName: 'INTEGER',
+          requiredDuringInsert: false,
+          defaultConstraints: 'CHECK (read IN (0, 1))',
+          defaultValue: const Constant(false));
   @override
   List<GeneratedColumn> get $columns =>
       [messageId, channelId, timestamp, type, content, from, deliveredTo, read];
   @override
-  $DBMessagesTable get asDslTable => this;
+  String get aliasedName => _alias ?? 'd_b_messages';
   @override
-  String get $tableName => _alias ?? 'd_b_messages';
-  @override
-  final String actualTableName = 'd_b_messages';
+  String get actualTableName => 'd_b_messages';
   @override
   VerificationContext validateIntegrity(Insertable<DBMessage> instance,
       {bool isInserting = false}) {
@@ -2060,66 +1912,51 @@ class $DBFriendsTable extends DBFriends
   final String _alias;
   $DBFriendsTable(this._db, [this._alias]);
   final VerificationMeta _idMeta = const VerificationMeta('id');
-  GeneratedIntColumn _id;
+  GeneratedColumn<int> _id;
   @override
-  GeneratedIntColumn get id => _id ??= _constructId();
-  GeneratedIntColumn _constructId() {
-    return GeneratedIntColumn(
-      'id',
-      $tableName,
-      false,
-    );
-  }
-
+  GeneratedColumn<int> get id =>
+      _id ??= GeneratedColumn<int>('id', aliasedName, false,
+          typeName: 'INTEGER', requiredDuringInsert: true);
   final VerificationMeta _nameMeta = const VerificationMeta('name');
-  GeneratedTextColumn _name;
+  GeneratedColumn<String> _name;
   @override
-  GeneratedTextColumn get name => _name ??= _constructName();
-  GeneratedTextColumn _constructName() {
-    return GeneratedTextColumn('name', $tableName, true,
-        minTextLength: 1, maxTextLength: 32);
-  }
-
+  GeneratedColumn<String> get name => _name ??= GeneratedColumn<String>(
+      'name', aliasedName, true,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 32),
+      typeName: 'TEXT',
+      requiredDuringInsert: false);
   final VerificationMeta _imageMeta = const VerificationMeta('image');
-  GeneratedBlobColumn _image;
+  GeneratedColumn<Uint8List> _image;
   @override
-  GeneratedBlobColumn get image => _image ??= _constructImage();
-  GeneratedBlobColumn _constructImage() {
-    return GeneratedBlobColumn(
-      'image',
-      $tableName,
-      true,
-    );
-  }
-
+  GeneratedColumn<Uint8List> get image =>
+      _image ??= GeneratedColumn<Uint8List>('image', aliasedName, true,
+          typeName: 'BLOB', requiredDuringInsert: false);
   final VerificationMeta _phoneNumberMeta =
       const VerificationMeta('phoneNumber');
-  GeneratedTextColumn _phoneNumber;
+  GeneratedColumn<String> _phoneNumber;
   @override
-  GeneratedTextColumn get phoneNumber =>
-      _phoneNumber ??= _constructPhoneNumber();
-  GeneratedTextColumn _constructPhoneNumber() {
-    return GeneratedTextColumn('phone_number', $tableName, true,
-        minTextLength: 6, maxTextLength: 16);
-  }
-
+  GeneratedColumn<String> get phoneNumber => _phoneNumber ??=
+      GeneratedColumn<String>('phone_number', aliasedName, true,
+          additionalChecks: GeneratedColumn.checkTextLength(
+              minTextLength: 6, maxTextLength: 16),
+          typeName: 'TEXT',
+          requiredDuringInsert: false);
   final VerificationMeta _eMailMeta = const VerificationMeta('eMail');
-  GeneratedTextColumn _eMail;
+  GeneratedColumn<String> _eMail;
   @override
-  GeneratedTextColumn get eMail => _eMail ??= _constructEMail();
-  GeneratedTextColumn _constructEMail() {
-    return GeneratedTextColumn('e_mail', $tableName, true,
-        minTextLength: 6, maxTextLength: 16);
-  }
-
+  GeneratedColumn<String> get eMail => _eMail ??= GeneratedColumn<String>(
+      'e_mail', aliasedName, true,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 6, maxTextLength: 16),
+      typeName: 'TEXT',
+      requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [id, name, image, phoneNumber, eMail];
   @override
-  $DBFriendsTable get asDslTable => this;
+  String get aliasedName => _alias ?? 'd_b_friends';
   @override
-  String get $tableName => _alias ?? 'd_b_friends';
-  @override
-  final String actualTableName = 'd_b_friends';
+  String get actualTableName => 'd_b_friends';
   @override
   VerificationContext validateIntegrity(Insertable<DBFriend> instance,
       {bool isInserting = false}) {
