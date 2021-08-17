@@ -29,7 +29,7 @@ jobs:
 
       # Uncomment this step to verify the use of 'dart format' on each commit.
       - name: Building Moor Database files
-        run: dart run build_runner build
+        run: dart run build_runner build --delete-conflicting-outputs
 
       # Consider passing '--fatal-infos' for slightly stricter analysis.
       - name: Analyze project source
