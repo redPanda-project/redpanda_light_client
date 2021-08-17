@@ -7,5 +7,5 @@ part of 'DBFriendsDao.dart';
 // **************************************************************************
 
 mixin _$DBFriendsDaoMixin on DatabaseAccessor<AppDatabase> {
-  $DBFriendsTable get dBFriends => db.dBFriends;
+  $DBFriendsTable get dBFriends => attachedDatabase.dBFriends;
 }

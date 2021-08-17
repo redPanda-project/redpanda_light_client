@@ -1,9 +1,12 @@
 pipeline {
     agent {
         docker {
-            image 'py4x3g/dart_lcov_to_cobertura'
+            image 'py4x3g/dart_lcov_to_cobertura:v0.0.6'
             args '-e PUB_CACHE=./.pub-cache'
         }
+    }
+    options {
+        timeout(time: 5, unit: 'MINUTES')
     }
     triggers {
         cron('@midnight')
@@ -21,7 +24,9 @@ pipeline {
         }
         stage('Coverage') {
             steps {
-                sh "pub run test_coverage"
+                timeout(40) {
+                    sh "pub run test_coverage"
+                }
             }
             post {
                 always {

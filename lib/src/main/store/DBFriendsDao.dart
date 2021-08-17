@@ -21,7 +21,7 @@ class DBFriendsDao extends DatabaseAccessor<AppDatabase> with _$DBFriendsDaoMixi
 
   Future<DBFriend> getFriend(int id) {
     return (select(dBFriends)
-      ..where((tbl) => tbl.id.equals(id))).getSingle();
+      ..where((tbl) => tbl.id.equals(id))).getSingleOrNull();
   }
 
   Future<bool> updateFriend(int id, String name) async {

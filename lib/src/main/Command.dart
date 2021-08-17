@@ -22,4 +22,7 @@ class Command {
   static final int KADEMLIA_GET = 121;
   static final int KADEMLIA_GET_ANSWER = 122;
   static final int JOB_ACK = 130;
+
+  //flaschenpost
+  static final int FLASCHENPOST_PUT = 141;
 }
