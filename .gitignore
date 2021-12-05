@@ -90,3 +90,6 @@ fabric.properties
 
 data/
 *.sqlite
+
+
+.idea/sonarlint/
