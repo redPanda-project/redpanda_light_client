@@ -25,8 +25,7 @@ class ByteBuffer {
     _capacity = _limit;
   }
 
-  factory ByteBuffer.fromBuffer(prefix0.ByteBuffer buffer,
-      [int offset = 0, int length = null, Endian endian = Endian.big]) {
+  factory ByteBuffer.fromBuffer(prefix0.ByteBuffer buffer, [int offset = 0, int length, Endian endian = Endian.big]) {
     length ??= buffer.lengthInBytes - offset;
 
     final view = ByteData.view(buffer, offset, length);
@@ -96,7 +95,9 @@ class ByteBuffer {
   void operator []=(int i, int value) => _byteData.setInt8(i, value);
 
   /// Appends [other] to [this]
-  ByteBuffer operator +(ByteBuffer other) => ByteBuffer(length + other.length)..writeBytes(this)..writeBytes(other);
+  ByteBuffer operator +(ByteBuffer other) => ByteBuffer(length + other.length)
+    ..writeBytes(this)
+    ..writeBytes(other);
 
   Iterable<int> byteStream() sync* {
     while (_offset < length) {

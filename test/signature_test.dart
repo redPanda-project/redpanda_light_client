@@ -1,12 +1,12 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:asn1lib/asn1lib.dart';
 import 'package:moor/moor.dart';
 import 'package:pointycastle/export.dart';
 import 'package:redpanda_light_client/src/main/NodeId.dart';
 import 'package:redpanda_light_client/src/main/Utils.dart';
 import 'package:test/test.dart';
-import 'package:asn1lib/asn1lib.dart';
 
 void main() {
   group('Test basic Signature algorithm', () {
@@ -25,7 +25,6 @@ void main() {
       );
       final ECSignature sig = signer.generateSignature(message);
 
-
       var asn1Object = ASN1Sequence();
       asn1Object.add(ASN1Integer(sig.r));
       asn1Object.add(ASN1Integer(sig.s));
@@ -39,7 +38,6 @@ void main() {
       ASN1Integer r = asnObject.elements[0] as ASN1Integer;
       ASN1Integer s = asnObject.elements[1] as ASN1Integer;
       var ecSignatureFromBytes = ECSignature(r.valueAsBigInteger, s.valueAsBigInteger);
-
 
       final verifier = Signer("SHA-256/DET-ECDSA");
       verifier.init(false, PublicKeyParameter(nodeId.getKeyPair().publicKey));

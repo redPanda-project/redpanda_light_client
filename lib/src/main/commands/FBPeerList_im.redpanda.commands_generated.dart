@@ -4,11 +4,12 @@
 library im.redpanda.commands;
 
 import 'dart:typed_data' show Uint8List;
-import 'package:flat_buffers/flat_buffers.dart' as fb;
 
+import 'package:flat_buffers/flat_buffers.dart' as fb;
 
 class FBPeerList {
   FBPeerList._(this._bc, this._bcOffset);
+
   factory FBPeerList(List<int> bytes) {
     fb.BufferContext rootRef = new fb.BufferContext.fromBytes(bytes);
     return reader.read(rootRef, 0);
@@ -31,8 +32,7 @@ class _FBPeerListReader extends fb.TableReader<FBPeerList> {
   const _FBPeerListReader();
 
   @override
-  FBPeerList createObject(fb.BufferContext bc, int offset) =>
-      new FBPeerList._(bc, offset);
+  FBPeerList createObject(fb.BufferContext bc, int offset) => new FBPeerList._(bc, offset);
 }
 
 class FBPeerListBuilder {
@@ -61,13 +61,11 @@ class FBPeerListObjectBuilder extends fb.ObjectBuilder {
 
   FBPeerListObjectBuilder({
     List<FBPeerObjectBuilder> peers,
-  })
-      : _peers = peers;
+  }) : _peers = peers;
 
   /// Finish building, and store into the [fbBuilder].
   @override
-  int finish(
-      fb.Builder fbBuilder) {
+  int finish(fb.Builder fbBuilder) {
     assert(fbBuilder != null);
     final int peersOffset = _peers?.isNotEmpty == true
         ? fbBuilder.writeList(_peers.map((b) => b.getOrCreateOffset(fbBuilder)).toList())
@@ -88,8 +86,10 @@ class FBPeerListObjectBuilder extends fb.ObjectBuilder {
     return fbBuilder.finish(offset, fileIdentifier);
   }
 }
+
 class FBPeer {
   FBPeer._(this._bc, this._bcOffset);
+
   factory FBPeer(List<int> bytes) {
     fb.BufferContext rootRef = new fb.BufferContext.fromBytes(bytes);
     return reader.read(rootRef, 0);
@@ -101,7 +101,9 @@ class FBPeer {
   final int _bcOffset;
 
   List<int> get nodeId => const fb.ListReader<int>(const fb.Int8Reader()).vTableGet(_bc, _bcOffset, 4, null);
+
   String get ip => const fb.StringReader().vTableGet(_bc, _bcOffset, 6, null);
+
   int get port => const fb.Int32Reader().vTableGet(_bc, _bcOffset, 8, 0);
 
   @override
@@ -114,8 +116,7 @@ class _FBPeerReader extends fb.TableReader<FBPeer> {
   const _FBPeerReader();
 
   @override
-  FBPeer createObject(fb.BufferContext bc, int offset) =>
-      new FBPeer._(bc, offset);
+  FBPeer createObject(fb.BufferContext bc, int offset) => new FBPeer._(bc, offset);
 }
 
 class FBPeerBuilder {
@@ -133,10 +134,12 @@ class FBPeerBuilder {
     fbBuilder.addOffset(0, offset);
     return fbBuilder.offset;
   }
+
   int addIpOffset(int offset) {
     fbBuilder.addOffset(1, offset);
     return fbBuilder.offset;
   }
+
   int addPort(int port) {
     fbBuilder.addInt32(2, port);
     return fbBuilder.offset;
@@ -156,19 +159,15 @@ class FBPeerObjectBuilder extends fb.ObjectBuilder {
     List<int> nodeId,
     String ip,
     int port,
-  })
-      : _nodeId = nodeId,
+  })  : _nodeId = nodeId,
         _ip = ip,
         _port = port;
 
   /// Finish building, and store into the [fbBuilder].
   @override
-  int finish(
-      fb.Builder fbBuilder) {
+  int finish(fb.Builder fbBuilder) {
     assert(fbBuilder != null);
-    final int nodeIdOffset = _nodeId?.isNotEmpty == true
-        ? fbBuilder.writeListInt8(_nodeId)
-        : null;
+    final int nodeIdOffset = _nodeId?.isNotEmpty == true ? fbBuilder.writeListInt8(_nodeId) : null;
     final int ipOffset = fbBuilder.writeString(_ip);
 
     fbBuilder.startTable();

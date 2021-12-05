@@ -1,7 +1,7 @@
 # Defines a default set of lint rules enforced for
 # projects at Google. For details and rationale,
 # see https://github.com/dart-lang/pedantic#enabled-lints.
-include: package:pedantic/analysis_options.yaml
+include: package:lints/recommended.yaml
 
 # For lint rules and documentation, see http://dart-lang.github.io/linter/lints.
 # Uncomment to specify additional rules.
@@ -11,6 +11,9 @@ linter:
     slash_for_doc_comments: false
     omit_local_variable_types: false
     unnecessary_new: false
+    file_names: false
+    non_constant_identifier_names: false
+    constant_identifier_names: false
 
 analyzer:
 #   exclude:

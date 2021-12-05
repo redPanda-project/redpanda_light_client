@@ -1,6 +1,5 @@
 import 'package:redpanda_light_client/export.dart';
 import 'package:redpanda_light_client/src/main/ByteBuffer.dart';
-import 'package:redpanda_light_client/src/main/store/DBMessagesDao.dart';
 import 'package:test/test.dart';
 
 AppDatabase appDatabase;

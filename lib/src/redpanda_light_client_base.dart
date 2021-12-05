@@ -1,7 +1,6 @@
 // TODO: Put public facing types in this file.
 
 import 'dart:async';
-import 'dart:convert';
 import 'dart:isolate';
 
 import 'package:redpanda_light_client/export.dart';
@@ -44,8 +43,6 @@ class RedPandaLightClient {
     // any answer
     //
 
-//    print(newIsolateSendPort);
-//    newIsolateSendPort.send(CrossIsolatesMessage<IsolateCommand>(sender: port.sendPort, message: command, data: data));
     newIsolateSendPort.send({"sender": port.sendPort, "command": command.toString(), "data": data});
 
     //

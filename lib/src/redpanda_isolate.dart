@@ -11,7 +11,6 @@ import 'package:redpanda_light_client/src/main/ConnectionService.dart';
 import 'package:redpanda_light_client/src/main/IsolateCommand.dart';
 import 'package:redpanda_light_client/src/main/Peer.dart';
 import 'package:redpanda_light_client/src/main/PeerList.dart';
-import 'package:redpanda_light_client/src/main/store/moor_database.dart';
 
 dynamic logLevel = Level.INFO; // defaults to Level.INFO
 
@@ -73,10 +72,10 @@ void processLine(String line) async {
   } else if (line == "c") {
     print("create new channel with name: ");
     var name = stdin.readLineSync();
-    print("name: ${name}");
-    if (name.length != 0) {
+    print("name: $name");
+    if (name.isNotEmpty) {
       var id = await ConnectionService.appDatabase.createNewChannel(name);
-      print("created new channel: ${name} and id: ${id}");
+      print("created new channel: $name and id: $id");
     }
   } else if (line == "e") {
     await shutdown();
@@ -138,39 +137,39 @@ Future<void> readLines() async {
       });
       print("");
       var allChannels = await ConnectionService.appDatabase.getAllChannels();
-      allChannels.forEach((DBChannel c) {
+      for (var c in allChannels) {
         var channel = new Channel(c);
         print(
-            "Channel: ${formatToMinLen("${channel.getId()}", 4)}    ${formatToMinLen("${channel.name}", 10)}   ${formatToMinLen("${channel.shareString()}", 30)}");
-      });
+            "Channel: ${formatToMinLen("${channel.getId()}", 4)}    ${formatToMinLen(channel.name, 10)}   ${formatToMinLen(channel.shareString(), 30)}");
+      }
       print("");
       print("");
     } else if (line == "c") {
       print("create new channel with name: ");
       var name = await readStream.first;
-      print("name: ${name}");
-      if (name.length != 0) {
+      print("name: $name");
+      if (name.isNotEmpty) {
         var id = await ConnectionService.appDatabase.createNewChannel(name);
-        print("created new channel: ${name} and id: ${id}");
+        print("created new channel: $name and id: $id");
       }
     } else if (line == "i") {
       print("import new channel with name:");
       var name = await readStream.first;
-      if (name.length != 0) {
-        print("name: ${name}, insert shared channel string: ");
+      if (name.isNotEmpty) {
+        print("name: $name, insert shared channel string: ");
         var string = await readStream.first;
-        if (string.length != 0) {
+        if (string.isNotEmpty) {
           Channel.insertSharedChannel(string, name);
         }
       }
     } else if (line == "n") {
       print("channel to write new messages, exit writing with a empty line:");
       var channelIdString = await readStream.first;
-      if (channelIdString.length != 0) {
+      if (channelIdString.isNotEmpty) {
         var channelId = int.parse(channelIdString);
         while (true) {
           var text = await readStream.first;
-          if (text.length != 0) {
+          if (text.isNotEmpty) {
             ConnectionService.appDatabase.dBMessagesDao.writeMessage(channelId, text);
           } else {
             break;
@@ -184,7 +183,7 @@ Future<void> readLines() async {
     } else if (line == "r") {
       print("remove channel by id:");
       var id = await readStream.first;
-      if (id.length != 0) {
+      if (id.isNotEmpty) {
         var parse = int.parse(id);
         ConnectionService.appDatabase.removeChannel(parse);
         print("remove channel: " + parse.toString());
@@ -196,7 +195,7 @@ Future<void> readLines() async {
   }
 }
 
-void setupAndStartIsolate() async {
+Future<void> setupAndStartIsolate() async {
   //
   // Local and temporary ReceivePort to retrieve
   // the new isolate's SendPort
@@ -274,11 +273,11 @@ void callbackFunction(SendPort callerSendPort) {
 
 Future<void> shutdown() async {
   await ConnectionService.appDatabase.close();
-  await connectionService.loopTimer.cancel();
+  connectionService.loopTimer.cancel();
   for (Peer peer in PeerList.getList()) {
-    await peer.disconnect("shutdown");
+    peer.disconnect("shutdown");
   }
-  await Isolate.current.kill();
+  Isolate.current.kill();
   return;
 }
 
@@ -290,7 +289,7 @@ void parseIsolateCommands(SendPort answerSendPort, String command, dynamic data)
   //
   if (command == IsolateCommand.PING.toString()) {
     lastPinged = Utils.getCurrentTimeMillis();
-  } else if (command == IsolateCommand.SHUTDOWN) {
+  } else if (command == IsolateCommand.SHUTDOWN.toString()) {
     log.info("RedPandaLightClient shutting down...");
 //    running = false;
     await shutdown();
@@ -666,7 +665,7 @@ Future<void> refreshStatus() async {
       }
     });
 
-    onNewStatusLisener.send("Connected: ${active}/${PeerList.getList().length}");
+    onNewStatusLisener.send("Connected: $active/${PeerList.getList().length}");
   }
 }
 

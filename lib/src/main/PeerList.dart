@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:collection';
 
 import 'package:logging/logging.dart';
-import 'package:moor/moor.dart';
 import 'package:redpanda_light_client/export.dart';
 import 'package:redpanda_light_client/src/main/ByteBuffer.dart';
 import 'package:redpanda_light_client/src/main/KademliaId.dart';
@@ -65,7 +64,7 @@ class PeerList {
     return _peerlist;
   }
 
-  static void sendIntegrated(ByteBuffer bytes) async {
+  static Future<void> sendIntegrated(ByteBuffer bytes) async {
     for (Peer p in _peerlist) {
       if (p.connected && p.socket != null) {
         bool send = false;
@@ -92,6 +91,4 @@ class PeerList {
         .insertNewPeer(peer.ip, peer.port, peer.getKademliaId(), publicKey: peer.getNodeId()?.exportPublic());
     return;
   }
-
-
 }

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:logging/logging.dart';
+import 'package:moor/ffi.dart';
 import 'package:moor/moor.dart';
 import 'package:path/path.dart' as p;
 import 'package:redpanda_light_client/src/main/ConnectionService.dart';
@@ -13,8 +14,6 @@ import 'package:redpanda_light_client/src/main/store/DBMessages.dart';
 import 'package:redpanda_light_client/src/main/store/DBMessagesDao.dart';
 import 'package:redpanda_light_client/src/main/store/DBPeers.dart';
 import 'package:redpanda_light_client/src/main/store/DBPeersDao.dart';
-
-import 'package:moor/ffi.dart';
 
 /**
  * Here we define the tables in the sqlite database. The code can be generated with
@@ -58,8 +57,7 @@ class AppDatabase extends _$AppDatabase {
   @override
   int get schemaVersion => 47;
 
-  Future<LocalSetting> get getLocalSettings =>
-      select(localSettings).getSingleOrNull();
+  Future<LocalSetting> get getLocalSettings => select(localSettings).getSingleOrNull();
 
   // returns the generated id
   Future<int> save(Insertable<LocalSetting> entry) async {
@@ -68,18 +66,15 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<int> insertFCMToken(String fcmToken) async {
-    return update(localSettings)
-        .write(LocalSettingsCompanion(fcmToken: Value(fcmToken)));
+    return update(localSettings).write(LocalSettingsCompanion(fcmToken: Value(fcmToken)));
   }
 
   Future<int> setNickname(String nick) async {
-    return update(localSettings)
-        .write(LocalSettingsCompanion(defaultName: Value(nick)));
+    return update(localSettings).write(LocalSettingsCompanion(defaultName: Value(nick)));
   }
 
   Future<int> setVersionTimestamp(int timestamp) async {
-    return update(localSettings)
-        .write(LocalSettingsCompanion(versionTimestamp: Value(timestamp)));
+    return update(localSettings).write(LocalSettingsCompanion(versionTimestamp: Value(timestamp)));
   }
 
   @override
@@ -95,9 +90,9 @@ class AppDatabase extends _$AppDatabase {
    */
   Future<void> onUpgrade(Migrator migrator, int from, int n) async {
     if (from < 48) {
-      await dropAll(migrator, from, n);
+      dropAll(migrator, from, n);
     } else {
-      await dropAllExceptChannelsAndSettings(migrator, from, n);
+      dropAllExceptChannelsAndSettings(migrator, from, n);
     }
 
     await migrator.createAll();
@@ -110,11 +105,9 @@ class AppDatabase extends _$AppDatabase {
     }
   }
 
-  void dropAllExceptChannelsAndSettings(
-      Migrator migrator, int from, int n) async {
+  void dropAllExceptChannelsAndSettings(Migrator migrator, int from, int n) async {
     for (final TableInfo<Table, DataClass> table in allTables) {
-      if (table.actualTableName.contains("channels") ||
-          table.actualTableName.contains("settings")) {
+      if (table.actualTableName.contains("channels") || table.actualTableName.contains("settings")) {
         print("table not dropped!: " + table.actualTableName);
         continue;
       }
@@ -137,21 +130,16 @@ class AppDatabase extends _$AppDatabase {
   Future<int> createNewChannel(String name) async {
     var nodeId = new NodeId.withNewKeyPair();
 
-    DBChannelsCompanion entry = DBChannelsCompanion.insert(
-        name: name,
-        sharedSecret: Utils.randBytes(32),
-        nodeId: nodeId.exportWithPrivate());
+    DBChannelsCompanion entry =
+        DBChannelsCompanion.insert(name: name, sharedSecret: Utils.randBytes(32), nodeId: nodeId.exportWithPrivate());
     log.finest("insert channel");
     return into(dBChannels).insert(entry);
   }
 
-  Future<int> createChannelFromData(
-      String name, Uint8List sharedSecret, Uint8List privateSigningKey) async {
+  Future<int> createChannelFromData(String name, Uint8List sharedSecret, Uint8List privateSigningKey) async {
     var nodeId = new NodeId.importWithPrivate(privateSigningKey);
-    DBChannelsCompanion entry = DBChannelsCompanion.insert(
-        name: name,
-        sharedSecret: sharedSecret,
-        nodeId: nodeId.exportWithPrivate());
+    DBChannelsCompanion entry =
+        DBChannelsCompanion.insert(name: name, sharedSecret: sharedSecret, nodeId: nodeId.exportWithPrivate());
     log.finest("insert channel");
     return into(dBChannels).insert(entry);
   }
@@ -161,31 +149,27 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<int> renameChannel(int id, String newname) async {
-    return (update(dBChannels)..where((tbl) => tbl.id.equals(id)))
-        .write(DBChannelsCompanion(name: Value(newname)));
+    return (update(dBChannels)..where((tbl) => tbl.id.equals(id))).write(DBChannelsCompanion(name: Value(newname)));
   }
 
   Future<int> updateLastMessageByMe(int channelId, String message) async {
-    return (update(dBChannels)..where((tbl) => tbl.id.equals(channelId))).write(
-        DBChannelsCompanion(
-            lastMessage_user: Value(""),
-            lastMessage_text: Value(message),
-            lastMessage_timestamp: Value(Utils.getCurrentTimeMillis())));
+    return (update(dBChannels)..where((tbl) => tbl.id.equals(channelId))).write(DBChannelsCompanion(
+        lastMessage_user: Value(""),
+        lastMessage_text: Value(message),
+        lastMessage_timestamp: Value(Utils.getCurrentTimeMillis())));
   }
 
-  Future<int> updateLastMessage(
-      int channelId, int userId, String message, int timestamp) async {
+  Future<int> updateLastMessage(int channelId, int userId, String message, int timestamp) async {
     var dbFriend = await dBFriendsDao.getFriend(userId);
 
-    return (update(dBChannels)..where((tbl) => tbl.id.equals(channelId))).write(
-        DBChannelsCompanion(
-            lastMessage_user: Value(dbFriend?.name ?? '?'),
-            lastMessage_text: Value(message),
-            lastMessage_timestamp: Value(timestamp)));
+    return (update(dBChannels)..where((tbl) => tbl.id.equals(channelId))).write(DBChannelsCompanion(
+        lastMessage_user: Value(dbFriend?.name ?? '?'),
+        lastMessage_text: Value(message),
+        lastMessage_timestamp: Value(timestamp)));
   }
 
   Future<int> updateChannelData(int id, String channelDataString) async {
-    log.finer('update channel data ${channelDataString}');
+    log.finer('update channel data $channelDataString');
     return (update(dBChannels)..where((tbl) => tbl.id.equals(id)))
         .write(DBChannelsCompanion(channelData: Value(channelDataString)));
   }
@@ -197,10 +181,7 @@ class AppDatabase extends _$AppDatabase {
   Future<List<DBChannel>> getAllChannels() {
 //    return select(dBChannels).get();
     return (select(dBChannels)
-          ..orderBy([
-            (t) => OrderingTerm(
-                expression: t.lastMessage_timestamp, mode: OrderingMode.desc)
-          ]))
+          ..orderBy([(t) => OrderingTerm(expression: t.lastMessage_timestamp, mode: OrderingMode.desc)]))
         .get();
   }
 
