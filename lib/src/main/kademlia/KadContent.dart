@@ -150,7 +150,7 @@ class KadContent {
         ByteBuffer(1 + 4 + 4 + 8 + NodeId.PUBLIC_KEYLEN + 4 + _content.length + 4 + getSignature().length);
     writeBuffer.writeByte(Command.KADEMLIA_STORE);
     writeBuffer.writeInt(4 + 8 + NodeId.PUBLIC_KEYLEN + 4 + _content.length + 4 + getSignature().length);
-    writeBuffer.writeInt(Utils.random.nextInt(6000)); //todo check for ack with this id?
+    writeBuffer.writeInt(Utils.random.nextInt(1<<32)); //todo check for ack with this id?
 //    writeBuffer.writeList(getKademliaId().bytes);
     writeBuffer.writeLong(timestamp);
     writeBuffer.writeList(pubkey);

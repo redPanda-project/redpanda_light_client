@@ -406,7 +406,7 @@ class ConnectionService {
 
         ByteBuffer writeBuffer = ByteBuffer(1 + 4 + KademliaId.ID_LENGTH_BYTES);
         writeBuffer.writeByte(Command.KADEMLIA_GET);
-        writeBuffer.writeInt(Utils.random.nextInt(6000)); //todo check for ack with this id?
+        writeBuffer.writeInt(Utils.random.nextInt(1<<32)); //todo check for ack with this id?
         writeBuffer.writeList(currentKademliaId.bytes);
 
         await PeerList.sendIntegrated(writeBuffer);
