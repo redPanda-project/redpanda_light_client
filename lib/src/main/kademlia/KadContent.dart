@@ -165,7 +165,7 @@ class KadContent {
       ConnectionService.sentry.captureException(ex);
       throw ex;
     }
-
+    writeBuffer.flip();
     return writeBuffer;
   }
 

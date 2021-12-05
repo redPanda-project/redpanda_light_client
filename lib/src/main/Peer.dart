@@ -449,7 +449,16 @@ class Peer {
   }
 
   Future<void> sendEncrypt(ByteBuffer buffer) async {
-    Uint8List encBytes = ctrStreamCipherSend.process(buffer.array());
+    if (buffer.bytesAvailable == 0) {
+      log.warning("no bytes to send to peer, maybe there is something wrong?");
+      throw new AssertionError("no available bytes in buffer to send");
+    }
+
+    sendEncryptArray(buffer.readBytes(buffer.bytesAvailable));
+  }
+
+  Future<void> sendEncryptArray(Uint8List array) async {
+    Uint8List encBytes = ctrStreamCipherSend.process(array);
 
     socket.handleError((e) => {log.finer("error2: " + e.toString())});
 
