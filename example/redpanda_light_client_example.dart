@@ -16,7 +16,7 @@ void main() async {
 
   print('asd');
 
-  const oneSec = const Duration(days: 365 * 10);
+  const oneSec = Duration(days: 365 * 10);
   new Timer(oneSec, () => RedPandaLightClient.shutdown());
 
 //  var watchDBChannelEntries = RedPandaLightClient.watchDBChannelEntries();

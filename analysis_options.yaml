@@ -11,6 +11,9 @@ linter:
     slash_for_doc_comments: false
     omit_local_variable_types: false
     unnecessary_new: false
+    file_names: false
+    non_constant_identifier_names: false
+    constant_identifier_names: false
 
 analyzer:
 #   exclude:

@@ -20,8 +20,7 @@ class DBFriendsDao extends DatabaseAccessor<AppDatabase> with _$DBFriendsDaoMixi
   }
 
   Future<DBFriend> getFriend(int id) {
-    return (select(dBFriends)
-      ..where((tbl) => tbl.id.equals(id))).getSingleOrNull();
+    return (select(dBFriends)..where((tbl) => tbl.id.equals(id))).getSingleOrNull();
   }
 
   Future<bool> updateFriend(int id, String name) async {
@@ -36,8 +35,7 @@ class DBFriendsDao extends DatabaseAccessor<AppDatabase> with _$DBFriendsDaoMixi
       await addFriend(id, name);
     } else {
       var newFriend = friend.copyWith(name: name);
-      await (update(dBFriends)
-        ..where((tbl) => tbl.id.equals(id))).write(newFriend);
+      await (update(dBFriends)..where((tbl) => tbl.id.equals(id))).write(newFriend);
     }
     return true;
   }

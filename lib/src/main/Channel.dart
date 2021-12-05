@@ -78,18 +78,13 @@ class Channel {
 
     int fullLen = bytes.length + bytesWithFullBlock;
 
-//    print("full length: " + (bytes.length + bytesWithFullBlock).toString());
-
     var paddedBuffer = ByteBuffer(bytes.length + bytesWithFullBlock);
     paddedBuffer.writeList(bytes);
 
     var padding = new Padding("PKCS7");
     padding.init();
 
-//    print("offset: " + bytes.length.toString());
     padding.addPadding(paddedBuffer.array(), bytes.length);
-
-//    print("dec byte with pad: " + Utils.hexEncode(paddedBuffer.array()));
 
     var encBytes = new Uint8List(fullLen);
     int currentStart = 0;
@@ -100,10 +95,6 @@ class Channel {
       currentStart += 16;
     }
 
-//    print("len: " + len.toString());
-
-//    print("enc byte: " + Utils.hexEncode(encBytes));
-
     return encBytes;
   }
 
@@ -111,7 +102,6 @@ class Channel {
    * Uses the sharedSecrete from the underlying DBChannel to decrypt the given data.
    */
   Uint8List decryptAES(Uint8List bytes, Uint8List iv) {
-    var cbcBlockCipher = CBCBlockCipher(AESFastEngine());
     ParametersWithIV parametersWithIV = ParametersWithIV(KeyParameter(_dbChannel.sharedSecret), iv);
 
     var dec = CBCBlockCipher(AESFastEngine());
@@ -119,7 +109,6 @@ class Channel {
 
     var decryptedBytes = new Uint8List(bytes.length);
     int currentStart = 0;
-//    print("to dec bytes: " + bytes.length.toString());
 
     while (currentStart + 16 <= bytes.length) {
       dec.processBlock(bytes, currentStart, decryptedBytes, currentStart);
@@ -129,16 +118,9 @@ class Channel {
     var padding2 = new Padding("PKCS7");
     padding2.init();
 
-//    print("dec byte: " + Utils.hexEncode(decryptedBytes));
     int padCount = padding2.padCount(decryptedBytes);
-
-//    print('pad cnt: ' + padCount.toString());
-
     //remove padding
     decryptedBytes = decryptedBytes.sublist(0, decryptedBytes.lengthInBytes - padCount);
-
-//    print(Utils.hexEncode(decryptedBytes));
-//    print(decryptedBytes.length);
 
     return decryptedBytes;
   }

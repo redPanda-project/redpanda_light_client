@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:redpanda_light_client/export.dart';
 import 'package:redpanda_light_client/src/main/ByteBuffer.dart';
 import 'package:redpanda_light_client/src/main/Channel.dart';

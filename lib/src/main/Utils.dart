@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'dart:math';
-
 import 'dart:typed_data';
+
 import 'package:base58check/base58.dart';
-import 'package:pointycastle/export.dart';
 import 'package:convert/convert.dart';
+import 'package:pointycastle/export.dart';
 
 class Utils {
   static Random random = Random.secure();

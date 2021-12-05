@@ -6,6 +6,7 @@ import 'dart:typed_data' hide ByteBuffer;
 import 'dart:typed_data';
 
 import 'package:buffer/buffer.dart';
+import 'package:convert/convert.dart';
 import 'package:date_format/date_format.dart';
 import 'package:logging/logging.dart';
 import 'package:pointycastle/api.dart';
@@ -20,11 +21,8 @@ import 'package:redpanda_light_client/src/main/NodeId.dart';
 import 'package:redpanda_light_client/src/main/PeerList.dart';
 import 'package:redpanda_light_client/src/main/SentryLogger.dart';
 import 'package:redpanda_light_client/src/main/Utils.dart';
-
-import 'package:convert/convert.dart';
 import 'package:redpanda_light_client/src/main/commands/FBPeerList_im.redpanda.commands_generated.dart';
 import 'package:redpanda_light_client/src/main/kademlia/KadContent.dart';
-
 import 'package:redpanda_light_client/src/redpanda_isolate.dart';
 
 class Peer {
@@ -99,8 +97,7 @@ class Peer {
 
   void updateNodeId(NodeId nodeId) async {
     if (_dbPeerId != null) {
-      await ConnectionService.appDatabase.dBPeersDao
-          .updateNodeId(_dbPeerId, nodeId.exportPublic());
+      await ConnectionService.appDatabase.dBPeersDao.updateNodeId(_dbPeerId, nodeId.exportPublic());
     }
     _nodeId = nodeId;
     return;
@@ -169,8 +166,7 @@ class Peer {
       decryptBuffer.compact();
 
       while (localDecrypted.remaining() > decryptBuffer.remaining()) {
-        print(
-            "doubled the size of the read buffer... ${2 * decryptBuffer.length}");
+        print("doubled the size of the read buffer... ${2 * decryptBuffer.length}");
         var newBuffer = ByteBuffer(2 * decryptBuffer.length);
 
         decryptBuffer.flip();
@@ -225,8 +221,7 @@ class Peer {
            */
           List<int> bytesForPublicKey = buffer.readBytes(NodeId.PUBLIC_KEYLEN);
 
-          NodeId peerNodeId =
-              NodeId.importPublic(Uint8List.fromList(bytesForPublicKey));
+          NodeId peerNodeId = NodeId.importPublic(Uint8List.fromList(bytesForPublicKey));
 
           log.finer('new nodeid from peer: ' + peerNodeId.toString());
 
@@ -262,8 +257,7 @@ class Peer {
 
           //lets read the random bytes from them
           if (buffer.remaining() < IVbytelenHalf) {
-            log.warning("not enough bytes for encryption... " +
-                buffer.remaining().toString());
+            log.warning("not enough bytes for encryption... " + buffer.remaining().toString());
             disconnect("not enough bytes for encryption...");
             return;
           }
@@ -327,8 +321,7 @@ class Peer {
 
       int decryptedCommand = firstEncByte.readByte();
 
-      log.finer(
-          "received first encrypted command: " + decryptedCommand.toString());
+      log.finer("received first encrypted command: " + decryptedCommand.toString());
 
       if (decryptedCommand == Command.PING) {
         log.finer("received first ping...");
@@ -451,25 +444,18 @@ class Peer {
   }
 
   ByteBuffer decrypt(ByteBuffer buffer) {
-    Uint8List decBytes =
-        ctrStreamCipherReceive.process(buffer.readBytes(buffer.remaining()));
+    Uint8List decBytes = ctrStreamCipherReceive.process(buffer.readBytes(buffer.remaining()));
     return ByteBuffer.fromList(decBytes);
   }
 
   Future<void> sendEncrypt(ByteBuffer buffer) async {
-//    print('len bytes to send enc: ' + buffer.remaining().toString() + " cmd: " + buffer.array().toString());
-
-    Uint8List encBytes = await ctrStreamCipherSend.process(buffer.array());
-
-//    print('len bytes to send enc: ' + encBytes.length.toString());
-
-//    print('enc cmd: ' + encBytes.toString());
+    Uint8List encBytes = ctrStreamCipherSend.process(buffer.array());
 
     socket.handleError((e) => {log.finer("error2: " + e.toString())});
 
     log.finest("trying to add bytes for peer: " + ip);
 
-    await socket.add(encBytes);
+    socket.add(encBytes);
     await socket.flush();
   }
 
@@ -477,26 +463,24 @@ class Peer {
     log.finest('calculateSharedSecret');
 
     ECPublicKey publicKey = _nodeId.getKeyPair().publicKey;
-    Uint8List encoded = generateIntermediateSharedSecret(
-        ConnectionService.nodeId.getKeyPair(), publicKey.Q);
+    Uint8List encoded = generateIntermediateSharedSecret(ConnectionService.nodeId.getKeyPair(), publicKey.Q);
 
-    log.finest(
-        'intermediateSharedSecret: ' + Utils.hexEncode(encoded).toString());
+    log.finest('intermediateSharedSecret: ' + Utils.hexEncode(encoded).toString());
 
-    ByteBuffer bytesForPrivateAESkeySend = ByteBuffer(32 + IVbytelen);
-    ByteBuffer bytesForPrivateAESkeyReceive = ByteBuffer(32 + IVbytelen);
+    ByteBuffer bytesForPrivateAESKeySend = ByteBuffer(32 + IVbytelen);
+    ByteBuffer bytesForPrivateAESKeyReceive = ByteBuffer(32 + IVbytelen);
 
-    bytesForPrivateAESkeySend.writeList(encoded);
-    bytesForPrivateAESkeyReceive.writeList(encoded);
+    bytesForPrivateAESKeySend.writeList(encoded);
+    bytesForPrivateAESKeyReceive.writeList(encoded);
 
-    bytesForPrivateAESkeySend.writeList(randomFromUs);
-    bytesForPrivateAESkeySend.writeList(randomFromThem);
+    bytesForPrivateAESKeySend.writeList(randomFromUs);
+    bytesForPrivateAESKeySend.writeList(randomFromThem);
 
-    bytesForPrivateAESkeyReceive.writeList(randomFromThem);
-    bytesForPrivateAESkeyReceive.writeList(randomFromUs);
+    bytesForPrivateAESKeyReceive.writeList(randomFromThem);
+    bytesForPrivateAESKeyReceive.writeList(randomFromUs);
 
-    sharedSecretSend = Utils.sha256(bytesForPrivateAESkeySend.array());
-    sharedSecretReceive = Utils.sha256(bytesForPrivateAESkeyReceive.array());
+    sharedSecretSend = Utils.sha256(bytesForPrivateAESKeySend.array());
+    sharedSecretReceive = Utils.sha256(bytesForPrivateAESKeyReceive.array());
 
     ByteBuffer bytesForIVsend = ByteBuffer(IVbytelen);
     ByteBuffer bytesForIVreceive = ByteBuffer(IVbytelen);
@@ -513,23 +497,15 @@ class Peer {
   void activateEncryption() {
     //todo
 
-//    print('activateEncryption');
-
     AESFastEngine aesSend = AESFastEngine();
     ctrStreamCipherSend = CTRStreamCipher(aesSend);
-    ParametersWithIV parametersWithIVSend =
-        ParametersWithIV(KeyParameter(sharedSecretSend), ivSend);
+    ParametersWithIV parametersWithIVSend = ParametersWithIV(KeyParameter(sharedSecretSend), ivSend);
     ctrStreamCipherSend.init(false, parametersWithIVSend);
-
-//    print('activateEncryption Send succesful');
 
     AESFastEngine aesReceive = AESFastEngine();
     ctrStreamCipherReceive = CTRStreamCipher(aesReceive);
-    ParametersWithIV parametersWithIVReceive =
-        ParametersWithIV(KeyParameter(sharedSecretReceive), ivReceive);
+    ParametersWithIV parametersWithIVReceive = ParametersWithIV(KeyParameter(sharedSecretReceive), ivReceive);
     ctrStreamCipherReceive.init(false, parametersWithIVReceive);
-
-//    print('activateEncryption Receive succesful');
 
     isEncryptionActive = true;
   }
@@ -555,7 +531,6 @@ class Peer {
   }
 
   bool parseHandshake(ByteBuffer buffer) {
-    //    print(buffer.readBytes(4));
     if (!Utils.listsAreEqual(Utils.MAGIC, buffer.readBytes(4))) {
       log.fine("wrong magic, disconnect!");
       return false;
@@ -568,7 +543,6 @@ class Peer {
     log.finest("lightclient code: $lightClient");
 
     Uint8List nonce = buffer.readBytes(20);
-//    print("server identity: " + HEX.encode(nonce).toUpperCase());
 
     log.finest('Found node with id: ' + _kademliaId.toString());
 
@@ -586,12 +560,10 @@ class Peer {
       handshakeStatus = -1;
     }
 
-//    print(buffer.readUnsignedShort());
     return true;
   }
 
-  Uint8List generateIntermediateSharedSecret(
-      AsymmetricKeyPair localPair, ECPoint remotePublicPoint) {
+  Uint8List generateIntermediateSharedSecret(AsymmetricKeyPair localPair, ECPoint remotePublicPoint) {
     var ss = remotePublicPoint * (localPair.privateKey as ECPrivateKey).d;
     return hex.decode(toHex(ss.x.toBigInteger()));
   }
@@ -601,18 +573,7 @@ class Peer {
     return (hex.length & 1 == 0) ? hex : '0$hex';
   }
 
-//  @override
-//  bool operator ==(other) {
-//    Peer otherPeer = other as Peer;
-//
-//    //todo add port...
-//    if (otherPeer.ip == ip) {
-//      return true;
-//    }
-//  }
-
   void onError(error) {
-//    print("error found: $error");
     log.fine("error found... ${ip} " + error.toString());
   }
 
@@ -635,10 +596,6 @@ class Peer {
     return secureRandom;
   }
 
-//  void setNodeId(NodeId peerNodeId) {
-//    _nodeId = peerNodeId;
-//  }
-
   NodeId getNodeId() {
     return _nodeId;
   }
@@ -649,7 +606,6 @@ class Peer {
     print("######################## disconnect: $reason ip: $ip ");
 
     if (socket != null) {
-//      socket.close();
       socket.destroy();
       socket = null;
     }
@@ -690,20 +646,16 @@ class Peer {
     int decryptedCommand = decryptBuffer.readUnsignedByte();
 
     log.finer("received encrypted command: " + decryptedCommand.toString());
-//      print('on data: ' + decryptBuffer.array().toString());
 
     if (decryptedCommand == Command.PING) {
-//        print("received ping...");
       ByteBuffer byteBuffer = new ByteBuffer(1);
       byteBuffer.writeByte(Command.PONG);
       byteBuffer.flip();
 
       sendEncrypt(byteBuffer);
-//        print('ponged peer...');
       return 1;
     } else if (decryptedCommand == Command.PONG) {
       lastActionOnConnection = new DateTime.now().millisecondsSinceEpoch;
-//        print('received pong...');
       return 1;
     } else if (decryptedCommand == Command.SEND_PEERLIST) {
       log.finer('received peerlist... ' + ip);
@@ -724,8 +676,6 @@ class Peer {
           continue;
         }
 
-        // KademliaId kademliaId = KademliaId.fromBytes(Uint8List.fromList(fbPeer.nodeId));
-
         NodeId nodeId = NodeId.importPublic(Uint8List.fromList(fbPeer.nodeId));
 
         if (nodeId.getKademliaId() == ConnectionService.kademliaId) {
@@ -733,10 +683,7 @@ class Peer {
           continue;
         }
 
-        log.finer("peer in fblist: " +
-            fbPeer.ip +
-            " " +
-            nodeId.getKademliaId().toString());
+        log.finer("peer in fblist: " + fbPeer.ip + " " + nodeId.getKademliaId().toString());
 
         PeerList.add(new Peer.withNodeId(fbPeer.ip, fbPeer.port, nodeId));
       }
@@ -748,7 +695,6 @@ class Peer {
       }
 
       int ackID = decryptBuffer.readInt();
-//        KademliaId kademliaId = new KademliaId.fromBytes(decryptBuffer.readBytes(KademliaId.ID_LENGTH));
       int timestamp = decryptBuffer.readLong();
       Uint8List pubkeyBytes = decryptBuffer.readBytes(NodeId.PUBLIC_KEYLEN);
 
@@ -761,27 +707,16 @@ class Peer {
       Uint8List content = decryptBuffer.readBytes(contentLength);
       Uint8List signature = readSignature(decryptBuffer);
 
-      KadContent kadContent = new KadContent.withEncryptedData(
-          timestamp, pubkeyBytes, content, signature);
+      KadContent kadContent = new KadContent.withEncryptedData(timestamp, pubkeyBytes, content, signature);
 
-      var channelId = ConnectionService
-          .currentKademliaIdtoChannelId[kadContent.getKademliaId()];
+      var channelId = ConnectionService.currentKademliaIdtoChannelId[kadContent.getKademliaId()];
       if (channelId == null) {
-        print("we could not map the KademliaId " +
-            channelId.toString() +
-            " to any channel in our db.");
+        print("we could not map the KademliaId " + channelId.toString() + " to any channel in our db.");
       } else {
-        DBChannel channel =
-            await ConnectionService.appDatabase.getChannelById(channelId);
+        DBChannel channel = await ConnectionService.appDatabase.getChannelById(channelId);
         if (channel == null) {
           log.fine("obtained data for a channel we do not have....");
-          return 1 +
-              4 +
-              8 +
-              NodeId.PUBLIC_KEYLEN +
-              4 +
-              contentLength +
-              signature.length;
+          return 1 + 4 + 8 + NodeId.PUBLIC_KEYLEN + 4 + contentLength + signature.length;
         }
         await kadContent.decryptWith(new Channel(channel));
         log.finer("obtained KadContent: " +
@@ -801,9 +736,6 @@ class Peer {
         chan.setChannelData(decoded);
         await chan.saveChannelData(ConnectionService.appDatabase);
 
-//        print("obtained KadContent: ");
-//        print(decoded);
-
         String text;
         int from;
         for (var msg in decoded['msgs']) {
@@ -814,10 +746,8 @@ class Peer {
           var i = await ConnectionService.appDatabase.dBMessagesDao
               .updateMessage(channelId, messageId, 0, text, from, timestamp);
           if (i != null) {
-            refreshMessagesWatching(channelId,
-                messageId: messageId, channelName: channel.name);
-            await ConnectionService.appDatabase
-                .updateLastMessage(channelId, from, text, timestamp);
+            refreshMessagesWatching(channelId, messageId: messageId, channelName: channel.name);
+            await ConnectionService.appDatabase.updateLastMessage(channelId, from, text, timestamp);
           }
         }
 
@@ -828,36 +758,25 @@ class Peer {
             String nick = ud.value['nick'];
             int timestamp = ud.value['generated'];
             log.finest("found nick for $userid in dht entry: $nick");
-            await ConnectionService.appDatabase.dBFriendsDao
-                .updateFriend(userid, nick);
+            await ConnectionService.appDatabase.dBFriendsDao.updateFriend(userid, nick);
           }
         }
-
-//          print("object")
       }
 
-      return 1 +
-          4 +
-          8 +
-          NodeId.PUBLIC_KEYLEN +
-          4 +
-          contentLength +
-          signature.length;
+      return 1 + 4 + 8 + NodeId.PUBLIC_KEYLEN + 4 + contentLength + signature.length;
     } else if (decryptedCommand == Command.JOB_ACK) {
       var ackId = decryptBuffer.readInt();
       return 1 + 4;
     }
 
-    if (decryptedCommand == Command.REQUEST_PEERLIST ||
-        decryptedCommand == Command.UPDATE_REQUEST_TIMESTAMP) {
+    if (decryptedCommand == Command.REQUEST_PEERLIST || decryptedCommand == Command.UPDATE_REQUEST_TIMESTAMP) {
       //commands are not supported for light clients,
       //todo do not send to light clients....
       return 1;
     }
 
     if (decryptedCommand == Command.FLASCHENPOST_PUT) {
-      print(
-          "cmd FLASCHENPOST_PUT should not be send to us since we are a light client");
+      print("cmd FLASCHENPOST_PUT should not be send to us since we are a light client");
       int contentLen = decryptBuffer.readInt();
       if (decryptBuffer.remaining() < contentLen) {
         return 0;

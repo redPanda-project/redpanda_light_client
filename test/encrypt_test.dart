@@ -6,8 +6,6 @@ import 'package:redpanda_light_client/export.dart';
 import 'package:redpanda_light_client/src/main/ByteBuffer.dart';
 import 'package:redpanda_light_client/src/main/Channel.dart';
 import 'package:redpanda_light_client/src/main/NodeId.dart';
-import 'package:redpanda_light_client/src/main/Peer.dart';
-import 'package:redpanda_light_client/src/main/PeerList.dart';
 import 'package:redpanda_light_client/src/main/Utils.dart';
 import 'package:test/test.dart';
 
@@ -15,17 +13,6 @@ AppDatabase appDatabase;
 
 void main() {
   group('Test basic encryption', () {
-//    setUp(() async {
-//      if (ConnectionService.appDatabase == null) {
-//        ConnectionService.pathToDatabase = 'data';
-//        await new Directory(ConnectionService.pathToDatabase).create(recursive: true);
-//        appDatabase = new AppDatabase();
-//        ConnectionService.appDatabase = appDatabase;
-//      } else {
-//        appDatabase = ConnectionService.appDatabase;
-//      }
-//    });
-
     test('Test enc Cipher Stream CTR', () {
       AESFastEngine aes = AESFastEngine();
 
@@ -38,7 +25,6 @@ void main() {
       ByteBuffer b = ByteBuffer(1);
 
       Uint8List encBytes = ctrStreamCipher.process(b.readBytes(b.remaining()));
-//      print("enc byte: " + Utils.hexEncode(encBytes));
 
       CTRStreamCipher dec = CTRStreamCipher(aes);
       dec.init(false, parametersWithIV);
@@ -90,8 +76,6 @@ void main() {
       padding2.init();
 
       int padCount = padding2.padCount(decBytes);
-
-//      print('pad cnt: ' + padCount.toString());
 
       //remove padding
       decBytes = decBytes.sublist(0, decBytes.lengthInBytes - padCount);

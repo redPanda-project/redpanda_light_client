@@ -1,8 +1,8 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:core';
 import 'dart:io';
-import 'dart:collection';
 
 import 'package:logging/logging.dart';
 import 'package:redpanda_light_client/export.dart';
@@ -363,7 +363,7 @@ class ConnectionService {
         continue;
       }
 
-      Map<String, dynamic> userData = null;
+      Map<String, dynamic> userData;
       Map<String, dynamic> channelData2 = channelData['userdata'];
 
       if (channelData2 != null) {
@@ -406,7 +406,7 @@ class ConnectionService {
 
         ByteBuffer writeBuffer = ByteBuffer(1 + 4 + KademliaId.ID_LENGTH_BYTES);
         writeBuffer.writeByte(Command.KADEMLIA_GET);
-        writeBuffer.writeInt(Utils.random.nextInt(1<<32)); //todo check for ack with this id?
+        writeBuffer.writeInt(Utils.random.nextInt(1 << 32)); //todo check for ack with this id?
         writeBuffer.writeList(currentKademliaId.bytes);
 
         await PeerList.sendIntegrated(writeBuffer);

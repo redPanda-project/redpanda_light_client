@@ -22,8 +22,7 @@ void main() {
         expect(fbPeerList.peers[i].port, i);
       }
 
-      KademliaId kademliaId =
-          KademliaId.fromBytes(Uint8List.fromList(fbPeerList.peers[0].nodeId));
+      KademliaId kademliaId = KademliaId.fromBytes(Uint8List.fromList(fbPeerList.peers[0].nodeId));
 
       expect(kademliaId.toString(), "2PCbqVfWuXK2t9g7YrPcTajYSZA2");
     });

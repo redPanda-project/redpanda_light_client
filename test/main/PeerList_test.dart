@@ -1,13 +1,8 @@
 import 'dart:io';
-import 'dart:typed_data';
 
-import 'package:moor/moor.dart';
-import 'package:pointycastle/export.dart';
 import 'package:redpanda_light_client/export.dart';
-import 'package:redpanda_light_client/src/main/ByteBuffer.dart';
 import 'package:redpanda_light_client/src/main/Peer.dart';
 import 'package:redpanda_light_client/src/main/PeerList.dart';
-import 'package:redpanda_light_client/src/main/Utils.dart';
 import 'package:test/test.dart';
 
 AppDatabase appDatabase;
@@ -52,7 +47,6 @@ void main() {
     });
 
     test('Test insert with different ip and port', () {
-
       var nodeId = new NodeId.withNewKeyPair();
 
       var peer = new Peer("542342342", 4234);
