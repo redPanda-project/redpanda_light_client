@@ -583,7 +583,7 @@ class Peer {
   }
 
   void onError(error) {
-    log.fine("error found... ${ip} " + error.toString());
+    log.finer("error found... ${ip} " + error.toString());
   }
 
   void requestPublicKey() {
