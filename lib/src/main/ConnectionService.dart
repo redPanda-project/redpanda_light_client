@@ -418,7 +418,7 @@ class ConnectionService {
     print('waited, now lets insert our lates data into the dht network...');
     stopwatch = Stopwatch()..start();
 
-    // lets optain the latest channel data from db
+    // lets obtain the latest channel data from db
     allChannels = await _appDatabase.getAllChannels();
     for (DBChannel dbChannel in allChannels) {
       if (channelsUpdated.contains(dbChannel.id)) {

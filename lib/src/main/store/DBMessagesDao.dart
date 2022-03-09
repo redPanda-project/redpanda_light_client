@@ -33,8 +33,8 @@ class DBMessagesDao extends DatabaseAccessor<AppDatabase> with _$DBMessagesDaoMi
     ]).get();
 
     var list = rows.map((row) {
-      var readTable = row.readTable(dBMessages);
-      return DBMessageWithFriend(readTable, row.readTable(dBFriends), ConnectionService.myUserId == readTable.from);
+      var readTable = row.readTableOrNull(dBMessages);
+      return DBMessageWithFriend(readTable, row.readTableOrNull(dBFriends), ConnectionService.myUserId == readTable.from);
     }).toList();
 
     return list;
@@ -70,17 +70,18 @@ class DBMessagesDao extends DatabaseAccessor<AppDatabase> with _$DBMessagesDaoMi
   }
 
   Future<int> updateMessage(int channelId, int messageId, int deliveredTo, String text, int from, int timestamp) async {
-//    print("hagdhjasgdhjasgd update message: " + messageId.toString() + " " + text);
+   log.finest("update message database: " + messageId.toString() + " " + text);
 
     bool hadToDelete = false;
-    var single;
+    DBMessage single;
     //if more than one message delete all msg and add below in the update routine
     try {
-      single = await (select(dBMessages)..where((tbl) => tbl.messageId.equals(messageId))).getSingle();
+      single = await (select(dBMessages)..where((tbl) => tbl.messageId.equals(messageId))).getSingleOrNull();
     } on StateError catch (e) {
       (delete(dBMessages)..where((tbl) => tbl.messageId.equals(messageId))).go();
       //let us set single to null such that the the message will be added
-      print("had to delete msg...");
+      print("had to delete msg, since more than one was found");
+      log.finer(e.stackTrace);
       single = null;
       hadToDelete = true;
     }
