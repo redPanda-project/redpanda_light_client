@@ -1,3 +1,4 @@
+// @dart=2.9
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -21,7 +22,6 @@ import 'package:redpanda_light_client/src/main/NodeId.dart';
 import 'package:redpanda_light_client/src/main/PeerList.dart';
 import 'package:redpanda_light_client/src/main/SentryLogger.dart';
 import 'package:redpanda_light_client/src/main/Utils.dart';
-import 'package:redpanda_light_client/src/main/commands/FBPeerList_im.redpanda.commands_generated.dart';
 import 'package:redpanda_light_client/src/main/kademlia/KadContent.dart';
 import 'package:redpanda_light_client/src/redpanda_isolate.dart';
 
@@ -671,30 +671,29 @@ class Peer {
 
       int toReadBytes = decryptBuffer.readInt();
 
-      List<int> readBytes = decryptBuffer.readBytes(toReadBytes);
+      List<int> peerListBytes = decryptBuffer.readBytes(toReadBytes);
 
-      FBPeerList fbPeerList = new FBPeerList(readBytes);
+      var peerListBuffer = ByteBuffer.fromList(peerListBytes);
 
-      if (fbPeerList == null || fbPeerList.peers.isEmpty) {
-        return 1 + 4 + toReadBytes;
-      }
+      var size = peerListBuffer.readInt();
 
-      for (FBPeer fbPeer in fbPeerList.peers) {
-        if (fbPeer.nodeId == null) {
-          //lets skip peers without a kademliaId...
-          continue;
+      for (int i = 0; i < size; i++) {
+        if (peerListBuffer.readShort() == 1) {
+          NodeId peerNodeId = NodeId.importPublic(peerListBuffer.readBytes(NodeId.PUBLIC_KEYLEN));
+
+          String peerIp = utf8.decode(peerListBuffer.readBytes(peerListBuffer.readInt()));
+          int peerPort = peerListBuffer.readInt();
+          if (peerNodeId.getKademliaId() == ConnectionService.kademliaId) {
+            //lets not add ourselves...
+            continue;
+          }
+          log.finer("peer in peerlist: " + peerIp + " " + peerNodeId.getKademliaId().toString());
+          PeerList.add(new Peer.withNodeId(peerIp, peerPort, peerNodeId));
+        } else {
+          //let skip peers without kademlia id and just move the buffers position
+          peerListBuffer.readBytes(peerListBuffer.readInt());
+          peerListBuffer.readInt();
         }
-
-        NodeId nodeId = NodeId.importPublic(Uint8List.fromList(fbPeer.nodeId));
-
-        if (nodeId.getKademliaId() == ConnectionService.kademliaId) {
-          //lets not add ourselves...
-          continue;
-        }
-
-        log.finer("peer in fblist: " + fbPeer.ip + " " + nodeId.getKademliaId().toString());
-
-        PeerList.add(new Peer.withNodeId(fbPeer.ip, fbPeer.port, nodeId));
       }
 
       return 1 + 4 + toReadBytes;
@@ -752,8 +751,7 @@ class Peer {
           text = msg['content'];
           from = msg['from'];
           int timestamp = msg['timestamp'];
-          var i = await ConnectionService.appDatabase.dBMessagesDao
-              .updateMessage(channelId, messageId, 0, text, from, timestamp);
+          var i = await ConnectionService.appDatabase.dBMessagesDao.updateMessage(channelId, messageId, 0, text, from, timestamp);
           if (i != null) {
             refreshMessagesWatching(channelId, messageId: messageId, channelName: channel.name);
             await ConnectionService.appDatabase.updateLastMessage(channelId, from, text, timestamp);

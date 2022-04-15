@@ -1,3 +1,4 @@
+// @dart=2.9
 import 'dart:typed_data';
 
 import 'package:date_format/date_format.dart';
@@ -10,11 +11,7 @@ import 'package:redpanda_light_client/src/main/NodeId.dart';
 import 'package:redpanda_light_client/src/main/Utils.dart';
 
 class KadContent {
-//    public static final int PUBKEY_LEN = 33;
-//    public static final int SIGNATURE_LEN = 64;
-
-  KademliaId
-      _id; //we store the ID duplicated because of performance reasons (new lookup in the hashmap costs more than a bit of memory)
+  KademliaId _id;
   int timestamp; //created at (or updated)
   Uint8List pubkey;
   Uint8List _content;
@@ -23,9 +20,7 @@ class KadContent {
 
   KadContent(this.timestamp, this.pubkey, this._content);
 
-  KadContent.createNow(this.pubkey, this._content) {
-    timestamp = Utils.getCurrentTimeMillis();
-  }
+  KadContent.createNow(this.pubkey, this._content) : timestamp = Utils.getCurrentTimeMillis();
 
   KadContent.withEncryptedData(this.timestamp, this.pubkey, this._content, this._signature) {
     _encrypted = true;
@@ -40,8 +35,7 @@ class KadContent {
   }
 
   static KademliaId createKademliaId(int timestamp, Uint8List pubkey) {
-    final formattedStr =
-        formatDate(DateTime.fromMillisecondsSinceEpoch(timestamp, isUtc: true), [dd, '.', mm, '.', yy]);
+    final formattedStr = formatDate(DateTime.fromMillisecondsSinceEpoch(timestamp, isUtc: true), [dd, '.', mm, '.', yy]);
 
     List<int> formatedTimeBytes = formattedStr.codeUnits;
 
@@ -146,8 +140,7 @@ class KadContent {
       throw new Exception('KadContent has to be signed before writing to a peer!');
     }
 
-    ByteBuffer writeBuffer =
-        ByteBuffer(1 + 4 + 4 + 8 + NodeId.PUBLIC_KEYLEN + 4 + _content.length + 4 + getSignature().length);
+    ByteBuffer writeBuffer = ByteBuffer(1 + 4 + 4 + 8 + NodeId.PUBLIC_KEYLEN + 4 + _content.length + 4 + getSignature().length);
     writeBuffer.writeByte(Command.KADEMLIA_STORE);
     writeBuffer.writeInt(4 + 8 + NodeId.PUBLIC_KEYLEN + 4 + _content.length + 4 + getSignature().length);
     writeBuffer.writeInt(Utils.random.nextInt(1 << 32)); //todo check for ack with this id?
