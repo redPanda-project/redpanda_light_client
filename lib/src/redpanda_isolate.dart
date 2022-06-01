@@ -1,3 +1,4 @@
+// @dart=2.9
 import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
@@ -16,19 +17,6 @@ dynamic logLevel = Level.INFO; // defaults to Level.INFO
 
 Stopwatch stopWatch = Stopwatch()..start();
 
-//final String START = "start";
-//final String START_DEBUG = "startdebug";
-//final String CHANNEL_CREATE = "createchannel";
-//final String CHANNEL_FROM_DATA = "channelfromdata";
-//final String CHANNEL_RENAME = "renamechannel";
-//final String CHANNEL_REMOVE = "removechannel";
-//final String CHANNELS_WATCH = "watchchannels";
-//final String CHANNEL_GET_BY_ID = "channelgetbyid";
-//final String MESSAGES_WATCH = "watchmessages";
-//final String MESSAGES_GET_RECENT = "getrecentmsgs";
-//final String MESSAGES_SEND = "sendmessages";
-//final String MESSAGES_LISTEN_NEW = "msgslistennew";
-
 final log = Logger('redpanda_isolate');
 ConnectionService connectionService;
 bool running = false;
@@ -39,23 +27,7 @@ Map<int, SendPort> messageWatcher = HashMap<int, SendPort>();
 SendPort onNewMessageLisener;
 SendPort onNewStatusLisener;
 
-//
-// The port of the new isolate
-// this port will be used to further
-// send messages to that isolate
-//
-//SendPort newIsolateSendPort;
-
-//
-// Instance of the new Isolate
-//
 Isolate newIsolate;
-
-//
-// Method that launches a new isolate
-// and proceeds with the initial
-// hand-shaking
-//
 
 Stream<String> readLine() => stdin.transform(utf8.decoder).transform(const LineSplitter());
 
@@ -84,24 +56,11 @@ void processLine(String line) async {
 }
 
 Stream<String> read() async* {
-//  var readLineSync = await stdin.readLineSync();
-//  yield readLineSync;
-
   await for (var codeUnits in stdin) {
     var line = Utf8Codec().decode(codeUnits);
     yield line.substring(0, line.length - 1);
   }
 
-//while (true) {
-////  var encode = Utf8Codec().encode("\n");
-////  var codeUnits = await stdin.firstWhere((element) => element.contains(encode[0]));
-//
-//  List<int> ints = await stdin.first;
-//  print("ints: " + ints.toString());
-//
-////  var line = Utf8Codec().decode(codeUnits);
-//  yield "a";
-//}
 }
 
 Future<void> readLines() async {
@@ -112,15 +71,8 @@ Future<void> readLines() async {
   Timer logNormalTimer;
 
   while (true) {
-//    var line = stdin.readLineSync();
-
-//    var encode = Utf8Codec().encode("\n");
-//    var codeUnits = await stdin.firstWhere((element) => element.contains(encode[0]));
-//    var line = Utf8Codec().decode(codeUnits);
-
     var line = await readStream.first;
 
-//    print("line:" + line.toString());
     if (logNormalTimer != null) {
       logNormalTimer.cancel();
     }
@@ -196,15 +148,8 @@ Future<void> readLines() async {
 }
 
 Future<void> setupAndStartIsolate() async {
-  //
-  // Local and temporary ReceivePort to retrieve
-  // the new isolate's SendPort
-  //
   ReceivePort receivePort = ReceivePort();
 
-  //
-  // Instantiate the new isolate
-  //
   newIsolate = await Isolate.spawn(
     callbackFunction,
     receivePort.sendPort,
@@ -221,33 +166,13 @@ Future<void> setupAndStartIsolate() async {
     print(stackDescription);
   });
 
-  //
-  // Retrieve the port to be used for further
-  // communication
-  //
   RedPandaLightClient.newIsolateSendPort = await receivePort.first;
 }
 
-//
-// The entry point of the new isolate
-//
-//
 void callbackFunction(SendPort callerSendPort) {
-//
-// Instantiate a SendPort to receive message
-// from the caller
-//
   ReceivePort newIsolateReceivePort = ReceivePort();
-
-//
-// Provide the caller with the reference of THIS isolate's SendPort
-//
   callerSendPort.send(newIsolateReceivePort.sendPort);
 
-//
-// Isolate main routine that listens to incoming messages,
-// processes it and provides an answer
-//
   newIsolateReceivePort.listen((dynamic message) {
     SendPort sendPort = message["sender"];
     String command = message["command"];
@@ -255,20 +180,9 @@ void callbackFunction(SendPort callerSendPort) {
 
     parseIsolateCommands(sendPort, command, data);
 
-//    if (message is CrossIsolatesMessage) {
-//      CrossIsolatesMessage incomingMessage = message as CrossIsolatesMessage;
-//      parseIsolateCommands(incomingMessage);
-//    } else if (message is String) {
-//      print("obtained string in isolate: " + message);
-//    }
+
   });
 
-//  new Timer.periodic(Duration(seconds: 1), (t) {
-//    if (Utils.getCurrentTimeMillis() - lastPinged > 10000) {
-//      print("isolate didnt receive ping in time, shutdown isolate");
-//      shutdown();
-//    }
-//  });
 }
 
 Future<void> shutdown() async {
@@ -284,14 +198,10 @@ Future<void> shutdown() async {
 void parseIsolateCommands(SendPort answerSendPort, String command, dynamic data) async {
   print("isolate cmd: " + command + " data: " + data.toString() + " after boot: ${stopWatch.elapsed}");
 
-  //
-  // Process the message
-  //
   if (command == IsolateCommand.PING.toString()) {
     lastPinged = Utils.getCurrentTimeMillis();
   } else if (command == IsolateCommand.SHUTDOWN.toString()) {
     log.info("RedPandaLightClient shutting down...");
-//    running = false;
     await shutdown();
     answerSendPort.send(null);
   } else if (command == IsolateCommand.START.toString()) {
@@ -315,22 +225,11 @@ void parseIsolateCommands(SendPort answerSendPort, String command, dynamic data)
 
     Logger.root.level = logLevel; // defaults to Level.INFO
     Logger.root.onRecord.listen((record) {
-//      print('${record.level.name}: ${record.time}: ${record.message}');
       print(
           '${formatToMinLen(record.loggerName, 30)}: ${formatToMinLen(record.time.toString(), 26)}:    ${record.message}');
     });
 
-    // create sqlite database folder otherwise the database opening will fail
-    // with: SqliteException: bad parameter or other API misuse, unable to open database file
-//    if (Platform.isWindows) {
-//    await new Directory('data').create(recursive: true);
-//    }
 
-//    if (running) {
-//      log.info("RedPandaLightClient already running skipping new init...");
-//      return;
-//    }
-//    running = true;
 
     connectionService = ConnectionService(dataFolderPath, myPort);
     var allChannels = await connectionService.start();
@@ -352,16 +251,10 @@ void parseIsolateCommands(SendPort answerSendPort, String command, dynamic data)
 
     Logger.root.level = logLevel; // defaults to Level.INFO
     Logger.root.onRecord.listen((record) {
-//      print('${record.level.name}: ${record.time}: ${record.message}');
       print(
           '${formatToMinLen(record.loggerName, 30)}: ${formatToMinLen(record.time.toString(), 26)}:    ${record.message}');
     });
 
-    // create sqlite database folder otherwise the database opening will fail
-    // with: SqliteException: bad parameter or other API misuse, unable to open database file
-//    if (Platform.isWindows) {
-//    await new Directory('data').create(recursive: true);
-//    }
 
     connectionService = ConnectionService(dataFolderPath, myPort);
     await connectionService.start(debugOnly: true);
@@ -376,9 +269,6 @@ void parseIsolateCommands(SendPort answerSendPort, String command, dynamic data)
   } else if (command == IsolateCommand.CHANNEL_FROM_DATA.toString()) {
     String sharedData = data['data'];
     String name = data['name'];
-//    Uint8List sharedSecret = data['sharedSecret'];
-//    Uint8List privateSigningKey = data['privateSigningKey'];
-//    var i = await ConnectionService.appDatabase.createChannelFromData(name, sharedSecret, privateSigningKey);
     var i = await Channel.insertSharedChannel(sharedData, name);
     answerSendPort.send(i);
     refreshChannelsWatching();
@@ -413,9 +303,7 @@ void parseIsolateCommands(SendPort answerSendPort, String command, dynamic data)
 
     print("messages watched");
 
-    //getcomplete message list
     var allmsgs = await ConnectionService.appDatabase.dBMessagesDao.getAllDBMessages(channelId);
-//    print("all msgs: " + allmsgs.toString());
     answerSendPort.send(allmsgs);
   } else if (command == IsolateCommand.MESSAGES_SEND.toString()) {
     int channelId = data['channelId'];
@@ -455,161 +343,6 @@ void parseIsolateCommands(SendPort answerSendPort, String command, dynamic data)
   }
 }
 
-//void parseIsolateCommands(CrossIsolatesMessage incomingMessage) async {
-//  IsolateCommand command = incomingMessage.message;
-//  dynamic data = incomingMessage.data;
-//
-////  print("isolate cmd: " + command.toString() + " data: " + data.toString());
-//
-//  //
-//  // Process the message
-//  //
-//  if (command == IsolateCommand.PING) {
-//    lastPinged = Utils.getCurrentTimeMillis();
-//  } else if (command == IsolateCommand.SHUTDOWN) {
-//    log.info("RedPandaLightClient shutting down...");
-////    running = false;
-//    await shutdown();
-//    incomingMessage.sender.send(null);
-//  } else if (command == IsolateCommand.START) {
-//    //listen for console if running on Windows or Linux
-//    if (Platform.isWindows || Platform.isLinux) {
-//      /**
-//       * start listing to console from Isolate such that we can use all objects on the isolate side
-//       */
-////      readLine().listen(processLine);
-//      readLines();
-//    }
-//    String dataFolderPath = data['dataFolderPath'];
-//    int myPort = data['myPort'];
-//
-//    Logger.root.level = logLevel; // defaults to Level.INFO
-//    Logger.root.onRecord.listen((record) {
-////      print('${record.level.name}: ${record.time}: ${record.message}');
-//      print(
-//          '${formatToMinLen(record.loggerName, 30)}: ${formatToMinLen(record.time.toString(), 26)}:    ${record.message}');
-//    });
-//
-//    // create sqlite database folder otherwise the database opening will fail
-//    // with: SqliteException: bad parameter or other API misuse, unable to open database file
-////    if (Platform.isWindows) {
-////    await new Directory('data').create(recursive: true);
-////    }
-//
-////    if (running) {
-////      log.info("RedPandaLightClient already running skipping new init...");
-////      return;
-////    }
-////    running = true;
-//
-//    connectionService = ConnectionService(dataFolderPath, myPort);
-//    await connectionService.start();
-//    incomingMessage.sender.send(null);
-//  } else if (command == IsolateCommand.START_DEBUG) {
-//    String dataFolderPath = data['dataFolderPath'];
-//    int myPort = data['myPort'];
-//
-//    Logger.root.level = logLevel; // defaults to Level.INFO
-//    Logger.root.onRecord.listen((record) {
-////      print('${record.level.name}: ${record.time}: ${record.message}');
-//      print(
-//          '${formatToMinLen(record.loggerName, 30)}: ${formatToMinLen(record.time.toString(), 26)}:    ${record.message}');
-//    });
-//
-//    // create sqlite database folder otherwise the database opening will fail
-//    // with: SqliteException: bad parameter or other API misuse, unable to open database file
-////    if (Platform.isWindows) {
-////    await new Directory('data').create(recursive: true);
-////    }
-//
-//    if (running) {
-//      log.info("RedPandaLightClient already running skipping new init...");
-//      return;
-//    }
-//    running = true;
-//
-//    connectionService = ConnectionService(dataFolderPath, myPort);
-//    await connectionService.start(debugOnly: true);
-//    incomingMessage.sender.send(null);
-//  }
-//  // Channel operations
-//  else if (command == IsolateCommand.CHANNEL_CREATE) {
-//    String name = data['name'];
-//    var i = await ConnectionService.appDatabase.createNewChannel(name);
-//    incomingMessage.sender.send(i);
-//    refreshChannelsWatching();
-//  } else if (command == IsolateCommand.CHANNEL_FROM_DATA) {
-//    String sharedData = data['data'];
-//    String name = data['name'];
-////    Uint8List sharedSecret = data['sharedSecret'];
-////    Uint8List privateSigningKey = data['privateSigningKey'];
-////    var i = await ConnectionService.appDatabase.createChannelFromData(name, sharedSecret, privateSigningKey);
-//    var i = await Channel.insertSharedChannel(sharedData, name);
-//    incomingMessage.sender.send(i);
-//    refreshChannelsWatching();
-//  } else if (command == IsolateCommand.CHANNEL_RENAME) {
-//    int channelId = data['channelId'];
-//    String name = data['newName'];
-//    var i = await ConnectionService.appDatabase.renameChannel(channelId, name);
-//    incomingMessage.sender.send(i);
-//    refreshChannelsWatching();
-//  } else if (command == IsolateCommand.CHANNEL_REMOVE) {
-//    int channelId = data['channelId'];
-//    var i = await ConnectionService.appDatabase.removeChannel(channelId);
-//    incomingMessage.sender.send(i);
-//    refreshChannelsWatching();
-//  } else if (command == IsolateCommand.CHANNEL_GET_BY_ID) {
-//    int channelId = data['channelId'];
-//    var i = await ConnectionService.appDatabase.getChannelById(channelId);
-//    incomingMessage.sender.send(i);
-//  } else if (command == IsolateCommand.CHANNELS_WATCH) {
-//    channelWatcher.add(incomingMessage.sender);
-//
-//    refreshChannelsWatching();
-//
-////    var i = ConnectionService.appDatabase.watchDBChannelEntries();
-////    await for (List<DBChannel> c in i) {
-////      print("asddwdwd: " + c.length.toString());
-////      incomingMessage.sender.send(c);
-////    }
-//  }
-//  // all stuff related to messages
-//  else if (command == IsolateCommand.MESSAGES_WATCH) {
-//    print("messages watched");
-//    int channelId = data['channelId'];
-//    //todo add by channel id...
-//    messageWatcher.update(channelId, (value) => incomingMessage.sender, ifAbsent: () => incomingMessage.sender);
-//
-//    print("messages watched");
-//
-//    //getcomplete message list
-//    var allmsgs = await ConnectionService.appDatabase.dBMessagesDao.getAllDBMessages(channelId);
-////    print("all msgs: " + allmsgs.toString());
-//    incomingMessage.sender.send(allmsgs);
-//  } else if (command == IsolateCommand.MESSAGES_SEND) {
-//    int channelId = data['channelId'];
-//    String text = data['text'];
-//    var newMessageId = await ConnectionService.appDatabase.dBMessagesDao.writeMessage(channelId, text);
-//    incomingMessage.sender.send(newMessageId);
-//    refreshMessagesWatching(channelId);
-//  } else if (command == IsolateCommand.MESSAGES_GET_RECENT) {
-//    int channelId = data['channelId'];
-//    String text = data['text'];
-//    var allMsgs = await ConnectionService.appDatabase.dBMessagesDao.getAllDBMessages(channelId);
-//    incomingMessage.sender.send(allMsgs);
-//  } else if (command == IsolateCommand.MESSAGES_LISTEN_NEW) {
-//    onNewMessageLisener = incomingMessage.sender;
-//  } else if (command == IsolateCommand.STATUS_LISTEN) {
-//    onNewStatusLisener = incomingMessage.sender;
-//  }
-//
-//  //
-//  else if (command == "unknown") {
-//    String newMessage = "asdg " + incomingMessage.message;
-//    incomingMessage.sender.send(newMessage);
-//  }
-//}
-
 /**
  * If now messageId is provided we assume that this message was send from us and we do not have to generate a new
  * notification.
@@ -632,7 +365,6 @@ refreshMessagesWatching(int channelId, {int messageId = -1, String channelName})
   }
 
   var allmsgs = await ConnectionService.appDatabase.dBMessagesDao.getAllDBMessages(channelId);
-//  print("all msgs: " + allmsgs.toString());
   mw.send(allmsgs);
 }
 
@@ -650,8 +382,6 @@ Future<void> refreshStatus() async {
 
   if (onNewStatusLisener != null) {
     var defaultName = ConnectionService.localSetting.defaultName;
-
-//    print('defaultName: ' + defaultName.toString() + ' ' + defaultName?.isEmpty.toString());
 
     if (defaultName == null || defaultName.isEmpty) {
       onNewStatusLisener.send("Please set your name in the menu.");

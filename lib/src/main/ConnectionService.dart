@@ -1,3 +1,4 @@
+// @dart=2.9
 import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
@@ -22,6 +23,8 @@ import 'package:sentry/sentry.dart';
 import 'NodeId.dart';
 
 class ConnectionService {
+  static const WAIT_BETWEEN_LOOPS = 10;
+
   static final log = Logger('RedPandaLightClient');
   static final SentryClient sentry =
       new SentryClient(new SentryOptions(dsn: "https://5ab6bb5e18a84fc1934b438139cc13d1@sentry.io/3871436"));
@@ -46,10 +49,12 @@ class ConnectionService {
   static AppDatabase _appDatabase;
   Timer loopTimer;
   static int myPort;
+  Stopwatch watchLastTimePeerListRequested;
 
   ConnectionService(String pathToDatabase, int mPort) {
     ConnectionService.pathToDatabase = pathToDatabase;
     myPort = mPort;
+    watchLastTimePeerListRequested = new Stopwatch();
   }
 
   static AppDatabase get appDatabase => _appDatabase;
@@ -70,7 +75,7 @@ class ConnectionService {
   }
 
   Future<void> loop2() async {
-    if (PeerList.size() < 3) {
+    if (PeerList.size() < 30) {
       reseed();
     }
 
@@ -95,8 +100,12 @@ class ConnectionService {
         }
 
         if (peer.connected && peer.isEncryptionActive) {
-          ByteBuffer byteBuffer = new ByteBuffer(1);
+          ByteBuffer byteBuffer = new ByteBuffer(2);
           byteBuffer.writeByte(Command.PING);
+
+          if (watchLastTimePeerListRequested.elapsed.inSeconds > 60) {
+            byteBuffer.writeByte(Command.REQUEST_PEERLIST);
+          }
 
           byteBuffer.flip();
 
@@ -105,11 +114,7 @@ class ConnectionService {
           }, onError: (error, stackTrace) {
             log.fine("failed to ping peer... captured for peer: " + peer.ip);
             peer.disconnect("failed to ping peer");
-//            print("failed to ping peer... captured for peer: " + peer.ip + " : " + error.toString());
-//            print(stackTrace);
-//            ConnectionService.sentry.captureException(exception: error, stackTrace: stackTrace);
           });
-//          print('pinged peer...');
         }
 
         continue;
@@ -145,18 +150,18 @@ class ConnectionService {
 
     _appDatabase = new AppDatabase();
 
-    var list = await _appDatabase.getAllChannels();
+    List<DBChannel> list = await _appDatabase.getAllChannels();
 
     setupBackground(debugOnly, list);
     return list;
   }
 
-  Future setupBackground(bool debugOnly, var list) async {
+  Future<void> setupBackground(bool debugOnly, List<DBChannel> channelList) async {
     await new Future.delayed(const Duration(milliseconds: 10), () => "1");
 
     await setupLocalSettings();
 
-    if (list.isEmpty) {
+    if (channelList.isEmpty) {
       log.finest('test insert first channel');
       await _appDatabase.createNewChannel("First test channel");
     }
@@ -167,6 +172,25 @@ class ConnectionService {
       return;
     }
 
+    await loadPeersFromDatabase();
+
+    /**
+     * We run loop immediately and every 5 seconds, this method will check for
+     * timed out peers and establish connections.
+     */
+    await loop();
+
+    loopTimer = new Timer.periodic(Duration(seconds: WAIT_BETWEEN_LOOPS), (Timer t) => {loop()});
+
+    const initFireChannelMaintain = Duration(seconds: 6);
+    new Timer(initFireChannelMaintain, () => maintain());
+
+    var seconds = 15 + Utils.random.nextInt(20);
+    new Timer.periodic(Duration(seconds: seconds), (Timer t) => maintain());
+    return;
+  }
+
+  Future<void> loadPeersFromDatabase() async {
     for (DBPeer dbp in await appDatabase.dBPeersDao.getAllPeers()) {
       PeerList.add(Peer.fromDBPeer(dbp));
       if (dbp.publicKey != null) {
@@ -180,26 +204,6 @@ class ConnectionService {
         print("added peer from db: " + dbp.ip + " null" + " " + KademliaId.fromBytes(dbp.kademliaId).toString());
       }
     }
-
-    /**
-     * We run loop immediately and every 5 seconds, this method will check for
-     * timed out peers and establish connections.
-     */
-    await loop();
-    new Timer(Duration(seconds: 1), () => {loop()});
-    new Timer(Duration(seconds: 2), () => {loop()});
-    new Timer(Duration(seconds: 3), () => {loop()});
-
-    const timeRepeatConectionMaintain = Duration(seconds: 10);
-    loopTimer = new Timer.periodic(timeRepeatConectionMaintain, (Timer t) => {loop()});
-
-    const initFireChannelMaintain = Duration(seconds: 6);
-    new Timer(initFireChannelMaintain, () => maintain());
-
-    var seconds = 15 + Utils.random.nextInt(20);
-    var timeRepeatChannelMaintain = Duration(seconds: seconds);
-    new Timer.periodic(timeRepeatChannelMaintain, (Timer t) => maintain());
-    return;
   }
 
   static Future<void> setupLocalSettings() async {
@@ -226,7 +230,7 @@ class ConnectionService {
     }
   }
 
-  Future<void> connectTo(Peer peer) async {
+  static Future<void> connectTo(Peer peer) async {
     peer.connecting = true;
 
     peer.lastActionOnConnection = new DateTime.now().millisecondsSinceEpoch;
@@ -250,46 +254,25 @@ class ConnectionService {
 
       socket.done.then((value) => {peer.onError(value)});
 
-      //      socket.add(utf8.encode("3kgV"));
-      //      socket.write(utf8.encode("3kgV"));
+      sendHandShake(socket);
 
-      ByteBuffer byteBuffer = new ByteBuffer(4 + 1 + 1 + KademliaId.ID_LENGTH_BYTES + 4);
-      byteBuffer.writeList(Utils.MAGIC);
-      byteBuffer.writeByte(22); //protocoll version code
-      byteBuffer.writeByte(129); //lightClient
-      byteBuffer.writeList(kademliaId.bytes);
-//      print(byteBuffer.buffer.asUint8List());
-      byteBuffer.writeInt(myPort); //port
-//      print(byteBuffer.buffer.asUint8List());
-
-      socket.add(byteBuffer.buffer.asInt8List());
-
-      //      socket.writeCharCode(8);
-//      socket.add(nodeId.bytes);
-      //      socket.add(59558);
-      //      socket.flush();
       socket.listen(peer.ondata);
-
-      //      socket.destroy();
     });
 
     return;
   }
 
-//  void dataHandler(data) {
-//    print(new String.fromCharCodes(data).trim());
-//  }
-//
-//  void errorHandler(error, StackTrace trace) {
-//    print(error);
-//  }
-//
-//  void doneHandler() {
-//    socket.destroy();
-//  }
+  static void sendHandShake(Socket socket) {
+    ByteBuffer byteBuffer = new ByteBuffer(4 + 1 + 1 + KademliaId.ID_LENGTH_BYTES + 4);
+    byteBuffer.writeList(Utils.MAGIC);
+    byteBuffer.writeByte(22); //protocoll version code
+    byteBuffer.writeByte(129); //lightClient
+    byteBuffer.writeList(kademliaId.bytes);
+    byteBuffer.writeInt(myPort); //port
+    socket.add(byteBuffer.buffer.asInt8List());
+  }
 
   void reseed() {
-//    print('reseed...');
     for (String str in Settings.seedNodeList) {
       List<String> split = str.split(":");
       String ip = split[0];
@@ -408,6 +391,7 @@ class ConnectionService {
         writeBuffer.writeByte(Command.KADEMLIA_GET);
         writeBuffer.writeInt(Utils.random.nextInt(1 << 32)); //todo check for ack with this id?
         writeBuffer.writeList(currentKademliaId.bytes);
+        writeBuffer.flip();
 
         await PeerList.sendIntegrated(writeBuffer);
       }

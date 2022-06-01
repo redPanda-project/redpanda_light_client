@@ -1,3 +1,4 @@
+// @dart=2.9
 import 'package:redpanda_light_client/export.dart';
 import 'package:redpanda_light_client/src/main/ByteBuffer.dart';
 import 'package:redpanda_light_client/src/main/Channel.dart';

@@ -1,3 +1,4 @@
+// @dart=2.9
 import 'dart:typed_data';
 
 import 'package:redpanda_light_client/src/main/Utils.dart';

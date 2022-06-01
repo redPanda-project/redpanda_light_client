@@ -5,11 +5,11 @@ import 'package:typed_data/typed_buffers.dart';
 
 /// Read and write to an array of bytes
 class ByteBuffer {
-  ByteData _byteData;
+  late ByteData _byteData;
   Endian endian;
   int _offset = 0;
-  int _limit;
-  int _capacity;
+  late int _limit;
+  late int _capacity;
 
   ByteData get byteData => _byteData;
 
@@ -25,7 +25,7 @@ class ByteBuffer {
     _capacity = _limit;
   }
 
-  factory ByteBuffer.fromBuffer(prefix0.ByteBuffer buffer, [int offset = 0, int length, Endian endian = Endian.big]) {
+  factory ByteBuffer.fromBuffer(prefix0.ByteBuffer buffer, [int offset = 0, int? length, Endian endian = Endian.big]) {
     length ??= buffer.lengthInBytes - offset;
 
     final view = ByteData.view(buffer, offset, length);

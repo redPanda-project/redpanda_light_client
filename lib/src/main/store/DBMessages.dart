@@ -5,7 +5,7 @@ import 'package:moor/moor.dart';
  */
 class DBMessages extends Table {
   /**
-   * Message id has to be unique for all memebers of the Channel. Thus, we have to generate a random interger for the
+   * Message id has to be unique for all members of the Channel. Thus, we have to generate a random integer for the
    * message id.
    */
   IntColumn get messageId => integer()();

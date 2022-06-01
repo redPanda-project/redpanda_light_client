@@ -1,3 +1,4 @@
+// @dart=2.9
 import 'dart:async';
 import 'dart:collection';
 
@@ -65,15 +66,19 @@ class PeerList {
   }
 
   static Future<void> sendIntegrated(ByteBuffer bytes) async {
-    for (Peer p in _peerlist) {
-      if (p.connected && p.socket != null) {
+    if (bytes.bytesAvailable == 0) {
+      throw new AssertionError("no bytes available to send");
+    }
+    var readBytes = bytes.readBytes(bytes.bytesAvailable);
+    for (Peer peer in _peerlist) {
+      if (peer.connected && peer.socket != null) {
         bool send = false;
         await runZoned<Future<void>>(() async {
-          await p.sendEncrypt(bytes);
-          log.finer("send to: " + p.getKademliaId().toString());
+          await peer.sendEncryptArray(readBytes);
+          log.finer("send to: " + peer.getKademliaId().toString());
           send = true;
         }, onError: (error, stackTrace) {
-          print("error sending message... " + error.toString() + " " + p.getKademliaId().toString());
+          print("error sending message... " + error.toString() + " " + peer.getKademliaId().toString());
         });
         if (send) {
           return;

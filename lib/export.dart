@@ -1,3 +1,4 @@
+// @dart=2.9
 library redpanda_light_client.export;
 
 export 'src/main/ByteBuffer.dart';
