@@ -13,7 +13,7 @@ dependencies:
   byte_array: ^0.1.6
   pointycastle: ^3.3.0
   sentry: ^6.1.2
-  flat_buffers: ^1.11.0
+  flat_buffers: ">=1.11.0 <3.0.0"
   moor: ^4.3.1
   path: ^1.6.4
   asn1lib: ^1.0.2
