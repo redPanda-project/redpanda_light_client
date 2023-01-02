@@ -236,15 +236,14 @@ class ConnectionService {
     peer.lastActionOnConnection = new DateTime.now().millisecondsSinceEpoch;
     peer.restries++;
 
-    Socket.connect(peer.ip, peer.port).catchError(peer.onError).then((socket) {
+    try {
+      var socket = await Socket.connect(peer.ip, peer.port);
       if (socket == null) {
         peer.connecting = false;
-//        print('error connecting...');
         return;
       }
 
       peer.reset();
-
       peer.socket = socket;
 
       log.finer('Connected to: '
@@ -253,11 +252,12 @@ class ConnectionService {
       socket.handleError(peer.onError);
 
       socket.done.then((value) => {peer.onError(value)});
-
       sendHandShake(socket);
-
       socket.listen(peer.ondata);
-    });
+    } catch (e) {
+      peer.onError(e);
+    }
+
 
     return;
   }
