@@ -1,66 +1,34 @@
-// @dart=2.9
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
 part of 'moor_database.dart';
 
-// **************************************************************************
-// MoorGenerator
-// **************************************************************************
-
-// ignore_for_file: unnecessary_brace_in_string_interps, unnecessary_this
+// ignore_for_file: type=lint
 class LocalSetting extends DataClass implements Insertable<LocalSetting> {
   final int id;
   final int myUserId;
-  final String fcmToken;
+  final String? fcmToken;
   final Uint8List privateKey;
   final Uint8List kademliaId;
-  final String defaultName;
-  final int versionTimestamp;
-  LocalSetting(
-      {@required this.id,
-      @required this.myUserId,
+  final String? defaultName;
+  final int? versionTimestamp;
+  const LocalSetting(
+      {required this.id,
+      required this.myUserId,
       this.fcmToken,
-      @required this.privateKey,
-      @required this.kademliaId,
+      required this.privateKey,
+      required this.kademliaId,
       this.defaultName,
       this.versionTimestamp});
-  factory LocalSetting.fromData(Map<String, dynamic> data, GeneratedDatabase db,
-      {String prefix}) {
-    final effectivePrefix = prefix ?? '';
-    return LocalSetting(
-      id: const IntType().mapFromDatabaseResponse(data['${effectivePrefix}id']),
-      myUserId: const IntType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}my_user_id']),
-      fcmToken: const StringType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}fcm_token']),
-      privateKey: const BlobType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}private_key']),
-      kademliaId: const BlobType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}kademlia_id']),
-      defaultName: const StringType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}default_name']),
-      versionTimestamp: const IntType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}version_timestamp']),
-    );
-  }
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    if (!nullToAbsent || id != null) {
-      map['id'] = Variable<int>(id);
-    }
-    if (!nullToAbsent || myUserId != null) {
-      map['my_user_id'] = Variable<int>(myUserId);
-    }
+    map['id'] = Variable<int>(id);
+    map['my_user_id'] = Variable<int>(myUserId);
     if (!nullToAbsent || fcmToken != null) {
       map['fcm_token'] = Variable<String>(fcmToken);
     }
-    if (!nullToAbsent || privateKey != null) {
-      map['private_key'] = Variable<Uint8List>(privateKey);
-    }
-    if (!nullToAbsent || kademliaId != null) {
-      map['kademlia_id'] = Variable<Uint8List>(kademliaId);
-    }
+    map['private_key'] = Variable<Uint8List>(privateKey);
+    map['kademlia_id'] = Variable<Uint8List>(kademliaId);
     if (!nullToAbsent || defaultName != null) {
       map['default_name'] = Variable<String>(defaultName);
     }
@@ -72,19 +40,13 @@ class LocalSetting extends DataClass implements Insertable<LocalSetting> {
 
   LocalSettingsCompanion toCompanion(bool nullToAbsent) {
     return LocalSettingsCompanion(
-      id: id == null && nullToAbsent ? const Value.absent() : Value(id),
-      myUserId: myUserId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(myUserId),
+      id: Value(id),
+      myUserId: Value(myUserId),
       fcmToken: fcmToken == null && nullToAbsent
           ? const Value.absent()
           : Value(fcmToken),
-      privateKey: privateKey == null && nullToAbsent
-          ? const Value.absent()
-          : Value(privateKey),
-      kademliaId: kademliaId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(kademliaId),
+      privateKey: Value(privateKey),
+      kademliaId: Value(kademliaId),
       defaultName: defaultName == null && nullToAbsent
           ? const Value.absent()
           : Value(defaultName),
@@ -95,48 +57,50 @@ class LocalSetting extends DataClass implements Insertable<LocalSetting> {
   }
 
   factory LocalSetting.fromJson(Map<String, dynamic> json,
-      {ValueSerializer serializer}) {
-    serializer ??= moorRuntimeOptions.defaultSerializer;
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
     return LocalSetting(
       id: serializer.fromJson<int>(json['id']),
       myUserId: serializer.fromJson<int>(json['myUserId']),
-      fcmToken: serializer.fromJson<String>(json['fcmToken']),
+      fcmToken: serializer.fromJson<String?>(json['fcmToken']),
       privateKey: serializer.fromJson<Uint8List>(json['privateKey']),
       kademliaId: serializer.fromJson<Uint8List>(json['kademliaId']),
-      defaultName: serializer.fromJson<String>(json['defaultName']),
-      versionTimestamp: serializer.fromJson<int>(json['versionTimestamp']),
+      defaultName: serializer.fromJson<String?>(json['defaultName']),
+      versionTimestamp: serializer.fromJson<int?>(json['versionTimestamp']),
     );
   }
   @override
-  Map<String, dynamic> toJson({ValueSerializer serializer}) {
-    serializer ??= moorRuntimeOptions.defaultSerializer;
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'myUserId': serializer.toJson<int>(myUserId),
-      'fcmToken': serializer.toJson<String>(fcmToken),
+      'fcmToken': serializer.toJson<String?>(fcmToken),
       'privateKey': serializer.toJson<Uint8List>(privateKey),
       'kademliaId': serializer.toJson<Uint8List>(kademliaId),
-      'defaultName': serializer.toJson<String>(defaultName),
-      'versionTimestamp': serializer.toJson<int>(versionTimestamp),
+      'defaultName': serializer.toJson<String?>(defaultName),
+      'versionTimestamp': serializer.toJson<int?>(versionTimestamp),
     };
   }
 
   LocalSetting copyWith(
-          {int id,
-          int myUserId,
-          String fcmToken,
-          Uint8List privateKey,
-          Uint8List kademliaId,
-          String defaultName,
-          int versionTimestamp}) =>
+          {int? id,
+          int? myUserId,
+          Value<String?> fcmToken = const Value.absent(),
+          Uint8List? privateKey,
+          Uint8List? kademliaId,
+          Value<String?> defaultName = const Value.absent(),
+          Value<int?> versionTimestamp = const Value.absent()}) =>
       LocalSetting(
         id: id ?? this.id,
         myUserId: myUserId ?? this.myUserId,
-        fcmToken: fcmToken ?? this.fcmToken,
+        fcmToken: fcmToken.present ? fcmToken.value : this.fcmToken,
         privateKey: privateKey ?? this.privateKey,
         kademliaId: kademliaId ?? this.kademliaId,
-        defaultName: defaultName ?? this.defaultName,
-        versionTimestamp: versionTimestamp ?? this.versionTimestamp,
+        defaultName: defaultName.present ? defaultName.value : this.defaultName,
+        versionTimestamp: versionTimestamp.present
+            ? versionTimestamp.value
+            : this.versionTimestamp,
       );
   @override
   String toString() {
@@ -153,8 +117,14 @@ class LocalSetting extends DataClass implements Insertable<LocalSetting> {
   }
 
   @override
-  int get hashCode => Object.hash(id, myUserId, fcmToken, privateKey,
-      kademliaId, defaultName, versionTimestamp);
+  int get hashCode => Object.hash(
+      id,
+      myUserId,
+      fcmToken,
+      $driftBlobEquality.hash(privateKey),
+      $driftBlobEquality.hash(kademliaId),
+      defaultName,
+      versionTimestamp);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -162,8 +132,8 @@ class LocalSetting extends DataClass implements Insertable<LocalSetting> {
           other.id == this.id &&
           other.myUserId == this.myUserId &&
           other.fcmToken == this.fcmToken &&
-          other.privateKey == this.privateKey &&
-          other.kademliaId == this.kademliaId &&
+          $driftBlobEquality.equals(other.privateKey, this.privateKey) &&
+          $driftBlobEquality.equals(other.kademliaId, this.kademliaId) &&
           other.defaultName == this.defaultName &&
           other.versionTimestamp == this.versionTimestamp);
 }
@@ -171,11 +141,11 @@ class LocalSetting extends DataClass implements Insertable<LocalSetting> {
 class LocalSettingsCompanion extends UpdateCompanion<LocalSetting> {
   final Value<int> id;
   final Value<int> myUserId;
-  final Value<String> fcmToken;
+  final Value<String?> fcmToken;
   final Value<Uint8List> privateKey;
   final Value<Uint8List> kademliaId;
-  final Value<String> defaultName;
-  final Value<int> versionTimestamp;
+  final Value<String?> defaultName;
+  final Value<int?> versionTimestamp;
   const LocalSettingsCompanion({
     this.id = const Value.absent(),
     this.myUserId = const Value.absent(),
@@ -187,23 +157,23 @@ class LocalSettingsCompanion extends UpdateCompanion<LocalSetting> {
   });
   LocalSettingsCompanion.insert({
     this.id = const Value.absent(),
-    @required int myUserId,
+    required int myUserId,
     this.fcmToken = const Value.absent(),
-    @required Uint8List privateKey,
-    @required Uint8List kademliaId,
+    required Uint8List privateKey,
+    required Uint8List kademliaId,
     this.defaultName = const Value.absent(),
     this.versionTimestamp = const Value.absent(),
   })  : myUserId = Value(myUserId),
         privateKey = Value(privateKey),
         kademliaId = Value(kademliaId);
   static Insertable<LocalSetting> custom({
-    Expression<int> id,
-    Expression<int> myUserId,
-    Expression<String> fcmToken,
-    Expression<Uint8List> privateKey,
-    Expression<Uint8List> kademliaId,
-    Expression<String> defaultName,
-    Expression<int> versionTimestamp,
+    Expression<int>? id,
+    Expression<int>? myUserId,
+    Expression<String>? fcmToken,
+    Expression<Uint8List>? privateKey,
+    Expression<Uint8List>? kademliaId,
+    Expression<String>? defaultName,
+    Expression<int>? versionTimestamp,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -217,13 +187,13 @@ class LocalSettingsCompanion extends UpdateCompanion<LocalSetting> {
   }
 
   LocalSettingsCompanion copyWith(
-      {Value<int> id,
-      Value<int> myUserId,
-      Value<String> fcmToken,
-      Value<Uint8List> privateKey,
-      Value<Uint8List> kademliaId,
-      Value<String> defaultName,
-      Value<int> versionTimestamp}) {
+      {Value<int>? id,
+      Value<int>? myUserId,
+      Value<String?>? fcmToken,
+      Value<Uint8List>? privateKey,
+      Value<Uint8List>? kademliaId,
+      Value<String?>? defaultName,
+      Value<int?>? versionTimestamp}) {
     return LocalSettingsCompanion(
       id: id ?? this.id,
       myUserId: myUserId ?? this.myUserId,
@@ -281,54 +251,53 @@ class $LocalSettingsTable extends LocalSettings
     with TableInfo<$LocalSettingsTable, LocalSetting> {
   @override
   final GeneratedDatabase attachedDatabase;
-  final String _alias;
+  final String? _alias;
   $LocalSettingsTable(this.attachedDatabase, [this._alias]);
-  final VerificationMeta _idMeta = const VerificationMeta('id');
-  GeneratedColumn<int> _id;
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  GeneratedColumn<int> get id =>
-      _id ??= GeneratedColumn<int>('id', aliasedName, false,
-          type: const IntType(),
-          requiredDuringInsert: false,
-          defaultConstraints: 'PRIMARY KEY AUTOINCREMENT');
-  final VerificationMeta _myUserIdMeta = const VerificationMeta('myUserId');
-  GeneratedColumn<int> _myUserId;
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _myUserIdMeta =
+      const VerificationMeta('myUserId');
   @override
-  GeneratedColumn<int> get myUserId =>
-      _myUserId ??= GeneratedColumn<int>('my_user_id', aliasedName, false,
-          type: const IntType(), requiredDuringInsert: true);
-  final VerificationMeta _fcmTokenMeta = const VerificationMeta('fcmToken');
-  GeneratedColumn<String> _fcmToken;
+  late final GeneratedColumn<int> myUserId = GeneratedColumn<int>(
+      'my_user_id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _fcmTokenMeta =
+      const VerificationMeta('fcmToken');
   @override
-  GeneratedColumn<String> get fcmToken =>
-      _fcmToken ??= GeneratedColumn<String>('fcm_token', aliasedName, true,
-          type: const StringType(), requiredDuringInsert: false);
-  final VerificationMeta _privateKeyMeta = const VerificationMeta('privateKey');
-  GeneratedColumn<Uint8List> _privateKey;
+  late final GeneratedColumn<String> fcmToken = GeneratedColumn<String>(
+      'fcm_token', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _privateKeyMeta =
+      const VerificationMeta('privateKey');
   @override
-  GeneratedColumn<Uint8List> get privateKey => _privateKey ??=
-      GeneratedColumn<Uint8List>('private_key', aliasedName, false,
-          type: const BlobType(), requiredDuringInsert: true);
-  final VerificationMeta _kademliaIdMeta = const VerificationMeta('kademliaId');
-  GeneratedColumn<Uint8List> _kademliaId;
+  late final GeneratedColumn<Uint8List> privateKey = GeneratedColumn<Uint8List>(
+      'private_key', aliasedName, false,
+      type: DriftSqlType.blob, requiredDuringInsert: true);
+  static const VerificationMeta _kademliaIdMeta =
+      const VerificationMeta('kademliaId');
   @override
-  GeneratedColumn<Uint8List> get kademliaId => _kademliaId ??=
-      GeneratedColumn<Uint8List>('kademlia_id', aliasedName, false,
-          type: const BlobType(), requiredDuringInsert: true);
-  final VerificationMeta _defaultNameMeta =
+  late final GeneratedColumn<Uint8List> kademliaId = GeneratedColumn<Uint8List>(
+      'kademlia_id', aliasedName, false,
+      type: DriftSqlType.blob, requiredDuringInsert: true);
+  static const VerificationMeta _defaultNameMeta =
       const VerificationMeta('defaultName');
-  GeneratedColumn<String> _defaultName;
   @override
-  GeneratedColumn<String> get defaultName => _defaultName ??=
-      GeneratedColumn<String>('default_name', aliasedName, true,
-          type: const StringType(), requiredDuringInsert: false);
-  final VerificationMeta _versionTimestampMeta =
+  late final GeneratedColumn<String> defaultName = GeneratedColumn<String>(
+      'default_name', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _versionTimestampMeta =
       const VerificationMeta('versionTimestamp');
-  GeneratedColumn<int> _versionTimestamp;
   @override
-  GeneratedColumn<int> get versionTimestamp => _versionTimestamp ??=
-      GeneratedColumn<int>('version_timestamp', aliasedName, true,
-          type: const IntType(), requiredDuringInsert: false);
+  late final GeneratedColumn<int> versionTimestamp = GeneratedColumn<int>(
+      'version_timestamp', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -349,23 +318,23 @@ class $LocalSettingsTable extends LocalSettings
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id'], _idMeta));
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('my_user_id')) {
       context.handle(_myUserIdMeta,
-          myUserId.isAcceptableOrUnknown(data['my_user_id'], _myUserIdMeta));
+          myUserId.isAcceptableOrUnknown(data['my_user_id']!, _myUserIdMeta));
     } else if (isInserting) {
       context.missing(_myUserIdMeta);
     }
     if (data.containsKey('fcm_token')) {
       context.handle(_fcmTokenMeta,
-          fcmToken.isAcceptableOrUnknown(data['fcm_token'], _fcmTokenMeta));
+          fcmToken.isAcceptableOrUnknown(data['fcm_token']!, _fcmTokenMeta));
     }
     if (data.containsKey('private_key')) {
       context.handle(
           _privateKeyMeta,
           privateKey.isAcceptableOrUnknown(
-              data['private_key'], _privateKeyMeta));
+              data['private_key']!, _privateKeyMeta));
     } else if (isInserting) {
       context.missing(_privateKeyMeta);
     }
@@ -373,7 +342,7 @@ class $LocalSettingsTable extends LocalSettings
       context.handle(
           _kademliaIdMeta,
           kademliaId.isAcceptableOrUnknown(
-              data['kademlia_id'], _kademliaIdMeta));
+              data['kademlia_id']!, _kademliaIdMeta));
     } else if (isInserting) {
       context.missing(_kademliaIdMeta);
     }
@@ -381,13 +350,13 @@ class $LocalSettingsTable extends LocalSettings
       context.handle(
           _defaultNameMeta,
           defaultName.isAcceptableOrUnknown(
-              data['default_name'], _defaultNameMeta));
+              data['default_name']!, _defaultNameMeta));
     }
     if (data.containsKey('version_timestamp')) {
       context.handle(
           _versionTimestampMeta,
           versionTimestamp.isAcceptableOrUnknown(
-              data['version_timestamp'], _versionTimestampMeta));
+              data['version_timestamp']!, _versionTimestampMeta));
     }
     return context;
   }
@@ -395,9 +364,24 @@ class $LocalSettingsTable extends LocalSettings
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  LocalSetting map(Map<String, dynamic> data, {String tablePrefix}) {
-    return LocalSetting.fromData(data, attachedDatabase,
-        prefix: tablePrefix != null ? '$tablePrefix.' : null);
+  LocalSetting map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LocalSetting(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      myUserId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}my_user_id'])!,
+      fcmToken: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}fcm_token']),
+      privateKey: attachedDatabase.typeMapping
+          .read(DriftSqlType.blob, data['${effectivePrefix}private_key'])!,
+      kademliaId: attachedDatabase.typeMapping
+          .read(DriftSqlType.blob, data['${effectivePrefix}kademlia_id'])!,
+      defaultName: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}default_name']),
+      versionTimestamp: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}version_timestamp']),
+    );
   }
 
   @override
@@ -411,55 +395,26 @@ class DBChannel extends DataClass implements Insertable<DBChannel> {
   final String name;
   final Uint8List sharedSecret;
   final Uint8List nodeId;
-  final String channelData;
-  final String lastMessage_text;
-  final String lastMessage_user;
-  final int lastMessage_timestamp;
-  DBChannel(
-      {@required this.id,
-      @required this.name,
-      @required this.sharedSecret,
-      @required this.nodeId,
+  final String? channelData;
+  final String? lastMessage_text;
+  final String? lastMessage_user;
+  final int? lastMessage_timestamp;
+  const DBChannel(
+      {required this.id,
+      required this.name,
+      required this.sharedSecret,
+      required this.nodeId,
       this.channelData,
       this.lastMessage_text,
       this.lastMessage_user,
       this.lastMessage_timestamp});
-  factory DBChannel.fromData(Map<String, dynamic> data, GeneratedDatabase db,
-      {String prefix}) {
-    final effectivePrefix = prefix ?? '';
-    return DBChannel(
-      id: const IntType().mapFromDatabaseResponse(data['${effectivePrefix}id']),
-      name: const StringType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}name']),
-      sharedSecret: const BlobType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}shared_secret']),
-      nodeId: const BlobType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}node_id']),
-      channelData: const StringType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}channel_data']),
-      lastMessage_text: const StringType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}last_message_text']),
-      lastMessage_user: const StringType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}last_message_user']),
-      lastMessage_timestamp: const IntType().mapFromDatabaseResponse(
-          data['${effectivePrefix}last_message_timestamp']),
-    );
-  }
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    if (!nullToAbsent || id != null) {
-      map['id'] = Variable<int>(id);
-    }
-    if (!nullToAbsent || name != null) {
-      map['name'] = Variable<String>(name);
-    }
-    if (!nullToAbsent || sharedSecret != null) {
-      map['shared_secret'] = Variable<Uint8List>(sharedSecret);
-    }
-    if (!nullToAbsent || nodeId != null) {
-      map['node_id'] = Variable<Uint8List>(nodeId);
-    }
+    map['id'] = Variable<int>(id);
+    map['name'] = Variable<String>(name);
+    map['shared_secret'] = Variable<Uint8List>(sharedSecret);
+    map['node_id'] = Variable<Uint8List>(nodeId);
     if (!nullToAbsent || channelData != null) {
       map['channel_data'] = Variable<String>(channelData);
     }
@@ -477,13 +432,10 @@ class DBChannel extends DataClass implements Insertable<DBChannel> {
 
   DBChannelsCompanion toCompanion(bool nullToAbsent) {
     return DBChannelsCompanion(
-      id: id == null && nullToAbsent ? const Value.absent() : Value(id),
-      name: name == null && nullToAbsent ? const Value.absent() : Value(name),
-      sharedSecret: sharedSecret == null && nullToAbsent
-          ? const Value.absent()
-          : Value(sharedSecret),
-      nodeId:
-          nodeId == null && nullToAbsent ? const Value.absent() : Value(nodeId),
+      id: Value(id),
+      name: Value(name),
+      sharedSecret: Value(sharedSecret),
+      nodeId: Value(nodeId),
       channelData: channelData == null && nullToAbsent
           ? const Value.absent()
           : Value(channelData),
@@ -500,54 +452,59 @@ class DBChannel extends DataClass implements Insertable<DBChannel> {
   }
 
   factory DBChannel.fromJson(Map<String, dynamic> json,
-      {ValueSerializer serializer}) {
-    serializer ??= moorRuntimeOptions.defaultSerializer;
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
     return DBChannel(
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       sharedSecret: serializer.fromJson<Uint8List>(json['sharedSecret']),
       nodeId: serializer.fromJson<Uint8List>(json['nodeId']),
-      channelData: serializer.fromJson<String>(json['channelData']),
-      lastMessage_text: serializer.fromJson<String>(json['lastMessage_text']),
-      lastMessage_user: serializer.fromJson<String>(json['lastMessage_user']),
+      channelData: serializer.fromJson<String?>(json['channelData']),
+      lastMessage_text: serializer.fromJson<String?>(json['lastMessage_text']),
+      lastMessage_user: serializer.fromJson<String?>(json['lastMessage_user']),
       lastMessage_timestamp:
-          serializer.fromJson<int>(json['lastMessage_timestamp']),
+          serializer.fromJson<int?>(json['lastMessage_timestamp']),
     );
   }
   @override
-  Map<String, dynamic> toJson({ValueSerializer serializer}) {
-    serializer ??= moorRuntimeOptions.defaultSerializer;
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'name': serializer.toJson<String>(name),
       'sharedSecret': serializer.toJson<Uint8List>(sharedSecret),
       'nodeId': serializer.toJson<Uint8List>(nodeId),
-      'channelData': serializer.toJson<String>(channelData),
-      'lastMessage_text': serializer.toJson<String>(lastMessage_text),
-      'lastMessage_user': serializer.toJson<String>(lastMessage_user),
-      'lastMessage_timestamp': serializer.toJson<int>(lastMessage_timestamp),
+      'channelData': serializer.toJson<String?>(channelData),
+      'lastMessage_text': serializer.toJson<String?>(lastMessage_text),
+      'lastMessage_user': serializer.toJson<String?>(lastMessage_user),
+      'lastMessage_timestamp': serializer.toJson<int?>(lastMessage_timestamp),
     };
   }
 
   DBChannel copyWith(
-          {int id,
-          String name,
-          Uint8List sharedSecret,
-          Uint8List nodeId,
-          String channelData,
-          String lastMessage_text,
-          String lastMessage_user,
-          int lastMessage_timestamp}) =>
+          {int? id,
+          String? name,
+          Uint8List? sharedSecret,
+          Uint8List? nodeId,
+          Value<String?> channelData = const Value.absent(),
+          Value<String?> lastMessage_text = const Value.absent(),
+          Value<String?> lastMessage_user = const Value.absent(),
+          Value<int?> lastMessage_timestamp = const Value.absent()}) =>
       DBChannel(
         id: id ?? this.id,
         name: name ?? this.name,
         sharedSecret: sharedSecret ?? this.sharedSecret,
         nodeId: nodeId ?? this.nodeId,
-        channelData: channelData ?? this.channelData,
-        lastMessage_text: lastMessage_text ?? this.lastMessage_text,
-        lastMessage_user: lastMessage_user ?? this.lastMessage_user,
-        lastMessage_timestamp:
-            lastMessage_timestamp ?? this.lastMessage_timestamp,
+        channelData: channelData.present ? channelData.value : this.channelData,
+        lastMessage_text: lastMessage_text.present
+            ? lastMessage_text.value
+            : this.lastMessage_text,
+        lastMessage_user: lastMessage_user.present
+            ? lastMessage_user.value
+            : this.lastMessage_user,
+        lastMessage_timestamp: lastMessage_timestamp.present
+            ? lastMessage_timestamp.value
+            : this.lastMessage_timestamp,
       );
   @override
   String toString() {
@@ -565,16 +522,23 @@ class DBChannel extends DataClass implements Insertable<DBChannel> {
   }
 
   @override
-  int get hashCode => Object.hash(id, name, sharedSecret, nodeId, channelData,
-      lastMessage_text, lastMessage_user, lastMessage_timestamp);
+  int get hashCode => Object.hash(
+      id,
+      name,
+      $driftBlobEquality.hash(sharedSecret),
+      $driftBlobEquality.hash(nodeId),
+      channelData,
+      lastMessage_text,
+      lastMessage_user,
+      lastMessage_timestamp);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is DBChannel &&
           other.id == this.id &&
           other.name == this.name &&
-          other.sharedSecret == this.sharedSecret &&
-          other.nodeId == this.nodeId &&
+          $driftBlobEquality.equals(other.sharedSecret, this.sharedSecret) &&
+          $driftBlobEquality.equals(other.nodeId, this.nodeId) &&
           other.channelData == this.channelData &&
           other.lastMessage_text == this.lastMessage_text &&
           other.lastMessage_user == this.lastMessage_user &&
@@ -586,10 +550,10 @@ class DBChannelsCompanion extends UpdateCompanion<DBChannel> {
   final Value<String> name;
   final Value<Uint8List> sharedSecret;
   final Value<Uint8List> nodeId;
-  final Value<String> channelData;
-  final Value<String> lastMessage_text;
-  final Value<String> lastMessage_user;
-  final Value<int> lastMessage_timestamp;
+  final Value<String?> channelData;
+  final Value<String?> lastMessage_text;
+  final Value<String?> lastMessage_user;
+  final Value<int?> lastMessage_timestamp;
   const DBChannelsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -602,9 +566,9 @@ class DBChannelsCompanion extends UpdateCompanion<DBChannel> {
   });
   DBChannelsCompanion.insert({
     this.id = const Value.absent(),
-    @required String name,
-    @required Uint8List sharedSecret,
-    @required Uint8List nodeId,
+    required String name,
+    required Uint8List sharedSecret,
+    required Uint8List nodeId,
     this.channelData = const Value.absent(),
     this.lastMessage_text = const Value.absent(),
     this.lastMessage_user = const Value.absent(),
@@ -613,14 +577,14 @@ class DBChannelsCompanion extends UpdateCompanion<DBChannel> {
         sharedSecret = Value(sharedSecret),
         nodeId = Value(nodeId);
   static Insertable<DBChannel> custom({
-    Expression<int> id,
-    Expression<String> name,
-    Expression<Uint8List> sharedSecret,
-    Expression<Uint8List> nodeId,
-    Expression<String> channelData,
-    Expression<String> lastMessage_text,
-    Expression<String> lastMessage_user,
-    Expression<int> lastMessage_timestamp,
+    Expression<int>? id,
+    Expression<String>? name,
+    Expression<Uint8List>? sharedSecret,
+    Expression<Uint8List>? nodeId,
+    Expression<String>? channelData,
+    Expression<String>? lastMessage_text,
+    Expression<String>? lastMessage_user,
+    Expression<int>? lastMessage_timestamp,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -636,14 +600,14 @@ class DBChannelsCompanion extends UpdateCompanion<DBChannel> {
   }
 
   DBChannelsCompanion copyWith(
-      {Value<int> id,
-      Value<String> name,
-      Value<Uint8List> sharedSecret,
-      Value<Uint8List> nodeId,
-      Value<String> channelData,
-      Value<String> lastMessage_text,
-      Value<String> lastMessage_user,
-      Value<int> lastMessage_timestamp}) {
+      {Value<int>? id,
+      Value<String>? name,
+      Value<Uint8List>? sharedSecret,
+      Value<Uint8List>? nodeId,
+      Value<String?>? channelData,
+      Value<String?>? lastMessage_text,
+      Value<String?>? lastMessage_user,
+      Value<int?>? lastMessage_timestamp}) {
     return DBChannelsCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
@@ -708,70 +672,64 @@ class $DBChannelsTable extends DBChannels
     with TableInfo<$DBChannelsTable, DBChannel> {
   @override
   final GeneratedDatabase attachedDatabase;
-  final String _alias;
+  final String? _alias;
   $DBChannelsTable(this.attachedDatabase, [this._alias]);
-  final VerificationMeta _idMeta = const VerificationMeta('id');
-  GeneratedColumn<int> _id;
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  GeneratedColumn<int> get id =>
-      _id ??= GeneratedColumn<int>('id', aliasedName, false,
-          type: const IntType(),
-          requiredDuringInsert: false,
-          defaultConstraints: 'PRIMARY KEY AUTOINCREMENT');
-  final VerificationMeta _nameMeta = const VerificationMeta('name');
-  GeneratedColumn<String> _name;
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
-  GeneratedColumn<String> get name => _name ??= GeneratedColumn<String>(
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
       'name', aliasedName, false,
       additionalChecks:
           GeneratedColumn.checkTextLength(minTextLength: 3, maxTextLength: 32),
-      type: const StringType(),
+      type: DriftSqlType.string,
       requiredDuringInsert: true);
-  final VerificationMeta _sharedSecretMeta =
+  static const VerificationMeta _sharedSecretMeta =
       const VerificationMeta('sharedSecret');
-  GeneratedColumn<Uint8List> _sharedSecret;
   @override
-  GeneratedColumn<Uint8List> get sharedSecret => _sharedSecret ??=
+  late final GeneratedColumn<Uint8List> sharedSecret =
       GeneratedColumn<Uint8List>('shared_secret', aliasedName, false,
-          type: const BlobType(), requiredDuringInsert: true);
-  final VerificationMeta _nodeIdMeta = const VerificationMeta('nodeId');
-  GeneratedColumn<Uint8List> _nodeId;
+          type: DriftSqlType.blob, requiredDuringInsert: true);
+  static const VerificationMeta _nodeIdMeta = const VerificationMeta('nodeId');
   @override
-  GeneratedColumn<Uint8List> get nodeId =>
-      _nodeId ??= GeneratedColumn<Uint8List>('node_id', aliasedName, false,
-          type: const BlobType(), requiredDuringInsert: true);
-  final VerificationMeta _channelDataMeta =
+  late final GeneratedColumn<Uint8List> nodeId = GeneratedColumn<Uint8List>(
+      'node_id', aliasedName, false,
+      type: DriftSqlType.blob, requiredDuringInsert: true);
+  static const VerificationMeta _channelDataMeta =
       const VerificationMeta('channelData');
-  GeneratedColumn<String> _channelData;
   @override
-  GeneratedColumn<String> get channelData => _channelData ??=
-      GeneratedColumn<String>('channel_data', aliasedName, true,
-          type: const StringType(), requiredDuringInsert: false);
-  final VerificationMeta _lastMessage_textMeta =
+  late final GeneratedColumn<String> channelData = GeneratedColumn<String>(
+      'channel_data', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _lastMessage_textMeta =
       const VerificationMeta('lastMessage_text');
-  GeneratedColumn<String> _lastMessage_text;
   @override
-  GeneratedColumn<String> get lastMessage_text => _lastMessage_text ??=
-      GeneratedColumn<String>('last_message_text', aliasedName, true,
-          additionalChecks: GeneratedColumn.checkTextLength(),
-          type: const StringType(),
-          requiredDuringInsert: false);
-  final VerificationMeta _lastMessage_userMeta =
+  late final GeneratedColumn<String> lastMessage_text = GeneratedColumn<String>(
+      'last_message_text', aliasedName, true,
+      additionalChecks: GeneratedColumn.checkTextLength(),
+      type: DriftSqlType.string,
+      requiredDuringInsert: false);
+  static const VerificationMeta _lastMessage_userMeta =
       const VerificationMeta('lastMessage_user');
-  GeneratedColumn<String> _lastMessage_user;
   @override
-  GeneratedColumn<String> get lastMessage_user => _lastMessage_user ??=
-      GeneratedColumn<String>('last_message_user', aliasedName, true,
-          additionalChecks: GeneratedColumn.checkTextLength(),
-          type: const StringType(),
-          requiredDuringInsert: false);
-  final VerificationMeta _lastMessage_timestampMeta =
+  late final GeneratedColumn<String> lastMessage_user = GeneratedColumn<String>(
+      'last_message_user', aliasedName, true,
+      additionalChecks: GeneratedColumn.checkTextLength(),
+      type: DriftSqlType.string,
+      requiredDuringInsert: false);
+  static const VerificationMeta _lastMessage_timestampMeta =
       const VerificationMeta('lastMessage_timestamp');
-  GeneratedColumn<int> _lastMessage_timestamp;
   @override
-  GeneratedColumn<int> get lastMessage_timestamp => _lastMessage_timestamp ??=
-      GeneratedColumn<int>('last_message_timestamp', aliasedName, true,
-          type: const IntType(), requiredDuringInsert: false);
+  late final GeneratedColumn<int> lastMessage_timestamp = GeneratedColumn<int>(
+      'last_message_timestamp', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -793,11 +751,11 @@ class $DBChannelsTable extends DBChannels
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id'], _idMeta));
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('name')) {
       context.handle(
-          _nameMeta, name.isAcceptableOrUnknown(data['name'], _nameMeta));
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
     } else if (isInserting) {
       context.missing(_nameMeta);
     }
@@ -805,13 +763,13 @@ class $DBChannelsTable extends DBChannels
       context.handle(
           _sharedSecretMeta,
           sharedSecret.isAcceptableOrUnknown(
-              data['shared_secret'], _sharedSecretMeta));
+              data['shared_secret']!, _sharedSecretMeta));
     } else if (isInserting) {
       context.missing(_sharedSecretMeta);
     }
     if (data.containsKey('node_id')) {
       context.handle(_nodeIdMeta,
-          nodeId.isAcceptableOrUnknown(data['node_id'], _nodeIdMeta));
+          nodeId.isAcceptableOrUnknown(data['node_id']!, _nodeIdMeta));
     } else if (isInserting) {
       context.missing(_nodeIdMeta);
     }
@@ -819,25 +777,25 @@ class $DBChannelsTable extends DBChannels
       context.handle(
           _channelDataMeta,
           channelData.isAcceptableOrUnknown(
-              data['channel_data'], _channelDataMeta));
+              data['channel_data']!, _channelDataMeta));
     }
     if (data.containsKey('last_message_text')) {
       context.handle(
           _lastMessage_textMeta,
           lastMessage_text.isAcceptableOrUnknown(
-              data['last_message_text'], _lastMessage_textMeta));
+              data['last_message_text']!, _lastMessage_textMeta));
     }
     if (data.containsKey('last_message_user')) {
       context.handle(
           _lastMessage_userMeta,
           lastMessage_user.isAcceptableOrUnknown(
-              data['last_message_user'], _lastMessage_userMeta));
+              data['last_message_user']!, _lastMessage_userMeta));
     }
     if (data.containsKey('last_message_timestamp')) {
       context.handle(
           _lastMessage_timestampMeta,
           lastMessage_timestamp.isAcceptableOrUnknown(
-              data['last_message_timestamp'], _lastMessage_timestampMeta));
+              data['last_message_timestamp']!, _lastMessage_timestampMeta));
     }
     return context;
   }
@@ -845,9 +803,26 @@ class $DBChannelsTable extends DBChannels
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  DBChannel map(Map<String, dynamic> data, {String tablePrefix}) {
-    return DBChannel.fromData(data, attachedDatabase,
-        prefix: tablePrefix != null ? '$tablePrefix.' : null);
+  DBChannel map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DBChannel(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      sharedSecret: attachedDatabase.typeMapping
+          .read(DriftSqlType.blob, data['${effectivePrefix}shared_secret'])!,
+      nodeId: attachedDatabase.typeMapping
+          .read(DriftSqlType.blob, data['${effectivePrefix}node_id'])!,
+      channelData: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}channel_data']),
+      lastMessage_text: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}last_message_text']),
+      lastMessage_user: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}last_message_user']),
+      lastMessage_timestamp: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}last_message_timestamp']),
+    );
   }
 
   @override
@@ -858,54 +833,31 @@ class $DBChannelsTable extends DBChannels
 
 class DBPeer extends DataClass implements Insertable<DBPeer> {
   final int id;
-  final String ip;
-  final int port;
+  final String? ip;
+  final int? port;
   final int score;
-  final int knownSince;
-  final Uint8List kademliaId;
-  final Uint8List publicKey;
-  DBPeer(
-      {@required this.id,
+  final int? knownSince;
+  final Uint8List? kademliaId;
+  final Uint8List? publicKey;
+  const DBPeer(
+      {required this.id,
       this.ip,
       this.port,
-      @required this.score,
+      required this.score,
       this.knownSince,
       this.kademliaId,
       this.publicKey});
-  factory DBPeer.fromData(Map<String, dynamic> data, GeneratedDatabase db,
-      {String prefix}) {
-    final effectivePrefix = prefix ?? '';
-    return DBPeer(
-      id: const IntType().mapFromDatabaseResponse(data['${effectivePrefix}id']),
-      ip: const StringType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}ip']),
-      port: const IntType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}port']),
-      score: const IntType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}score']),
-      knownSince: const IntType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}known_since']),
-      kademliaId: const BlobType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}kademlia_id']),
-      publicKey: const BlobType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}public_key']),
-    );
-  }
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    if (!nullToAbsent || id != null) {
-      map['id'] = Variable<int>(id);
-    }
+    map['id'] = Variable<int>(id);
     if (!nullToAbsent || ip != null) {
       map['ip'] = Variable<String>(ip);
     }
     if (!nullToAbsent || port != null) {
       map['port'] = Variable<int>(port);
     }
-    if (!nullToAbsent || score != null) {
-      map['score'] = Variable<int>(score);
-    }
+    map['score'] = Variable<int>(score);
     if (!nullToAbsent || knownSince != null) {
       map['known_since'] = Variable<int>(knownSince);
     }
@@ -920,11 +872,10 @@ class DBPeer extends DataClass implements Insertable<DBPeer> {
 
   DBPeersCompanion toCompanion(bool nullToAbsent) {
     return DBPeersCompanion(
-      id: id == null && nullToAbsent ? const Value.absent() : Value(id),
+      id: Value(id),
       ip: ip == null && nullToAbsent ? const Value.absent() : Value(ip),
       port: port == null && nullToAbsent ? const Value.absent() : Value(port),
-      score:
-          score == null && nullToAbsent ? const Value.absent() : Value(score),
+      score: Value(score),
       knownSince: knownSince == null && nullToAbsent
           ? const Value.absent()
           : Value(knownSince),
@@ -938,48 +889,48 @@ class DBPeer extends DataClass implements Insertable<DBPeer> {
   }
 
   factory DBPeer.fromJson(Map<String, dynamic> json,
-      {ValueSerializer serializer}) {
-    serializer ??= moorRuntimeOptions.defaultSerializer;
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
     return DBPeer(
       id: serializer.fromJson<int>(json['id']),
-      ip: serializer.fromJson<String>(json['ip']),
-      port: serializer.fromJson<int>(json['port']),
+      ip: serializer.fromJson<String?>(json['ip']),
+      port: serializer.fromJson<int?>(json['port']),
       score: serializer.fromJson<int>(json['score']),
-      knownSince: serializer.fromJson<int>(json['knownSince']),
-      kademliaId: serializer.fromJson<Uint8List>(json['kademliaId']),
-      publicKey: serializer.fromJson<Uint8List>(json['publicKey']),
+      knownSince: serializer.fromJson<int?>(json['knownSince']),
+      kademliaId: serializer.fromJson<Uint8List?>(json['kademliaId']),
+      publicKey: serializer.fromJson<Uint8List?>(json['publicKey']),
     );
   }
   @override
-  Map<String, dynamic> toJson({ValueSerializer serializer}) {
-    serializer ??= moorRuntimeOptions.defaultSerializer;
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
-      'ip': serializer.toJson<String>(ip),
-      'port': serializer.toJson<int>(port),
+      'ip': serializer.toJson<String?>(ip),
+      'port': serializer.toJson<int?>(port),
       'score': serializer.toJson<int>(score),
-      'knownSince': serializer.toJson<int>(knownSince),
-      'kademliaId': serializer.toJson<Uint8List>(kademliaId),
-      'publicKey': serializer.toJson<Uint8List>(publicKey),
+      'knownSince': serializer.toJson<int?>(knownSince),
+      'kademliaId': serializer.toJson<Uint8List?>(kademliaId),
+      'publicKey': serializer.toJson<Uint8List?>(publicKey),
     };
   }
 
   DBPeer copyWith(
-          {int id,
-          String ip,
-          int port,
-          int score,
-          int knownSince,
-          Uint8List kademliaId,
-          Uint8List publicKey}) =>
+          {int? id,
+          Value<String?> ip = const Value.absent(),
+          Value<int?> port = const Value.absent(),
+          int? score,
+          Value<int?> knownSince = const Value.absent(),
+          Value<Uint8List?> kademliaId = const Value.absent(),
+          Value<Uint8List?> publicKey = const Value.absent()}) =>
       DBPeer(
         id: id ?? this.id,
-        ip: ip ?? this.ip,
-        port: port ?? this.port,
+        ip: ip.present ? ip.value : this.ip,
+        port: port.present ? port.value : this.port,
         score: score ?? this.score,
-        knownSince: knownSince ?? this.knownSince,
-        kademliaId: kademliaId ?? this.kademliaId,
-        publicKey: publicKey ?? this.publicKey,
+        knownSince: knownSince.present ? knownSince.value : this.knownSince,
+        kademliaId: kademliaId.present ? kademliaId.value : this.kademliaId,
+        publicKey: publicKey.present ? publicKey.value : this.publicKey,
       );
   @override
   String toString() {
@@ -996,8 +947,8 @@ class DBPeer extends DataClass implements Insertable<DBPeer> {
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, ip, port, score, knownSince, kademliaId, publicKey);
+  int get hashCode => Object.hash(id, ip, port, score, knownSince,
+      $driftBlobEquality.hash(kademliaId), $driftBlobEquality.hash(publicKey));
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1007,18 +958,18 @@ class DBPeer extends DataClass implements Insertable<DBPeer> {
           other.port == this.port &&
           other.score == this.score &&
           other.knownSince == this.knownSince &&
-          other.kademliaId == this.kademliaId &&
-          other.publicKey == this.publicKey);
+          $driftBlobEquality.equals(other.kademliaId, this.kademliaId) &&
+          $driftBlobEquality.equals(other.publicKey, this.publicKey));
 }
 
 class DBPeersCompanion extends UpdateCompanion<DBPeer> {
   final Value<int> id;
-  final Value<String> ip;
-  final Value<int> port;
+  final Value<String?> ip;
+  final Value<int?> port;
   final Value<int> score;
-  final Value<int> knownSince;
-  final Value<Uint8List> kademliaId;
-  final Value<Uint8List> publicKey;
+  final Value<int?> knownSince;
+  final Value<Uint8List?> kademliaId;
+  final Value<Uint8List?> publicKey;
   const DBPeersCompanion({
     this.id = const Value.absent(),
     this.ip = const Value.absent(),
@@ -1038,13 +989,13 @@ class DBPeersCompanion extends UpdateCompanion<DBPeer> {
     this.publicKey = const Value.absent(),
   });
   static Insertable<DBPeer> custom({
-    Expression<int> id,
-    Expression<String> ip,
-    Expression<int> port,
-    Expression<int> score,
-    Expression<int> knownSince,
-    Expression<Uint8List> kademliaId,
-    Expression<Uint8List> publicKey,
+    Expression<int>? id,
+    Expression<String>? ip,
+    Expression<int>? port,
+    Expression<int>? score,
+    Expression<int>? knownSince,
+    Expression<Uint8List>? kademliaId,
+    Expression<Uint8List>? publicKey,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1058,13 +1009,13 @@ class DBPeersCompanion extends UpdateCompanion<DBPeer> {
   }
 
   DBPeersCompanion copyWith(
-      {Value<int> id,
-      Value<String> ip,
-      Value<int> port,
-      Value<int> score,
-      Value<int> knownSince,
-      Value<Uint8List> kademliaId,
-      Value<Uint8List> publicKey}) {
+      {Value<int>? id,
+      Value<String?>? ip,
+      Value<int?>? port,
+      Value<int>? score,
+      Value<int?>? knownSince,
+      Value<Uint8List?>? kademliaId,
+      Value<Uint8List?>? publicKey}) {
     return DBPeersCompanion(
       id: id ?? this.id,
       ip: ip ?? this.ip,
@@ -1121,57 +1072,55 @@ class DBPeersCompanion extends UpdateCompanion<DBPeer> {
 class $DBPeersTable extends DBPeers with TableInfo<$DBPeersTable, DBPeer> {
   @override
   final GeneratedDatabase attachedDatabase;
-  final String _alias;
+  final String? _alias;
   $DBPeersTable(this.attachedDatabase, [this._alias]);
-  final VerificationMeta _idMeta = const VerificationMeta('id');
-  GeneratedColumn<int> _id;
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  GeneratedColumn<int> get id =>
-      _id ??= GeneratedColumn<int>('id', aliasedName, false,
-          type: const IntType(),
-          requiredDuringInsert: false,
-          defaultConstraints: 'PRIMARY KEY AUTOINCREMENT');
-  final VerificationMeta _ipMeta = const VerificationMeta('ip');
-  GeneratedColumn<String> _ip;
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _ipMeta = const VerificationMeta('ip');
   @override
-  GeneratedColumn<String> get ip => _ip ??= GeneratedColumn<String>(
+  late final GeneratedColumn<String> ip = GeneratedColumn<String>(
       'ip', aliasedName, true,
       additionalChecks:
           GeneratedColumn.checkTextLength(minTextLength: 3, maxTextLength: 32),
-      type: const StringType(),
+      type: DriftSqlType.string,
       requiredDuringInsert: false);
-  final VerificationMeta _portMeta = const VerificationMeta('port');
-  GeneratedColumn<int> _port;
+  static const VerificationMeta _portMeta = const VerificationMeta('port');
   @override
-  GeneratedColumn<int> get port =>
-      _port ??= GeneratedColumn<int>('port', aliasedName, true,
-          type: const IntType(), requiredDuringInsert: false);
-  final VerificationMeta _scoreMeta = const VerificationMeta('score');
-  GeneratedColumn<int> _score;
+  late final GeneratedColumn<int> port = GeneratedColumn<int>(
+      'port', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _scoreMeta = const VerificationMeta('score');
   @override
-  GeneratedColumn<int> get score =>
-      _score ??= GeneratedColumn<int>('score', aliasedName, false,
-          type: const IntType(),
-          requiredDuringInsert: false,
-          defaultValue: const Constant(0));
-  final VerificationMeta _knownSinceMeta = const VerificationMeta('knownSince');
-  GeneratedColumn<int> _knownSince;
+  late final GeneratedColumn<int> score = GeneratedColumn<int>(
+      'score', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _knownSinceMeta =
+      const VerificationMeta('knownSince');
   @override
-  GeneratedColumn<int> get knownSince =>
-      _knownSince ??= GeneratedColumn<int>('known_since', aliasedName, true,
-          type: const IntType(), requiredDuringInsert: false);
-  final VerificationMeta _kademliaIdMeta = const VerificationMeta('kademliaId');
-  GeneratedColumn<Uint8List> _kademliaId;
+  late final GeneratedColumn<int> knownSince = GeneratedColumn<int>(
+      'known_since', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _kademliaIdMeta =
+      const VerificationMeta('kademliaId');
   @override
-  GeneratedColumn<Uint8List> get kademliaId => _kademliaId ??=
-      GeneratedColumn<Uint8List>('kademlia_id', aliasedName, true,
-          type: const BlobType(), requiredDuringInsert: false);
-  final VerificationMeta _publicKeyMeta = const VerificationMeta('publicKey');
-  GeneratedColumn<Uint8List> _publicKey;
+  late final GeneratedColumn<Uint8List> kademliaId = GeneratedColumn<Uint8List>(
+      'kademlia_id', aliasedName, true,
+      type: DriftSqlType.blob, requiredDuringInsert: false);
+  static const VerificationMeta _publicKeyMeta =
+      const VerificationMeta('publicKey');
   @override
-  GeneratedColumn<Uint8List> get publicKey =>
-      _publicKey ??= GeneratedColumn<Uint8List>('public_key', aliasedName, true,
-          type: const BlobType(), requiredDuringInsert: false);
+  late final GeneratedColumn<Uint8List> publicKey = GeneratedColumn<Uint8List>(
+      'public_key', aliasedName, true,
+      type: DriftSqlType.blob, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns =>
       [id, ip, port, score, knownSince, kademliaId, publicKey];
@@ -1185,34 +1134,34 @@ class $DBPeersTable extends DBPeers with TableInfo<$DBPeersTable, DBPeer> {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id'], _idMeta));
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('ip')) {
-      context.handle(_ipMeta, ip.isAcceptableOrUnknown(data['ip'], _ipMeta));
+      context.handle(_ipMeta, ip.isAcceptableOrUnknown(data['ip']!, _ipMeta));
     }
     if (data.containsKey('port')) {
       context.handle(
-          _portMeta, port.isAcceptableOrUnknown(data['port'], _portMeta));
+          _portMeta, port.isAcceptableOrUnknown(data['port']!, _portMeta));
     }
     if (data.containsKey('score')) {
       context.handle(
-          _scoreMeta, score.isAcceptableOrUnknown(data['score'], _scoreMeta));
+          _scoreMeta, score.isAcceptableOrUnknown(data['score']!, _scoreMeta));
     }
     if (data.containsKey('known_since')) {
       context.handle(
           _knownSinceMeta,
           knownSince.isAcceptableOrUnknown(
-              data['known_since'], _knownSinceMeta));
+              data['known_since']!, _knownSinceMeta));
     }
     if (data.containsKey('kademlia_id')) {
       context.handle(
           _kademliaIdMeta,
           kademliaId.isAcceptableOrUnknown(
-              data['kademlia_id'], _kademliaIdMeta));
+              data['kademlia_id']!, _kademliaIdMeta));
     }
     if (data.containsKey('public_key')) {
       context.handle(_publicKeyMeta,
-          publicKey.isAcceptableOrUnknown(data['public_key'], _publicKeyMeta));
+          publicKey.isAcceptableOrUnknown(data['public_key']!, _publicKeyMeta));
     }
     return context;
   }
@@ -1220,9 +1169,24 @@ class $DBPeersTable extends DBPeers with TableInfo<$DBPeersTable, DBPeer> {
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  DBPeer map(Map<String, dynamic> data, {String tablePrefix}) {
-    return DBPeer.fromData(data, attachedDatabase,
-        prefix: tablePrefix != null ? '$tablePrefix.' : null);
+  DBPeer map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DBPeer(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      ip: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}ip']),
+      port: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}port']),
+      score: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}score'])!,
+      knownSince: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}known_since']),
+      kademliaId: attachedDatabase.typeMapping
+          .read(DriftSqlType.blob, data['${effectivePrefix}kademlia_id']),
+      publicKey: attachedDatabase.typeMapping
+          .read(DriftSqlType.blob, data['${effectivePrefix}public_key']),
+    );
   }
 
   @override
@@ -1233,147 +1197,107 @@ class $DBPeersTable extends DBPeers with TableInfo<$DBPeersTable, DBPeer> {
 
 class DBMessage extends DataClass implements Insertable<DBMessage> {
 /**
-   * Message id has to be unique for all memebers of the Channel. Thus, we have to generate a random interger for the
+   * Message id has to be unique for all members of the Channel. Thus, we have to generate a random integer for the
    * message id.
    */
   final int messageId;
   final int channelId;
   final int timestamp;
   final int type;
-  final String content;
+  final String? content;
   final int from;
-  final String deliveredTo;
+  final String? deliveredTo;
   final bool read;
-  DBMessage(
-      {@required this.messageId,
-      @required this.channelId,
-      @required this.timestamp,
-      @required this.type,
+  const DBMessage(
+      {required this.messageId,
+      required this.channelId,
+      required this.timestamp,
+      required this.type,
       this.content,
-      @required this.from,
+      required this.from,
       this.deliveredTo,
-      @required this.read});
-  factory DBMessage.fromData(Map<String, dynamic> data, GeneratedDatabase db,
-      {String prefix}) {
-    final effectivePrefix = prefix ?? '';
-    return DBMessage(
-      messageId: const IntType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}message_id']),
-      channelId: const IntType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}channel_id']),
-      timestamp: const IntType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}timestamp']),
-      type: const IntType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}type']),
-      content: const StringType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}content']),
-      from: const IntType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}from']),
-      deliveredTo: const StringType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}delivered_to']),
-      read: const BoolType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}read']),
-    );
-  }
+      required this.read});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    if (!nullToAbsent || messageId != null) {
-      map['message_id'] = Variable<int>(messageId);
-    }
-    if (!nullToAbsent || channelId != null) {
-      map['channel_id'] = Variable<int>(channelId);
-    }
-    if (!nullToAbsent || timestamp != null) {
-      map['timestamp'] = Variable<int>(timestamp);
-    }
-    if (!nullToAbsent || type != null) {
-      map['type'] = Variable<int>(type);
-    }
+    map['message_id'] = Variable<int>(messageId);
+    map['channel_id'] = Variable<int>(channelId);
+    map['timestamp'] = Variable<int>(timestamp);
+    map['type'] = Variable<int>(type);
     if (!nullToAbsent || content != null) {
       map['content'] = Variable<String>(content);
     }
-    if (!nullToAbsent || from != null) {
-      map['from'] = Variable<int>(from);
-    }
+    map['from'] = Variable<int>(from);
     if (!nullToAbsent || deliveredTo != null) {
       map['delivered_to'] = Variable<String>(deliveredTo);
     }
-    if (!nullToAbsent || read != null) {
-      map['read'] = Variable<bool>(read);
-    }
+    map['read'] = Variable<bool>(read);
     return map;
   }
 
   DBMessagesCompanion toCompanion(bool nullToAbsent) {
     return DBMessagesCompanion(
-      messageId: messageId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(messageId),
-      channelId: channelId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(channelId),
-      timestamp: timestamp == null && nullToAbsent
-          ? const Value.absent()
-          : Value(timestamp),
-      type: type == null && nullToAbsent ? const Value.absent() : Value(type),
+      messageId: Value(messageId),
+      channelId: Value(channelId),
+      timestamp: Value(timestamp),
+      type: Value(type),
       content: content == null && nullToAbsent
           ? const Value.absent()
           : Value(content),
-      from: from == null && nullToAbsent ? const Value.absent() : Value(from),
+      from: Value(from),
       deliveredTo: deliveredTo == null && nullToAbsent
           ? const Value.absent()
           : Value(deliveredTo),
-      read: read == null && nullToAbsent ? const Value.absent() : Value(read),
+      read: Value(read),
     );
   }
 
   factory DBMessage.fromJson(Map<String, dynamic> json,
-      {ValueSerializer serializer}) {
-    serializer ??= moorRuntimeOptions.defaultSerializer;
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
     return DBMessage(
       messageId: serializer.fromJson<int>(json['messageId']),
       channelId: serializer.fromJson<int>(json['channelId']),
       timestamp: serializer.fromJson<int>(json['timestamp']),
       type: serializer.fromJson<int>(json['type']),
-      content: serializer.fromJson<String>(json['content']),
+      content: serializer.fromJson<String?>(json['content']),
       from: serializer.fromJson<int>(json['from']),
-      deliveredTo: serializer.fromJson<String>(json['deliveredTo']),
+      deliveredTo: serializer.fromJson<String?>(json['deliveredTo']),
       read: serializer.fromJson<bool>(json['read']),
     );
   }
   @override
-  Map<String, dynamic> toJson({ValueSerializer serializer}) {
-    serializer ??= moorRuntimeOptions.defaultSerializer;
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'messageId': serializer.toJson<int>(messageId),
       'channelId': serializer.toJson<int>(channelId),
       'timestamp': serializer.toJson<int>(timestamp),
       'type': serializer.toJson<int>(type),
-      'content': serializer.toJson<String>(content),
+      'content': serializer.toJson<String?>(content),
       'from': serializer.toJson<int>(from),
-      'deliveredTo': serializer.toJson<String>(deliveredTo),
+      'deliveredTo': serializer.toJson<String?>(deliveredTo),
       'read': serializer.toJson<bool>(read),
     };
   }
 
   DBMessage copyWith(
-          {int messageId,
-          int channelId,
-          int timestamp,
-          int type,
-          String content,
-          int from,
-          String deliveredTo,
-          bool read}) =>
+          {int? messageId,
+          int? channelId,
+          int? timestamp,
+          int? type,
+          Value<String?> content = const Value.absent(),
+          int? from,
+          Value<String?> deliveredTo = const Value.absent(),
+          bool? read}) =>
       DBMessage(
         messageId: messageId ?? this.messageId,
         channelId: channelId ?? this.channelId,
         timestamp: timestamp ?? this.timestamp,
         type: type ?? this.type,
-        content: content ?? this.content,
+        content: content.present ? content.value : this.content,
         from: from ?? this.from,
-        deliveredTo: deliveredTo ?? this.deliveredTo,
+        deliveredTo: deliveredTo.present ? deliveredTo.value : this.deliveredTo,
         read: read ?? this.read,
       );
   @override
@@ -1413,9 +1337,9 @@ class DBMessagesCompanion extends UpdateCompanion<DBMessage> {
   final Value<int> channelId;
   final Value<int> timestamp;
   final Value<int> type;
-  final Value<String> content;
+  final Value<String?> content;
   final Value<int> from;
-  final Value<String> deliveredTo;
+  final Value<String?> deliveredTo;
   final Value<bool> read;
   const DBMessagesCompanion({
     this.messageId = const Value.absent(),
@@ -1428,12 +1352,12 @@ class DBMessagesCompanion extends UpdateCompanion<DBMessage> {
     this.read = const Value.absent(),
   });
   DBMessagesCompanion.insert({
-    @required int messageId,
-    @required int channelId,
-    @required int timestamp,
-    @required int type,
+    required int messageId,
+    required int channelId,
+    required int timestamp,
+    required int type,
     this.content = const Value.absent(),
-    @required int from,
+    required int from,
     this.deliveredTo = const Value.absent(),
     this.read = const Value.absent(),
   })  : messageId = Value(messageId),
@@ -1442,14 +1366,14 @@ class DBMessagesCompanion extends UpdateCompanion<DBMessage> {
         type = Value(type),
         from = Value(from);
   static Insertable<DBMessage> custom({
-    Expression<int> messageId,
-    Expression<int> channelId,
-    Expression<int> timestamp,
-    Expression<int> type,
-    Expression<String> content,
-    Expression<int> from,
-    Expression<String> deliveredTo,
-    Expression<bool> read,
+    Expression<int>? messageId,
+    Expression<int>? channelId,
+    Expression<int>? timestamp,
+    Expression<int>? type,
+    Expression<String>? content,
+    Expression<int>? from,
+    Expression<String>? deliveredTo,
+    Expression<bool>? read,
   }) {
     return RawValuesInsertable({
       if (messageId != null) 'message_id': messageId,
@@ -1464,14 +1388,14 @@ class DBMessagesCompanion extends UpdateCompanion<DBMessage> {
   }
 
   DBMessagesCompanion copyWith(
-      {Value<int> messageId,
-      Value<int> channelId,
-      Value<int> timestamp,
-      Value<int> type,
-      Value<String> content,
-      Value<int> from,
-      Value<String> deliveredTo,
-      Value<bool> read}) {
+      {Value<int>? messageId,
+      Value<int>? channelId,
+      Value<int>? timestamp,
+      Value<int>? type,
+      Value<String?>? content,
+      Value<int>? from,
+      Value<String?>? deliveredTo,
+      Value<bool>? read}) {
     return DBMessagesCompanion(
       messageId: messageId ?? this.messageId,
       channelId: channelId ?? this.channelId,
@@ -1534,62 +1458,62 @@ class $DBMessagesTable extends DBMessages
     with TableInfo<$DBMessagesTable, DBMessage> {
   @override
   final GeneratedDatabase attachedDatabase;
-  final String _alias;
+  final String? _alias;
   $DBMessagesTable(this.attachedDatabase, [this._alias]);
-  final VerificationMeta _messageIdMeta = const VerificationMeta('messageId');
-  GeneratedColumn<int> _messageId;
+  static const VerificationMeta _messageIdMeta =
+      const VerificationMeta('messageId');
   @override
-  GeneratedColumn<int> get messageId =>
-      _messageId ??= GeneratedColumn<int>('message_id', aliasedName, false,
-          type: const IntType(), requiredDuringInsert: true);
-  final VerificationMeta _channelIdMeta = const VerificationMeta('channelId');
-  GeneratedColumn<int> _channelId;
+  late final GeneratedColumn<int> messageId = GeneratedColumn<int>(
+      'message_id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _channelIdMeta =
+      const VerificationMeta('channelId');
   @override
-  GeneratedColumn<int> get channelId =>
-      _channelId ??= GeneratedColumn<int>('channel_id', aliasedName, false,
-          type: const IntType(), requiredDuringInsert: true);
-  final VerificationMeta _timestampMeta = const VerificationMeta('timestamp');
-  GeneratedColumn<int> _timestamp;
+  late final GeneratedColumn<int> channelId = GeneratedColumn<int>(
+      'channel_id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _timestampMeta =
+      const VerificationMeta('timestamp');
   @override
-  GeneratedColumn<int> get timestamp =>
-      _timestamp ??= GeneratedColumn<int>('timestamp', aliasedName, false,
-          type: const IntType(), requiredDuringInsert: true);
-  final VerificationMeta _typeMeta = const VerificationMeta('type');
-  GeneratedColumn<int> _type;
+  late final GeneratedColumn<int> timestamp = GeneratedColumn<int>(
+      'timestamp', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
   @override
-  GeneratedColumn<int> get type =>
-      _type ??= GeneratedColumn<int>('type', aliasedName, false,
-          type: const IntType(), requiredDuringInsert: true);
-  final VerificationMeta _contentMeta = const VerificationMeta('content');
-  GeneratedColumn<String> _content;
+  late final GeneratedColumn<int> type = GeneratedColumn<int>(
+      'type', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _contentMeta =
+      const VerificationMeta('content');
   @override
-  GeneratedColumn<String> get content =>
-      _content ??= GeneratedColumn<String>('content', aliasedName, true,
-          additionalChecks: GeneratedColumn.checkTextLength(
-              minTextLength: 1, maxTextLength: 1024),
-          type: const StringType(),
-          requiredDuringInsert: false);
-  final VerificationMeta _fromMeta = const VerificationMeta('from');
-  GeneratedColumn<int> _from;
+  late final GeneratedColumn<String> content = GeneratedColumn<String>(
+      'content', aliasedName, true,
+      additionalChecks: GeneratedColumn.checkTextLength(
+          minTextLength: 1, maxTextLength: 1024),
+      type: DriftSqlType.string,
+      requiredDuringInsert: false);
+  static const VerificationMeta _fromMeta = const VerificationMeta('from');
   @override
-  GeneratedColumn<int> get from =>
-      _from ??= GeneratedColumn<int>('from', aliasedName, false,
-          type: const IntType(), requiredDuringInsert: true);
-  final VerificationMeta _deliveredToMeta =
+  late final GeneratedColumn<int> from = GeneratedColumn<int>(
+      'from', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _deliveredToMeta =
       const VerificationMeta('deliveredTo');
-  GeneratedColumn<String> _deliveredTo;
   @override
-  GeneratedColumn<String> get deliveredTo => _deliveredTo ??=
-      GeneratedColumn<String>('delivered_to', aliasedName, true,
-          type: const StringType(), requiredDuringInsert: false);
-  final VerificationMeta _readMeta = const VerificationMeta('read');
-  GeneratedColumn<bool> _read;
+  late final GeneratedColumn<String> deliveredTo = GeneratedColumn<String>(
+      'delivered_to', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _readMeta = const VerificationMeta('read');
   @override
-  GeneratedColumn<bool> get read =>
-      _read ??= GeneratedColumn<bool>('read', aliasedName, false,
-          type: const BoolType(),
+  late final GeneratedColumn<bool> read =
+      GeneratedColumn<bool>('read', aliasedName, false,
+          type: DriftSqlType.bool,
           requiredDuringInsert: false,
-          defaultConstraints: 'CHECK (read IN (0, 1))',
+          defaultConstraints: GeneratedColumn.constraintsDependsOnDialect({
+            SqlDialect.sqlite: 'CHECK ("read" IN (0, 1))',
+            SqlDialect.mysql: '',
+            SqlDialect.postgres: '',
+          }),
           defaultValue: const Constant(false));
   @override
   List<GeneratedColumn> get $columns =>
@@ -1605,35 +1529,35 @@ class $DBMessagesTable extends DBMessages
     final data = instance.toColumns(true);
     if (data.containsKey('message_id')) {
       context.handle(_messageIdMeta,
-          messageId.isAcceptableOrUnknown(data['message_id'], _messageIdMeta));
+          messageId.isAcceptableOrUnknown(data['message_id']!, _messageIdMeta));
     } else if (isInserting) {
       context.missing(_messageIdMeta);
     }
     if (data.containsKey('channel_id')) {
       context.handle(_channelIdMeta,
-          channelId.isAcceptableOrUnknown(data['channel_id'], _channelIdMeta));
+          channelId.isAcceptableOrUnknown(data['channel_id']!, _channelIdMeta));
     } else if (isInserting) {
       context.missing(_channelIdMeta);
     }
     if (data.containsKey('timestamp')) {
       context.handle(_timestampMeta,
-          timestamp.isAcceptableOrUnknown(data['timestamp'], _timestampMeta));
+          timestamp.isAcceptableOrUnknown(data['timestamp']!, _timestampMeta));
     } else if (isInserting) {
       context.missing(_timestampMeta);
     }
     if (data.containsKey('type')) {
       context.handle(
-          _typeMeta, type.isAcceptableOrUnknown(data['type'], _typeMeta));
+          _typeMeta, type.isAcceptableOrUnknown(data['type']!, _typeMeta));
     } else if (isInserting) {
       context.missing(_typeMeta);
     }
     if (data.containsKey('content')) {
       context.handle(_contentMeta,
-          content.isAcceptableOrUnknown(data['content'], _contentMeta));
+          content.isAcceptableOrUnknown(data['content']!, _contentMeta));
     }
     if (data.containsKey('from')) {
       context.handle(
-          _fromMeta, from.isAcceptableOrUnknown(data['from'], _fromMeta));
+          _fromMeta, from.isAcceptableOrUnknown(data['from']!, _fromMeta));
     } else if (isInserting) {
       context.missing(_fromMeta);
     }
@@ -1641,21 +1565,38 @@ class $DBMessagesTable extends DBMessages
       context.handle(
           _deliveredToMeta,
           deliveredTo.isAcceptableOrUnknown(
-              data['delivered_to'], _deliveredToMeta));
+              data['delivered_to']!, _deliveredToMeta));
     }
     if (data.containsKey('read')) {
       context.handle(
-          _readMeta, read.isAcceptableOrUnknown(data['read'], _readMeta));
+          _readMeta, read.isAcceptableOrUnknown(data['read']!, _readMeta));
     }
     return context;
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => <GeneratedColumn>{};
+  Set<GeneratedColumn> get $primaryKey => const {};
   @override
-  DBMessage map(Map<String, dynamic> data, {String tablePrefix}) {
-    return DBMessage.fromData(data, attachedDatabase,
-        prefix: tablePrefix != null ? '$tablePrefix.' : null);
+  DBMessage map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DBMessage(
+      messageId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}message_id'])!,
+      channelId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}channel_id'])!,
+      timestamp: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}timestamp'])!,
+      type: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}type'])!,
+      content: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}content']),
+      from: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}from'])!,
+      deliveredTo: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}delivered_to']),
+      read: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}read'])!,
+    );
   }
 
   @override
@@ -1666,33 +1607,16 @@ class $DBMessagesTable extends DBMessages
 
 class DBFriend extends DataClass implements Insertable<DBFriend> {
   final int id;
-  final String name;
-  final Uint8List image;
-  final String phoneNumber;
-  final String eMail;
-  DBFriend(
-      {@required this.id, this.name, this.image, this.phoneNumber, this.eMail});
-  factory DBFriend.fromData(Map<String, dynamic> data, GeneratedDatabase db,
-      {String prefix}) {
-    final effectivePrefix = prefix ?? '';
-    return DBFriend(
-      id: const IntType().mapFromDatabaseResponse(data['${effectivePrefix}id']),
-      name: const StringType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}name']),
-      image: const BlobType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}image']),
-      phoneNumber: const StringType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}phone_number']),
-      eMail: const StringType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}e_mail']),
-    );
-  }
+  final String? name;
+  final Uint8List? image;
+  final String? phoneNumber;
+  final String? eMail;
+  const DBFriend(
+      {required this.id, this.name, this.image, this.phoneNumber, this.eMail});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    if (!nullToAbsent || id != null) {
-      map['id'] = Variable<int>(id);
-    }
+    map['id'] = Variable<int>(id);
     if (!nullToAbsent || name != null) {
       map['name'] = Variable<String>(name);
     }
@@ -1710,7 +1634,7 @@ class DBFriend extends DataClass implements Insertable<DBFriend> {
 
   DBFriendsCompanion toCompanion(bool nullToAbsent) {
     return DBFriendsCompanion(
-      id: id == null && nullToAbsent ? const Value.absent() : Value(id),
+      id: Value(id),
       name: name == null && nullToAbsent ? const Value.absent() : Value(name),
       image:
           image == null && nullToAbsent ? const Value.absent() : Value(image),
@@ -1723,40 +1647,40 @@ class DBFriend extends DataClass implements Insertable<DBFriend> {
   }
 
   factory DBFriend.fromJson(Map<String, dynamic> json,
-      {ValueSerializer serializer}) {
-    serializer ??= moorRuntimeOptions.defaultSerializer;
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
     return DBFriend(
       id: serializer.fromJson<int>(json['id']),
-      name: serializer.fromJson<String>(json['name']),
-      image: serializer.fromJson<Uint8List>(json['image']),
-      phoneNumber: serializer.fromJson<String>(json['phoneNumber']),
-      eMail: serializer.fromJson<String>(json['eMail']),
+      name: serializer.fromJson<String?>(json['name']),
+      image: serializer.fromJson<Uint8List?>(json['image']),
+      phoneNumber: serializer.fromJson<String?>(json['phoneNumber']),
+      eMail: serializer.fromJson<String?>(json['eMail']),
     );
   }
   @override
-  Map<String, dynamic> toJson({ValueSerializer serializer}) {
-    serializer ??= moorRuntimeOptions.defaultSerializer;
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
-      'name': serializer.toJson<String>(name),
-      'image': serializer.toJson<Uint8List>(image),
-      'phoneNumber': serializer.toJson<String>(phoneNumber),
-      'eMail': serializer.toJson<String>(eMail),
+      'name': serializer.toJson<String?>(name),
+      'image': serializer.toJson<Uint8List?>(image),
+      'phoneNumber': serializer.toJson<String?>(phoneNumber),
+      'eMail': serializer.toJson<String?>(eMail),
     };
   }
 
   DBFriend copyWith(
-          {int id,
-          String name,
-          Uint8List image,
-          String phoneNumber,
-          String eMail}) =>
+          {int? id,
+          Value<String?> name = const Value.absent(),
+          Value<Uint8List?> image = const Value.absent(),
+          Value<String?> phoneNumber = const Value.absent(),
+          Value<String?> eMail = const Value.absent()}) =>
       DBFriend(
         id: id ?? this.id,
-        name: name ?? this.name,
-        image: image ?? this.image,
-        phoneNumber: phoneNumber ?? this.phoneNumber,
-        eMail: eMail ?? this.eMail,
+        name: name.present ? name.value : this.name,
+        image: image.present ? image.value : this.image,
+        phoneNumber: phoneNumber.present ? phoneNumber.value : this.phoneNumber,
+        eMail: eMail.present ? eMail.value : this.eMail,
       );
   @override
   String toString() {
@@ -1771,24 +1695,25 @@ class DBFriend extends DataClass implements Insertable<DBFriend> {
   }
 
   @override
-  int get hashCode => Object.hash(id, name, image, phoneNumber, eMail);
+  int get hashCode =>
+      Object.hash(id, name, $driftBlobEquality.hash(image), phoneNumber, eMail);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is DBFriend &&
           other.id == this.id &&
           other.name == this.name &&
-          other.image == this.image &&
+          $driftBlobEquality.equals(other.image, this.image) &&
           other.phoneNumber == this.phoneNumber &&
           other.eMail == this.eMail);
 }
 
 class DBFriendsCompanion extends UpdateCompanion<DBFriend> {
   final Value<int> id;
-  final Value<String> name;
-  final Value<Uint8List> image;
-  final Value<String> phoneNumber;
-  final Value<String> eMail;
+  final Value<String?> name;
+  final Value<Uint8List?> image;
+  final Value<String?> phoneNumber;
+  final Value<String?> eMail;
   const DBFriendsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -1797,18 +1722,18 @@ class DBFriendsCompanion extends UpdateCompanion<DBFriend> {
     this.eMail = const Value.absent(),
   });
   DBFriendsCompanion.insert({
-    @required int id,
+    required int id,
     this.name = const Value.absent(),
     this.image = const Value.absent(),
     this.phoneNumber = const Value.absent(),
     this.eMail = const Value.absent(),
   }) : id = Value(id);
   static Insertable<DBFriend> custom({
-    Expression<int> id,
-    Expression<String> name,
-    Expression<Uint8List> image,
-    Expression<String> phoneNumber,
-    Expression<String> eMail,
+    Expression<int>? id,
+    Expression<String>? name,
+    Expression<Uint8List>? image,
+    Expression<String>? phoneNumber,
+    Expression<String>? eMail,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1820,11 +1745,11 @@ class DBFriendsCompanion extends UpdateCompanion<DBFriend> {
   }
 
   DBFriendsCompanion copyWith(
-      {Value<int> id,
-      Value<String> name,
-      Value<Uint8List> image,
-      Value<String> phoneNumber,
-      Value<String> eMail}) {
+      {Value<int>? id,
+      Value<String?>? name,
+      Value<Uint8List?>? image,
+      Value<String?>? phoneNumber,
+      Value<String?>? eMail}) {
     return DBFriendsCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
@@ -1872,47 +1797,42 @@ class $DBFriendsTable extends DBFriends
     with TableInfo<$DBFriendsTable, DBFriend> {
   @override
   final GeneratedDatabase attachedDatabase;
-  final String _alias;
+  final String? _alias;
   $DBFriendsTable(this.attachedDatabase, [this._alias]);
-  final VerificationMeta _idMeta = const VerificationMeta('id');
-  GeneratedColumn<int> _id;
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  GeneratedColumn<int> get id =>
-      _id ??= GeneratedColumn<int>('id', aliasedName, false,
-          type: const IntType(), requiredDuringInsert: true);
-  final VerificationMeta _nameMeta = const VerificationMeta('name');
-  GeneratedColumn<String> _name;
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
-  GeneratedColumn<String> get name => _name ??= GeneratedColumn<String>(
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
       'name', aliasedName, true,
       additionalChecks:
           GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 32),
-      type: const StringType(),
+      type: DriftSqlType.string,
       requiredDuringInsert: false);
-  final VerificationMeta _imageMeta = const VerificationMeta('image');
-  GeneratedColumn<Uint8List> _image;
+  static const VerificationMeta _imageMeta = const VerificationMeta('image');
   @override
-  GeneratedColumn<Uint8List> get image =>
-      _image ??= GeneratedColumn<Uint8List>('image', aliasedName, true,
-          type: const BlobType(), requiredDuringInsert: false);
-  final VerificationMeta _phoneNumberMeta =
+  late final GeneratedColumn<Uint8List> image = GeneratedColumn<Uint8List>(
+      'image', aliasedName, true,
+      type: DriftSqlType.blob, requiredDuringInsert: false);
+  static const VerificationMeta _phoneNumberMeta =
       const VerificationMeta('phoneNumber');
-  GeneratedColumn<String> _phoneNumber;
   @override
-  GeneratedColumn<String> get phoneNumber => _phoneNumber ??=
-      GeneratedColumn<String>('phone_number', aliasedName, true,
-          additionalChecks: GeneratedColumn.checkTextLength(
-              minTextLength: 6, maxTextLength: 16),
-          type: const StringType(),
-          requiredDuringInsert: false);
-  final VerificationMeta _eMailMeta = const VerificationMeta('eMail');
-  GeneratedColumn<String> _eMail;
+  late final GeneratedColumn<String> phoneNumber = GeneratedColumn<String>(
+      'phone_number', aliasedName, true,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 6, maxTextLength: 16),
+      type: DriftSqlType.string,
+      requiredDuringInsert: false);
+  static const VerificationMeta _eMailMeta = const VerificationMeta('eMail');
   @override
-  GeneratedColumn<String> get eMail => _eMail ??= GeneratedColumn<String>(
+  late final GeneratedColumn<String> eMail = GeneratedColumn<String>(
       'e_mail', aliasedName, true,
       additionalChecks:
           GeneratedColumn.checkTextLength(minTextLength: 6, maxTextLength: 16),
-      type: const StringType(),
+      type: DriftSqlType.string,
       requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [id, name, image, phoneNumber, eMail];
@@ -1926,37 +1846,48 @@ class $DBFriendsTable extends DBFriends
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id'], _idMeta));
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     } else if (isInserting) {
       context.missing(_idMeta);
     }
     if (data.containsKey('name')) {
       context.handle(
-          _nameMeta, name.isAcceptableOrUnknown(data['name'], _nameMeta));
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
     }
     if (data.containsKey('image')) {
       context.handle(
-          _imageMeta, image.isAcceptableOrUnknown(data['image'], _imageMeta));
+          _imageMeta, image.isAcceptableOrUnknown(data['image']!, _imageMeta));
     }
     if (data.containsKey('phone_number')) {
       context.handle(
           _phoneNumberMeta,
           phoneNumber.isAcceptableOrUnknown(
-              data['phone_number'], _phoneNumberMeta));
+              data['phone_number']!, _phoneNumberMeta));
     }
     if (data.containsKey('e_mail')) {
       context.handle(
-          _eMailMeta, eMail.isAcceptableOrUnknown(data['e_mail'], _eMailMeta));
+          _eMailMeta, eMail.isAcceptableOrUnknown(data['e_mail']!, _eMailMeta));
     }
     return context;
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => <GeneratedColumn>{};
+  Set<GeneratedColumn> get $primaryKey => const {};
   @override
-  DBFriend map(Map<String, dynamic> data, {String tablePrefix}) {
-    return DBFriend.fromData(data, attachedDatabase,
-        prefix: tablePrefix != null ? '$tablePrefix.' : null);
+  DBFriend map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DBFriend(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name']),
+      image: attachedDatabase.typeMapping
+          .read(DriftSqlType.blob, data['${effectivePrefix}image']),
+      phoneNumber: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}phone_number']),
+      eMail: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}e_mail']),
+    );
   }
 
   @override
@@ -1966,28 +1897,18 @@ class $DBFriendsTable extends DBFriends
 }
 
 abstract class _$AppDatabase extends GeneratedDatabase {
-  _$AppDatabase(QueryExecutor e) : super(SqlTypeSystem.defaultInstance, e);
-  $LocalSettingsTable _localSettings;
-  $LocalSettingsTable get localSettings =>
-      _localSettings ??= $LocalSettingsTable(this);
-  $DBChannelsTable _dBChannels;
-  $DBChannelsTable get dBChannels => _dBChannels ??= $DBChannelsTable(this);
-  $DBPeersTable _dBPeers;
-  $DBPeersTable get dBPeers => _dBPeers ??= $DBPeersTable(this);
-  $DBMessagesTable _dBMessages;
-  $DBMessagesTable get dBMessages => _dBMessages ??= $DBMessagesTable(this);
-  $DBFriendsTable _dBFriends;
-  $DBFriendsTable get dBFriends => _dBFriends ??= $DBFriendsTable(this);
-  DBPeersDao _dBPeersDao;
-  DBPeersDao get dBPeersDao => _dBPeersDao ??= DBPeersDao(this as AppDatabase);
-  DBMessagesDao _dBMessagesDao;
-  DBMessagesDao get dBMessagesDao =>
-      _dBMessagesDao ??= DBMessagesDao(this as AppDatabase);
-  DBFriendsDao _dBFriendsDao;
-  DBFriendsDao get dBFriendsDao =>
-      _dBFriendsDao ??= DBFriendsDao(this as AppDatabase);
+  _$AppDatabase(QueryExecutor e) : super(e);
+  late final $LocalSettingsTable localSettings = $LocalSettingsTable(this);
+  late final $DBChannelsTable dBChannels = $DBChannelsTable(this);
+  late final $DBPeersTable dBPeers = $DBPeersTable(this);
+  late final $DBMessagesTable dBMessages = $DBMessagesTable(this);
+  late final $DBFriendsTable dBFriends = $DBFriendsTable(this);
+  late final DBPeersDao dBPeersDao = DBPeersDao(this as AppDatabase);
+  late final DBMessagesDao dBMessagesDao = DBMessagesDao(this as AppDatabase);
+  late final DBFriendsDao dBFriendsDao = DBFriendsDao(this as AppDatabase);
   @override
-  Iterable<TableInfo> get allTables => allSchemaEntities.whereType<TableInfo>();
+  Iterable<TableInfo<Table, Object?>> get allTables =>
+      allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities =>
       [localSettings, dBChannels, dBPeers, dBMessages, dBFriends];

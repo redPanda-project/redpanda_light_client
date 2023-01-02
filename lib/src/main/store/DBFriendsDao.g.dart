@@ -1,12 +1,8 @@
-// @dart=2.9
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
 part of 'DBFriendsDao.dart';
 
-// **************************************************************************
-// DaoGenerator
-// **************************************************************************
-
+// ignore_for_file: type=lint
 mixin _$DBFriendsDaoMixin on DatabaseAccessor<AppDatabase> {
   $DBFriendsTable get dBFriends => attachedDatabase.dBFriends;
 }

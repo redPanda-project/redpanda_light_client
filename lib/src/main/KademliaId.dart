@@ -40,8 +40,7 @@ class KademliaId {
    */
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is KademliaId && runtimeType == other.runtimeType && Utils.listsAreEqual(_bytes, other._bytes);
+      identical(this, other) || other is KademliaId && runtimeType == other.runtimeType && Utils.listsAreEqual(_bytes, other._bytes);
 
   @override
   int get hashCode {

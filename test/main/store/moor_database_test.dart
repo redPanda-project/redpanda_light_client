@@ -23,8 +23,7 @@ void main() {
     test('Test DBPeers', () async {
       var nodeId = new NodeId.withNewKeyPair();
 
-      await appDatabase.dBPeersDao
-          .insertNewPeer("127.0.0.1", 1332, nodeId.getKademliaId(), publicKey: nodeId.exportPublic());
+      await appDatabase.dBPeersDao.insertNewPeer("127.0.0.1", 1332, nodeId.getKademliaId(), publicKey: nodeId.exportPublic());
 
       var dbPeer = await appDatabase.dBPeersDao.getPeerByKademliaId(nodeId.getKademliaId());
 

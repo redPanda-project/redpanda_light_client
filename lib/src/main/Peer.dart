@@ -746,7 +746,7 @@ class Peer {
           from = msg['from'];
           int timestamp = msg['timestamp'];
           var i = await ConnectionService.appDatabase.dBMessagesDao.updateMessage(channelId, messageId, 0, text, from, timestamp);
-          if (i != null) {
+          if (i != 0) {
             refreshMessagesWatching(channelId, messageId: messageId, channelName: channel.name);
             await ConnectionService.appDatabase.updateLastMessage(channelId, from, text, timestamp);
           }

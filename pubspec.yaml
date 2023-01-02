@@ -10,9 +10,8 @@ dependencies:
   buffer: ^1.0.6
   hex: ^0.2.0
   base58check: ^2.0.0
-  byte_array: ^0.1.6
   pointycastle: ^3.3.0
-  moor: ^4.3.1
+  drift: ^2.4.1
   path: ^1.6.4
   asn1lib: ^1.0.2
   date_format: ^2.0.4
@@ -25,6 +24,6 @@ dev_dependencies:
     git:
       url: https://github.com/civts/test-coverage.git
       ref: aa6ffb41c28d7dec4e3bb11c3b7c4729e8271a69
-  moor_generator: ^4.0.0-dev
+  drift_dev: ^2.4.0
   build_runner: ^2.1.1
-  lints: ^1.0.1
+  lints: ^2.0.1

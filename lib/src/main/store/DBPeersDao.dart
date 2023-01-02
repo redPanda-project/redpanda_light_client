@@ -1,5 +1,4 @@
-// @dart=2.9
-import 'package:moor/moor.dart';
+import 'package:drift/drift.dart';
 import 'package:redpanda_light_client/export.dart';
 import 'package:redpanda_light_client/src/main/KademliaId.dart';
 import 'package:redpanda_light_client/src/main/Utils.dart';
@@ -10,7 +9,7 @@ part 'DBPeersDao.g.dart';
 // the _TodosDaoMixin will be created by moor. It contains all the necessary
 // fields for the tables. The <MyDatabase> type annotation is the database class
 // that should use this dao.
-@UseDao(tables: [DBPeers])
+@DriftAccessor(tables: [DBPeers])
 class DBPeersDao extends DatabaseAccessor<AppDatabase> with _$DBPeersDaoMixin {
   // this constructor is required so that the main database can create an instance
   // of this object.
@@ -19,11 +18,11 @@ class DBPeersDao extends DatabaseAccessor<AppDatabase> with _$DBPeersDaoMixin {
   /**
    * Returns the id of the new Peer in db.
    */
-  Future<int> insertNewPeer(String ip, int port, KademliaId kademliaId, {Uint8List publicKey}) async {
+  Future<int> insertNewPeer(String ip, int port, KademliaId kademliaId, {Uint8List? publicKey}) async {
     var list = await (select(dBPeers)..where((tbl) => tbl.kademliaId.equals(kademliaId.bytes))).get();
     if (list.isNotEmpty) {
       print("peer already in db...");
-      return null;
+      return 0;
     }
     print("add peer to db...");
     DBPeersCompanion entry = DBPeersCompanion.insert(
@@ -58,7 +57,7 @@ class DBPeersDao extends DatabaseAccessor<AppDatabase> with _$DBPeersDaoMixin {
 //    return update(dBPeers).replace(entry);
   }
 
-  Future<DBPeer> getPeerByKademliaId(KademliaId kademliaId) {
+  Future<DBPeer?> getPeerByKademliaId(KademliaId kademliaId) {
     return (select(dBPeers)..where((tbl) => tbl.kademliaId.equals(kademliaId.bytes))).getSingleOrNull();
   }
 

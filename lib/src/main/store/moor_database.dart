@@ -1,9 +1,8 @@
-// @dart=2.9
 import 'dart:io';
 
 import 'package:logging/logging.dart';
-import 'package:moor/ffi.dart';
-import 'package:moor/moor.dart';
+import 'package:drift/native.dart';
+import 'package:drift/drift.dart';
 import 'package:path/path.dart' as p;
 import 'package:redpanda_light_client/src/main/ConnectionService.dart';
 import 'package:redpanda_light_client/src/main/NodeId.dart';
@@ -46,9 +45,7 @@ class LocalSettings extends Table {
 
 // this annotation tells moor to prepare a database class that uses both of the
 // tables we just defined. We'll see how to use that database class in a moment.
-@UseMoor(
-    tables: [LocalSettings, DBChannels, DBPeers, DBMessages, DBFriends],
-    daos: [DBPeersDao, DBMessagesDao, DBFriendsDao])
+@DriftDatabase(tables: [LocalSettings, DBChannels, DBPeers, DBMessages, DBFriends], daos: [DBPeersDao, DBMessagesDao, DBFriendsDao])
 class AppDatabase extends _$AppDatabase {
   // we tell the database where to store the data with this constructor
   AppDatabase() : super(_openConnection());
@@ -58,7 +55,7 @@ class AppDatabase extends _$AppDatabase {
   @override
   int get schemaVersion => 47;
 
-  Future<LocalSetting> get getLocalSettings => select(localSettings).getSingleOrNull();
+  Future<LocalSetting?> get getLocalSettings => select(localSettings).getSingleOrNull();
 
   // returns the generated id
   Future<int> save(Insertable<LocalSetting> entry) async {
@@ -100,14 +97,14 @@ class AppDatabase extends _$AppDatabase {
   }
 
   void dropAll(Migrator migrator, int from, int n) async {
-    for (final TableInfo<Table, DataClass> table in allTables) {
+    for (final TableInfo<Table, Object?> table in allTables) {
       await migrator.deleteTable(table.actualTableName);
       print("dropping table " + table.actualTableName);
     }
   }
 
   void dropAllExceptChannelsAndSettings(Migrator migrator, int from, int n) async {
-    for (final TableInfo<Table, DataClass> table in allTables) {
+    for (final TableInfo<Table, Object?> table in allTables) {
       if (table.actualTableName.contains("channels") || table.actualTableName.contains("settings")) {
         print("table not dropped!: " + table.actualTableName);
         continue;
@@ -139,8 +136,7 @@ class AppDatabase extends _$AppDatabase {
 
   Future<int> createChannelFromData(String name, Uint8List sharedSecret, Uint8List privateSigningKey) async {
     var nodeId = new NodeId.importWithPrivate(privateSigningKey);
-    DBChannelsCompanion entry =
-        DBChannelsCompanion.insert(name: name, sharedSecret: sharedSecret, nodeId: nodeId.exportWithPrivate());
+    DBChannelsCompanion entry = DBChannelsCompanion.insert(name: name, sharedSecret: sharedSecret, nodeId: nodeId.exportWithPrivate());
     log.finest("insert channel");
     return into(dBChannels).insert(entry);
   }
@@ -155,24 +151,19 @@ class AppDatabase extends _$AppDatabase {
 
   Future<int> updateLastMessageByMe(int channelId, String message) async {
     return (update(dBChannels)..where((tbl) => tbl.id.equals(channelId))).write(DBChannelsCompanion(
-        lastMessage_user: Value(""),
-        lastMessage_text: Value(message),
-        lastMessage_timestamp: Value(Utils.getCurrentTimeMillis())));
+        lastMessage_user: Value(""), lastMessage_text: Value(message), lastMessage_timestamp: Value(Utils.getCurrentTimeMillis())));
   }
 
   Future<int> updateLastMessage(int channelId, int userId, String message, int timestamp) async {
     var dbFriend = await dBFriendsDao.getFriend(userId);
 
     return (update(dBChannels)..where((tbl) => tbl.id.equals(channelId))).write(DBChannelsCompanion(
-        lastMessage_user: Value(dbFriend?.name ?? '?'),
-        lastMessage_text: Value(message),
-        lastMessage_timestamp: Value(timestamp)));
+        lastMessage_user: Value(dbFriend?.name ?? '?'), lastMessage_text: Value(message), lastMessage_timestamp: Value(timestamp)));
   }
 
   Future<int> updateChannelData(int id, String channelDataString) async {
     log.finer('update channel data $channelDataString');
-    return (update(dBChannels)..where((tbl) => tbl.id.equals(id)))
-        .write(DBChannelsCompanion(channelData: Value(channelDataString)));
+    return (update(dBChannels)..where((tbl) => tbl.id.equals(id))).write(DBChannelsCompanion(channelData: Value(channelDataString)));
   }
 
   Future<DBChannel> getChannelById(int id) {
@@ -181,9 +172,7 @@ class AppDatabase extends _$AppDatabase {
 
   Future<List<DBChannel>> getAllChannels() {
 //    return select(dBChannels).get();
-    return (select(dBChannels)
-          ..orderBy([(t) => OrderingTerm(expression: t.lastMessage_timestamp, mode: OrderingMode.desc)]))
-        .get();
+    return (select(dBChannels)..orderBy([(t) => OrderingTerm(expression: t.lastMessage_timestamp, mode: OrderingMode.desc)])).get();
   }
 
 //  /**
@@ -212,6 +201,6 @@ LazyDatabase _openConnection() {
     // for your app.
     // for flutter get the path by: final dbFolder = await getApplicationDocumentsDirectory().path;
     final file = File(p.join(ConnectionService.pathToDatabase, 'db.sqlite'));
-    return VmDatabase(file);
+    return NativeDatabase(file);
   });
 }

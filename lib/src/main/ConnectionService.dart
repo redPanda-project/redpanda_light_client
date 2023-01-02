@@ -26,8 +26,7 @@ class ConnectionService {
   static const WAIT_BETWEEN_LOOPS = 10;
 
   static final log = Logger('RedPandaLightClient');
-  static final SentryClient sentry =
-      new SentryClient(new SentryOptions(dsn: "https://5ab6bb5e18a84fc1934b438139cc13d1@sentry.io/3871436"));
+  static final SentryClient sentry = new SentryClient(new SentryOptions(dsn: "https://5ab6bb5e18a84fc1934b438139cc13d1@sentry.io/3871436"));
 
   /**
    * The local settings will be obtained from db in the start method.
@@ -215,8 +214,8 @@ class ConnectionService {
       kademliaId = nodeId.getKademliaId();
       myUserId = Utils.randInteger();
 
-      LocalSettingsCompanion localSettingsCompanion = LocalSettingsCompanion.insert(
-          privateKey: nodeId.exportWithPrivate(), kademliaId: kademliaId.bytes, myUserId: myUserId);
+      LocalSettingsCompanion localSettingsCompanion =
+          LocalSettingsCompanion.insert(privateKey: nodeId.exportWithPrivate(), kademliaId: kademliaId.bytes, myUserId: myUserId);
 
       await _appDatabase.save(localSettingsCompanion);
       localSetting = await _appDatabase.getLocalSettings;
@@ -257,7 +256,6 @@ class ConnectionService {
     } catch (e) {
       peer.onError(e);
     }
-
 
     return;
   }
@@ -381,8 +379,7 @@ class ConnectionService {
         cntUpdatedChannels++;
         channelsUpdated.add(channel.getId());
         //lets seach the DHT network for fresh channel data
-        KademliaId currentKademliaId =
-            KadContent.createKademliaId(Utils.getCurrentTimeMillis(), channel.getNodeId().exportPublic());
+        KademliaId currentKademliaId = KadContent.createKademliaId(Utils.getCurrentTimeMillis(), channel.getNodeId().exportPublic());
         currentKademliaIdtoChannelId.putIfAbsent(currentKademliaId, () => channel.getId());
 
         log.fine("seaching for KadId: " + currentKademliaId.toString());
@@ -426,12 +423,7 @@ class ConnectionService {
           if (cnt > 20) {
             break;
           }
-          var datamsg = {
-            "id": m.message.messageId,
-            "from": m.message.from,
-            "timestamp": m.message.timestamp,
-            "content": m.message.content
-          };
+          var datamsg = {"id": m.message.messageId, "from": m.message.from, "timestamp": m.message.timestamp, "content": m.message.content};
           list.add(datamsg);
         }
         data['msgs'] = list;
