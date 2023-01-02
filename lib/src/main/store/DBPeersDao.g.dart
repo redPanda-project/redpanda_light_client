@@ -1,12 +1,8 @@
-// @dart=2.9
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
 part of 'DBPeersDao.dart';
 
-// **************************************************************************
-// DaoGenerator
-// **************************************************************************
-
+// ignore_for_file: type=lint
 mixin _$DBPeersDaoMixin on DatabaseAccessor<AppDatabase> {
   $DBPeersTable get dBPeers => attachedDatabase.dBPeers;
 }

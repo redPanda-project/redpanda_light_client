@@ -1,7 +1,7 @@
 // @dart=2.9
 import 'dart:typed_data';
 
-import 'package:moor/moor.dart';
+import 'package:drift/drift.dart';
 import 'package:pointycastle/export.dart';
 import 'package:redpanda_light_client/export.dart';
 import 'package:redpanda_light_client/src/main/ByteBuffer.dart';
@@ -91,11 +91,8 @@ void main() {
     });
 
     test('Test Channel enc dec', () {
-      var dbChannel = new DBChannel(
-          id: 1,
-          name: "name",
-          sharedSecret: Utils.randBytes(32),
-          nodeId: new NodeId.withNewKeyPair().exportWithPrivate());
+      var dbChannel =
+          new DBChannel(id: 1, name: "name", sharedSecret: Utils.randBytes(32), nodeId: new NodeId.withNewKeyPair().exportWithPrivate());
 
       var channel = new Channel(dbChannel);
 

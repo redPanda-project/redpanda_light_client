@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
 
+import 'package:drift/drift.dart';
 import 'package:logging/logging.dart';
 import 'package:redpanda_light_client/export.dart';
 import 'package:redpanda_light_client/src/main/Channel.dart';
@@ -60,7 +61,6 @@ Stream<String> read() async* {
     var line = Utf8Codec().decode(codeUnits);
     yield line.substring(0, line.length - 1);
   }
-
 }
 
 Future<void> readLines() async {
@@ -179,10 +179,7 @@ void callbackFunction(SendPort callerSendPort) {
     dynamic data = message["data"];
 
     parseIsolateCommands(sendPort, command, data);
-
-
   });
-
 }
 
 Future<void> shutdown() async {
@@ -225,11 +222,8 @@ void parseIsolateCommands(SendPort answerSendPort, String command, dynamic data)
 
     Logger.root.level = logLevel; // defaults to Level.INFO
     Logger.root.onRecord.listen((record) {
-      print(
-          '${formatToMinLen(record.loggerName, 30)}: ${formatToMinLen(record.time.toString(), 26)}:    ${record.message}');
+      print('${formatToMinLen(record.loggerName, 30)}: ${formatToMinLen(record.time.toString(), 26)}:    ${record.message}');
     });
-
-
 
     connectionService = ConnectionService(dataFolderPath, myPort);
     var allChannels = await connectionService.start();
@@ -251,10 +245,8 @@ void parseIsolateCommands(SendPort answerSendPort, String command, dynamic data)
 
     Logger.root.level = logLevel; // defaults to Level.INFO
     Logger.root.onRecord.listen((record) {
-      print(
-          '${formatToMinLen(record.loggerName, 30)}: ${formatToMinLen(record.time.toString(), 26)}:    ${record.message}');
+      print('${formatToMinLen(record.loggerName, 30)}: ${formatToMinLen(record.time.toString(), 26)}:    ${record.message}');
     });
-
 
     connectionService = ConnectionService(dataFolderPath, myPort);
     await connectionService.start(debugOnly: true);
@@ -329,7 +321,7 @@ void parseIsolateCommands(SendPort answerSendPort, String command, dynamic data)
     /**
      * lets update the name in our local database file
      */
-    ConnectionService.localSetting = ConnectionService.localSetting.copyWith(defaultName: name);
+    ConnectionService.localSetting = ConnectionService.localSetting.copyWith(defaultName: Value(name));
     answerSendPort.send(i);
   } else if (command == IsolateCommand.INSERT_FCM_TOKEN.toString()) {
     String token = data['token'];

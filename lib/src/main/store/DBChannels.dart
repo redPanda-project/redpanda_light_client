@@ -1,4 +1,4 @@
-import 'package:moor/moor.dart';
+import 'package:drift/drift.dart';
 
 /**
  * Sqlite schema for Channels, will generate a class Channel which then holds

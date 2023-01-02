@@ -14,7 +14,6 @@ void main() async {
 
   var watchDBChannelEntries = RedPandaLightClient.init(dataFolderPath, 5500);
 
-
   print('asd');
 
   const oneSec = Duration(days: 365 * 10);

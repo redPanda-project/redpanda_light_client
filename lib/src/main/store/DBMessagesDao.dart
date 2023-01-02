@@ -1,7 +1,6 @@
-// @dart=2.9
 import 'dart:convert';
 
-import 'package:moor/moor.dart';
+import 'package:drift/drift.dart';
 import 'package:redpanda_light_client/export.dart';
 import 'package:redpanda_light_client/src/main/store/DBFriends.dart';
 import 'package:redpanda_light_client/src/main/store/DBMessageWithFriend.dart';
@@ -12,7 +11,7 @@ part 'DBMessagesDao.g.dart';
 // the _TodosDaoMixin will be created by moor. It contains all the necessary
 // fields for the tables. The <MyDatabase> type annotation is the database class
 // that should use this dao.
-@UseDao(tables: [DBMessages, DBFriends])
+@DriftAccessor(tables: [DBMessages, DBFriends])
 class DBMessagesDao extends DatabaseAccessor<AppDatabase> with _$DBMessagesDaoMixin {
   // this constructor is required so that the main database can create an instance
   // of this object.
@@ -35,7 +34,7 @@ class DBMessagesDao extends DatabaseAccessor<AppDatabase> with _$DBMessagesDaoMi
 
     var list = rows.map((row) {
       var readTable = row.readTableOrNull(dBMessages);
-      return DBMessageWithFriend(readTable, row.readTableOrNull(dBFriends), ConnectionService.myUserId == readTable.from);
+      return DBMessageWithFriend(readTable, row.readTableOrNull(dBFriends), ConnectionService.myUserId == readTable?.from);
     }).toList();
 
     return list;
@@ -71,10 +70,10 @@ class DBMessagesDao extends DatabaseAccessor<AppDatabase> with _$DBMessagesDaoMi
   }
 
   Future<int> updateMessage(int channelId, int messageId, int deliveredTo, String text, int from, int timestamp) async {
-   log.finest("update message database: " + messageId.toString() + " " + text);
+    log.finest("update message database: " + messageId.toString() + " " + text);
 
     bool hadToDelete = false;
-    DBMessage single;
+    DBMessage? single;
     //if more than one message delete all msg and add below in the update routine
     try {
       single = await (select(dBMessages)..where((tbl) => tbl.messageId.equals(messageId))).getSingleOrNull();
@@ -92,7 +91,7 @@ class DBMessagesDao extends DatabaseAccessor<AppDatabase> with _$DBMessagesDaoMi
       var dec = [];
 
       if (single.deliveredTo != null) {
-        dec = jsonDecode(single.deliveredTo);
+        dec = jsonDecode(single.deliveredTo!);
         if (!dec.contains(deliveredTo)) {
           weHaveToAdd = true;
         }
@@ -108,12 +107,12 @@ class DBMessagesDao extends DatabaseAccessor<AppDatabase> with _$DBMessagesDaoMi
         await (update(dBMessages)..where((tbl) => tbl.messageId.equals(messageId)))
             .write(new DBMessagesCompanion(deliveredTo: Value(jsonEncode(dec))));
 
-        return null;
+        return 0;
       } else {
 //        print("no new content from dht for msg: " + jsonEncode(dec) + " " + text);
       }
 
-      return null;
+      return 0;
     } else {
       DBMessagesCompanion entry = DBMessagesCompanion.insert(
           messageId: messageId,
@@ -129,7 +128,7 @@ class DBMessagesDao extends DatabaseAccessor<AppDatabase> with _$DBMessagesDaoMi
       var a = into(dBMessages).insert(entry);
 
       if (hadToDelete) {
-        a = null;
+        return 0;
       }
 
       return a;
