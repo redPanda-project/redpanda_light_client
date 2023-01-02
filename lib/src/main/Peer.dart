@@ -10,18 +10,12 @@ import 'package:buffer/buffer.dart';
 import 'package:convert/convert.dart';
 import 'package:date_format/date_format.dart';
 import 'package:logging/logging.dart';
-import 'package:pointycastle/api.dart';
 import 'package:pointycastle/export.dart';
 import 'package:redpanda_light_client/export.dart';
-import 'package:redpanda_light_client/src/main/ByteBuffer.dart';
-import 'package:redpanda_light_client/src/main/Channel.dart';
 import 'package:redpanda_light_client/src/main/Command.dart';
-import 'package:redpanda_light_client/src/main/ConnectionService.dart';
 import 'package:redpanda_light_client/src/main/KademliaId.dart';
-import 'package:redpanda_light_client/src/main/NodeId.dart';
 import 'package:redpanda_light_client/src/main/PeerList.dart';
 import 'package:redpanda_light_client/src/main/SentryLogger.dart';
-import 'package:redpanda_light_client/src/main/Utils.dart';
 import 'package:redpanda_light_client/src/main/kademlia/KadContent.dart';
 import 'package:redpanda_light_client/src/redpanda_isolate.dart';
 
