@@ -1,4 +1,3 @@
-// @dart=2.9
 import 'dart:async';
 
 import 'package:redpanda_light_client/export.dart';
@@ -34,7 +33,7 @@ void main() async {
 }
 
 onNewMessage(DBMessageWithFriend msg, String channelName) {
-  print('#########\n\nNew Message for Channel $channelName\n\n${msg.friend?.name}: ${msg.message.content}\n\n#########');
+  print('#########\n\nNew Message for Channel $channelName\n\n${msg.friend?.name}: ${msg.message?.content}\n\n#########');
 }
 
 //todo documentation of used licenses

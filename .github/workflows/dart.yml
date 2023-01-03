@@ -26,7 +26,7 @@ jobs:
       # - uses: dart-lang/setup-dart@v1
       - uses: dart-lang/setup-dart@v1.3
         with:
-          sdk: 2.18.0-44.1.beta
+          sdk: 2.18.4
 
       - name: Install dependencies
         run: dart pub get && dart pub get

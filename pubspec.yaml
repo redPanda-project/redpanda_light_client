@@ -25,5 +25,5 @@ dev_dependencies:
       url: https://github.com/civts/test-coverage.git
       ref: aa6ffb41c28d7dec4e3bb11c3b7c4729e8271a69
   drift_dev: ^2.4.0
-  build_runner: ^2.1.1
+  build_runner: ^2.3.0
   lints: ^2.0.1
